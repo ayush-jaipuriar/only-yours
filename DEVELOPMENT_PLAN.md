@@ -64,17 +64,16 @@ This document breaks down the development of the "Only Yours" MVP into a detaile
     - [ ] Wrap the `AppNavigator` in the `AuthProvider` in your main `App.js` file.
 
 ### Shared / DevOps Tasks
-- [ ] **Google Cloud Project Setup:**
-    - [ ] Create a new project in the Google Cloud Console.
-    - [ ] Configure the OAuth 2.0 consent screen with app details.
-- [ ] **OAuth Credentials Generation:**
-    - [ ] Create an "Android" type OAuth 2.0 Client ID. Note the client ID.
-    - [ ] Create a "Web application" type OAuth 2.0 Client ID. Note the Web Client ID and securely store the secret.
-- [ ] **Version Control:**
-    - [ ] Initialize a Git repository in the project root.
-    - [ ] Create an initial commit with the generated project files.
-    - [ ] Create a `.gitignore` file appropriate for a Java/Spring and React Native project.
-    - [ ] Establish a branching strategy (e.g., `main`, `develop`, `feature/*`).
+- [x] **Google Cloud Project Setup:**
+    - [x] Create a new project in the Google Cloud Console.
+    - [x] Configure the OAuth 2.0 consent screen with app details.
+- [x] **OAuth Credentials Generation:**
+    - [x] Create an "Android" type OAuth 2.0 Client ID. Note the client ID.
+    - [x] Create a "Web application" type OAuth 2.0 Client ID. Note the Web Client ID and securely store the secret.
+- [x] **Version Control:**
+    - [x] Initialize a Git repository in the project root.
+    - [x] Create a `.gitignore` file appropriate for a Java/Spring and React Native project.
+    - [x] Establish a branching strategy (e.g., `main`, `develop`, `feature/*`).
 
 ---
 
@@ -83,55 +82,55 @@ This document breaks down the development of the "Only Yours" MVP into a detaile
 **Goal:** Implement the complete, end-to-end Google Sign-In flow, allowing a user to authenticate with their Google account and receive an application-specific JWT from the backend.
 
 ### Backend Technical Tasks
-- [ ] **Dependencies:**
-    - [ ] Add `com.google.api-client:google-api-client` to `pom.xml` for Google ID token verification.
-- [ ] **Data Transfer Objects (DTOs):**
-    - [ ] Create `GoogleSignInRequestDto.java` to map the incoming `idToken`.
-    - [ ] Create `AuthResponseDto.java` to structure the response containing the application JWT.
-- [ ] **JWT Service:**
-    - [ ] Implement `JwtService.java`.
-    - [ ] Method to generate a JWT from user details.
-    - [ ] Method to validate an incoming JWT.
-    - [ ] Method to extract user ID/claims from a JWT.
-    - [ ] Store the JWT secret key securely in `application.properties` (to be moved to env vars later).
-- [ ] **Authentication Service:**
-    - [ ] Implement `AuthService.java`.
-    - [ ] Create `authenticateGoogleUser(String googleIdToken)` method.
-        - [ ] Use `GoogleIdTokenVerifier` to validate the token against Google's servers.
-        - [ ] On success, extract `sub` (Google ID), `email`, and `name`.
-        - [ ] Query `UserRepository` via `findByGoogleUserId`.
-        - [ ] If user does not exist, create a new `User` entity and save it.
-        - [ ] If user exists, update their details if necessary.
-        - [ ] Call `JwtService` to generate an application JWT for the user.
-- [ ] **Authentication Controller:**
-    - [ ] Implement `AuthController.java`.
-    - [ ] Create a `POST /api/auth/google/signin` endpoint.
-    - [ ] This endpoint should be publicly accessible.
-    - [ ] It calls the `AuthService` and returns the `AuthResponseDto` with a 200 OK status.
-- [ ] **Security Configuration Update:**
-    - [ ] In `SecurityConfig.java`, permit all requests to `/api/auth/**`.
-    - [ ] Secure all other endpoints by requiring authentication (`.anyRequest().authenticated()`).
-    - [ ] Implement `JwtAuthFilter.java` extending `OncePerRequestFilter`.
-    - [ ] This filter should read the `Authorization: Bearer <token>` header, validate the JWT using `JwtService`, and set the `Authentication` in the `SecurityContextHolder`.
-    - [ ] Add the `JwtAuthFilter` to the security filter chain before the standard `UsernamePasswordAuthenticationFilter`.
+- [x] **Dependencies:**
+    - [x] Add `com.google.api-client:google-api-client` to `build.gradle` for Google ID token verification.
+- [x] **Data Transfer Objects (DTOs):**
+    - [x] Create `GoogleSignInRequestDto.java` to map the incoming `idToken`.
+    - [x] Create `AuthResponseDto.java` to structure the response containing the application JWT.
+- [x] **JWT Service:**
+    - [x] Implement `JwtService.java`.
+    - [x] Method to generate a JWT from user details.
+    - [x] Method to validate an incoming JWT.
+    - [x] Method to extract user ID/claims from a JWT.
+    - [x] Store the JWT secret key securely in `application.properties` (to be moved to env vars later).
+- [x] **Authentication Service:**
+    - [x] Implement `AuthService.java`.
+    - [x] Create `authenticateGoogleUser(String googleIdToken)` method.
+        - [x] Use `GoogleIdTokenVerifier` to validate the token against Google's servers.
+        - [x] On success, extract `sub` (Google ID), `email`, and `name`.
+        - [x] Query `UserRepository` via `findByGoogleUserId`.
+        - [x] If user does not exist, create a new `User` entity and save it.
+        - [x] If user exists, update their details if necessary.
+        - [x] Call `JwtService` to generate an application JWT for the user.
+- [x] **Authentication Controller:**
+    - [x] Implement `AuthController.java`.
+    - [x] Create a `POST /api/auth/google/signin` endpoint.
+    - [x] This endpoint should be publicly accessible.
+    - [x] It calls the `AuthService` and returns the `AuthResponseDto` with a 200 OK status.
+- [x] **Security Configuration Update:**
+    - [x] In `SecurityConfig.java`, permit all requests to `/api/auth/**`.
+    - [x] Secure all other endpoints by requiring authentication (`.anyRequest().authenticated()`).
+    - [x] Implement `JwtAuthFilter.java` extending `OncePerRequestFilter`.
+    - [x] This filter should read the `Authorization: Bearer <token>` header, validate the JWT using `JwtService`, and set the `Authentication` in the `SecurityContextHolder`.
+    - [x] Add the `JwtAuthFilter` to the security filter chain before the standard `UsernamePasswordAuthenticationFilter`.
 
 ### Frontend Technical Tasks
-- [ ] **Google Sign-In Configuration:**
-    - [ ] In the app's entry point (e.g., `App.js`), call `GoogleSignin.configure()` with the `webClientId` obtained from Google Cloud.
-- [ ] **Sign-In Screen Implementation (`SignInScreen.js`):**
-    - [ ] Create a "Sign in with Google" button.
-    - [ ] The `onPress` handler should be an `async` function.
-    - [ ] Inside a `try/catch` block:
-        - [ ] Call `await GoogleSignin.signIn()`.
-        - [ ] From the result, extract the `idToken`.
-        - [ ] Use `axios` to make a `POST` request to the backend's `/api/auth/google/signin` endpoint with the `idToken`.
-        - [ ] On a successful response (200 OK), retrieve the application JWT from the response body.
-        - [ ] Securely store the JWT using `@react-native-async-storage/async-storage`.
-        - [ ] Call the `login()` function from `AuthContext` with the user data and token.
-- [ ] **Conditional Navigation:**
-    - [ ] In `AppNavigator.js`, use the `isLoggedIn` state from `AuthContext`.
-    - [ ] If `isLoggedIn` is true, render the main app stack.
-    - [ ] If `isLoggedIn` is false, render the `SignInScreen`.
+- [x] **Google Sign-In Configuration:**
+    - [x] In the app's entry point (e.g., `App.js`), call `GoogleSignin.configure()` with the `webClientId` obtained from Google Cloud.
+- [x] **Sign-In Screen Implementation (`SignInScreen.js`):**
+    - [x] Create a "Sign in with Google" button.
+    - [x] The `onPress` handler should be an `async` function.
+    - [x] Inside a `try/catch` block:
+        - [x] Call `await GoogleSignin.signIn()`.
+        - [x] From the result, extract the `idToken`.
+        - [x] Use `axios` to make a `POST` request to the backend's `/api/auth/google/signin` endpoint with the `idToken`.
+        - [x] On a successful response (200 OK), retrieve the application JWT from the response body.
+        - [x] Securely store the JWT using `@react-native-async-storage/async-storage`.
+        - [x] Call the `login()` function from `AuthContext` with the user data and token.
+- [x] **Conditional Navigation:**
+    - [x] In `AppNavigator.js`, use the `isLoggedIn` state from `AuthContext`.
+    - [x] If `isLoggedIn` is true, render the main app stack.
+    - [x] If `isLoggedIn` is false, render the `SignInScreen`.
 - [ ] **Authenticated API Service:**
     - [ ] Create an `axios` instance that automatically includes the JWT in the `Authorization` header for all subsequent requests.
 
