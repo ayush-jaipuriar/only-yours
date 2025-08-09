@@ -58,10 +58,10 @@ This document breaks down the development of the "Only Yours" MVP into a detaile
 - [x] **Navigation Setup:**
     - [x] Create `AppNavigator.js` in the `navigation` directory.
     - [x] Set up a `StackNavigator` with initial placeholder routes for `SignIn` and a `MainApp` stack.
-- [ ] **Global State (Authentication):**
-    - [ ] Create `AuthContext.js` in the `state` directory.
-    - [ ] The context should provide `isLoggedIn` status, `user` data, and placeholder functions `login()` and `logout()`.
-    - [ ] Wrap the `AppNavigator` in the `AuthProvider` in your main `App.js` file.
+- [x] **Global State (Authentication):**
+    - [x] Create `AuthContext.js` in the `state` directory.
+    - [x] The context should provide `isLoggedIn` status, `user` data, and placeholder functions `login()` and `logout()`.
+    - [x] Wrap the `AppNavigator` in the `AuthProvider` in your main `App.js` file.
 
 ### Shared / DevOps Tasks
 - [x] **Google Cloud Project Setup:**
@@ -131,8 +131,8 @@ This document breaks down the development of the "Only Yours" MVP into a detaile
     - [x] In `AppNavigator.js`, use the `isLoggedIn` state from `AuthContext`.
     - [x] If `isLoggedIn` is true, render the main app stack.
     - [x] If `isLoggedIn` is false, render the `SignInScreen`.
-- [ ] **Authenticated API Service:**
-    - [ ] Create an `axios` instance that automatically includes the JWT in the `Authorization` header for all subsequent requests.
+- [x] **Authenticated API Service:**
+    - [x] Create an `axios` instance that automatically includes the JWT in the `Authorization` header for all subsequent requests.
 
 ---
 
