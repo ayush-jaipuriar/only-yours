@@ -141,40 +141,51 @@ This document breaks down the development of the "Only Yours" MVP into a detaile
 **Goal:** Enable users to view their basic profile and establish a permanent, two-way link with their partner's account using a unique, time-limited code.
 
 ### Backend Technical Tasks
-- [ ] **DTOs:**
-    - [ ] Create `UserDto.java` and `CoupleDto.java` to safely expose entity data to the client.
-- [ ] **User Profile Endpoint:**
-    - [ ] Implement `UserController.java`.
-    - [ ] Create a secured `GET /api/user/me` endpoint.
-    - [ ] Use the `Authentication` principal from Spring Security to get the current user's ID.
-    - [ ] Fetch the full user object from the repository and return it as a `UserDto`.
-- [ ] **Couple Linking Service (`CoupleService.java`):**
-    - [ ] Implement `generateLinkCode(UUID userId)`. This should create a new `Couple` entity with `user1_id` set, generate a random 6-8 character alphanumeric string for `link_code`, and save it.
-    - [ ] Implement `redeemLinkCode(UUID userId, String code)`. This will:
-        - [ ] Find a `Couple` by `link_code`.
-        - [ ] Validate that the code exists and has not been used (`user2_id` is null).
-        - [ ] Validate that the redeemer (`userId`) is not the same as `user1_id`.
-        - [ ] If valid, set `user2_id` to the current user's ID, nullify the `link_code`, and save the updated `Couple` entity.
-- [ ] **Couple Linking Controller (`CoupleController.java`):**
-    - [ ] Create a secured `POST /api/couple/generate-code` endpoint that calls the service and returns the code.
-    - [ ] Create a secured `POST /api/couple/link` endpoint that accepts the code in a request body and calls the redeem service.
-    - [ ] Create a secured `GET /api/couple` endpoint to fetch the details of the couple link if it exists.
+- [x] **DTOs:**
+    - [x] Create `UserDto.java` and `CoupleDto.java` to safely expose entity data to the client.
+- [x] **User Profile Endpoint:**
+    - [x] Implement `UserController.java`.
+    - [x] Create a secured `GET /api/user/me` endpoint.
+    - [x] Use the `Authentication` principal from Spring Security to get the current user's ID.
+    - [x] Fetch the full user object from the repository and return it as a `UserDto`.
+- [x] **Couple Linking Service (`CoupleService.java`):**
+    - [x] Implement `generateLinkCode(UUID userId)`. This should create a new `Couple` entity with `user1_id` set, generate a random 6-8 character alphanumeric string for `link_code`, and save it.
+    - [x] Implement `redeemLinkCode(UUID userId, String code)`. This will:
+        - [x] Find a `Couple` by `link_code`.
+        - [x] Validate that the code exists and has not been used (`user2_id` is null).
+        - [x] Validate that the redeemer (`userId`) is not the same as `user1_id`.
+        - [x] If valid, set `user2_id` to the current user's ID, nullify the `link_code`, and save the updated `Couple` entity.
+- [x] **Couple Linking Controller (`CoupleController.java`):**
+    - [x] Create a secured `POST /api/couple/generate-code` endpoint that calls the service and returns the code.
+    - [x] Create a secured `POST /api/couple/link` endpoint that accepts the code in a request body and calls the redeem service.
+    - [x] Create a secured `GET /api/couple` endpoint to fetch the details of the couple link if it exists.
 
 ### Frontend Technical Tasks
-- [ ] **Profile Screen (`ProfileScreen.js`):**
-    - [ ] On component mount (`useEffect`), make an authenticated `GET` request to `/api/user/me`.
-    - [ ] Display the user's name and email.
-    - [ ] Include a "Logout" button that clears `AsyncStorage` and calls the `logout()` function from `AuthContext`.
-- [ ] **Dashboard Screen (`DashboardScreen.js`):**
-    - [ ] On component mount, call `/api/couple`.
-    - [ ] If the response is successful (200 OK), display "You are connected with [Partner's Name]".
-    - [ ] If the response is a 404 Not Found, display a "Link with Partner" button that navigates to the `PartnerLinkScreen`.
-- [ ] **Partner Linking Screen (`PartnerLinkScreen.js`):**
-    - [ ] Create a UI with two sections: "Get a Code" and "Enter a Code".
-    - [ ] The "Get a Code" section has a button that calls `POST /api/couple/generate-code` and displays the returned code.
-    - [ ] Add a "Share" button that uses React Native's `Share` API to share the code.
-    - [ ] The "Enter a Code" section has a `TextInput` for the code and a "Connect" button that calls `POST /api/couple/link`.
-    - [ ] On a successful connection, navigate the user back to the dashboard, which should now re-fetch and show the linked status.
+- [x] **Profile Screen (`ProfileScreen.js`):**
+    - [x] On component mount (`useEffect`), make an authenticated `GET` request to `/api/user/me`.
+    - [x] Display the user's name and email.
+    - [x] Include a "Logout" button that clears `AsyncStorage` and calls the `logout()` function from `AuthContext`.
+- [x] **Dashboard Screen (`DashboardScreen.js`):**
+    - [x] On component focus, call `/api/couple`.
+    - [x] If the response is successful (200 OK), display "You are connected with [Partner's Name]".
+    - [x] If the response is a 404 Not Found, display a "Link with Partner" button that navigates to the `PartnerLinkScreen`.
+- [x] **Partner Linking Screen (`PartnerLinkScreen.js`):**
+    - [x] Create a UI with two sections: "Get a Code" and "Enter a Code".
+    - [x] The "Get a Code" section has a button that calls `POST /api/couple/generate-code` and displays the returned code.
+    - [x] Add a "Share" button that uses React Native's `Share` API to share the code.
+    - [x] The "Enter a Code" section has a `TextInput` for the code and a "Connect" button that calls `POST /api/couple/link`.
+    - [x] On a successful connection, navigate the user back to the dashboard, which re-fetches and shows the linked status.
+
+Implementation details:
+- DTOs added under `backend/src/main/java/com/onlyyours/dto/` to decouple API responses from entities.
+- `UserController` maps `Principal.getName()` (email) to `User` and returns `UserDto`.
+- `CoupleService` handles code generation, redemption, and lookup; `CoupleRepository` extended with `findByLinkCode` and `findByUser1_IdOrUser2_Id`.
+- `CoupleController` exposes generate/link/get endpoints secured by JWT.
+
+Changes made:
+- Added screens under `OnlyYoursApp/src/screens/` and wired routes in `OnlyYoursApp/src/navigation/AppNavigator.js`.
+- Updated `OnlyYoursApp/src/state/AuthContext.js` to clear `userToken` on logout.
+- Deprecated `MainApp` placeholder in favor of `Dashboard`, `Profile`, and `PartnerLink`.
 
 ---
 

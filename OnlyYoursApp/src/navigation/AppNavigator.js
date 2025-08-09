@@ -3,7 +3,9 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthContext } from '../state/AuthContext';
 import SignInScreen from '../screens/SignInScreen';
-import MainApp from '../screens/MainApp';
+import DashboardScreen from '../screens/DashboardScreen';
+import ProfileScreen from '../screens/ProfileScreen';
+import PartnerLinkScreen from '../screens/PartnerLinkScreen';
 
 const Stack = createStackNavigator();
 
@@ -14,7 +16,11 @@ const AppNavigator = () => {
     <NavigationContainer>
       <Stack.Navigator>
         {isLoggedIn ? (
-          <Stack.Screen name="MainApp" component={MainApp} />
+          <>
+            <Stack.Screen name="Dashboard" component={DashboardScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
+            <Stack.Screen name="PartnerLink" component={PartnerLinkScreen} />
+          </>
         ) : (
           <Stack.Screen name="SignIn" component={SignInScreen} />
         )}
