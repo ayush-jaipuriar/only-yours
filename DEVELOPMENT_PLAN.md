@@ -194,43 +194,30 @@ Changes made:
 **Goal:** Build the pre-game user flow (category selection) and establish the fundamental WebSocket infrastructure for real-time communication.
 
 ### Backend Technical Tasks
-- [ ] **Database Seeding (via Flyway):**
-    - [ ] Create a new Flyway migration script (e.g., `V2__Seed_Initial_Data.sql`) in `src/main/resources/db/migration`.
-    - [ ] Add `INSERT` statements to this script to populate `question_categories` and a sample of `questions` for each category.
-- [ ] **Content Endpoint:**
-    - [ ] Implement `ContentController.java`.
-    - [ ] Create a `GET /api/content/categories` endpoint that returns a list of all `CategoryDto`s.
-- [ ] **WebSocket Configuration (`WebSocketConfig.java`):**
-    - [ ] Annotate with `@Configuration` and `@EnableWebSocketMessageBroker`.
-    - [ ] Implement the `WebSocketMessageBrokerConfigurer` interface.
-    - [ ] In `registerStompEndpoints`, register a STOMP endpoint at `/ws` (with SockJS fallback).
-    - [ ] In `configureMessageBroker`, enable a simple in-memory broker with destination prefixes `/topic` and `/user`.
-    - [ ] Set the application destination prefix to `/app`.
-- [ ] **WebSocket Security:**
-    - [ ] Create a `ChannelInterceptor` to secure the WebSocket connection.
-    - [ ] In the `preSend` method, intercept the `CONNECT` message.
-    - [ ] Read the JWT from the STOMP headers.
-    - [ ] Validate the token using `JwtService` and associate the authenticated user with the WebSocket session.
-    - [ ] If the token is invalid, reject the connection.
+- [x] **Database Seeding (via Flyway):**
+    - [x] Create a new Flyway migration script `V2__Seed_Initial_Data.sql` in `src/main/resources/db/migration`.
+    - [x] Added `INSERT` statements to populate `question_categories` and sample `questions` per category.
+- [x] **Content Endpoint:**
+    - [x] Implemented `ContentController.java`.
+    - [x] Created `GET /api/content/categories` returning a list of `CategoryDto`s.
+- [x] **WebSocket Configuration (`WebSocketConfig.java`):**
+    - [x] Annotated with `@Configuration` and `@EnableWebSocketMessageBroker`.
+    - [x] Implemented `WebSocketMessageBrokerConfigurer` with `/ws` STOMP endpoint (SockJS fallback).
+    - [x] Enabled simple broker with `/topic` and `/user`; set app prefix `/app`.
+- [x] **WebSocket Security:**
+    - [x] Added `WebSocketSecurityConfig` with an inbound `ChannelInterceptor`.
+    - [x] Intercepts `CONNECT`, extracts `Authorization` header, validates JWT via `JwtService`, sets authenticated user on the session; rejects invalid tokens.
 
 ### Frontend Technical Tasks
-- [ ] **WebSocket Libraries:**
-    - [ ] Install STOMP and SockJS clients: `npm install @stomp/stompjs sockjs-client`.
-- [ ] **WebSocket Service (`WebSocketService.js`):**
-    - [ ] Create a singleton service to manage the WebSocket connection.
-    - [ ] Implement a `connect(jwt)` method that:
-        - [ ] Instantiates a Stomp client.
-        - [ ] Sets the `Authorization: Bearer ${jwt}` header for the connection.
-        - [ ] Connects to the backend's `/ws` endpoint.
-    - [ ] Implement `disconnect()`, `subscribe(topic, callback)`, and `sendMessage(destination, body)` methods.
-- [ ] **Category Selection Screen (`CategorySelectionScreen.js`):**
-    - [ ] On mount, fetch the list of categories from `/api/content/categories`.
-    - [ ] Display the categories in a `<FlatList>` or similar scrollable view.
-    - [ ] Each item should be a custom, pressable component (`CategoryCard.js`).
-    - [ ] When a category marked as `is_sensitive` is pressed, show a native `Alert` for confirmation before proceeding.
-- [ ] **WebSocket Integration:**
-    - [ ] In the main app logic (e.g., after login in `AuthContext`), call `WebSocketService.connect(jwt)`.
-    - [ ] Ensure the service gracefully handles disconnections and provides a mechanism to report connection status.
+- [x] **WebSocket Libraries:**
+    - [x] Installed STOMP and SockJS clients in app dependencies.
+- [x] **WebSocket Service (`WebSocketService.js`):**
+    - [x] Created a singleton service managing connection lifecycle, headers with `Authorization`, subscriptions, and publish.
+- [x] **Category Selection Screen (`CategorySelectionScreen.js`):**
+    - [x] Fetches categories from `/api/content/categories` on mount and displays as a list.
+    - [x] Shows a confirmation `Alert` when a sensitive category is tapped.
+- [x] **WebSocket Integration:**
+    - [x] After login and on silent auth, `AuthContext` calls `WebSocketService.connect()`; service auto-retries and disconnects on logout.
 
 ---
 

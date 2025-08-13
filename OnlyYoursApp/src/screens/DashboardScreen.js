@@ -41,6 +41,8 @@ const DashboardScreen = ({ navigation }) => {
           <Button title="Link with Partner" onPress={() => navigation.navigate('PartnerLink')} />
         </>
       )}
+      <View style={{ height: 8 }} />
+      <Button title="Choose Category" onPress={() => navigation.navigate('CategorySelection')} />
     </View>
   );
 };
