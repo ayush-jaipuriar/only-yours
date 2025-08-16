@@ -11,6 +11,14 @@ This report documents the implementation details for Sprint 3, covering backend 
   - Categories: Getting to Know You, Daily Habits, Memories, Intimacy (sensitive)
   - Two sample questions per category
 
+#### Post-migration Fix (Startup Failure)
+- Root cause: Hibernate previously auto-created `questions` table columns based on camelCase field names (`optionA`, `optionB`, etc.), resulting in snake-less columns (`optiona`, `optionb`, ...). Our Flyway DDL (V1) correctly defines snake_case columns (`option_a`, `option_b`, ...). When V2 attempted to insert rows using snake_case columns, PostgreSQL enforced NOT NULL constraints on the legacy `optiona` columns, causing `ERROR: null value in column "optiona"`.
+- Fixes applied:
+  - Aligned JPA entity to Flyway schema by explicitly mapping column names in `Question.java` using `@Column(name = "option_a"|"option_b"|...)`.
+  - Switched `spring.jpa.hibernate.ddl-auto` to `validate` to prevent Hibernate from creating/modifying tables; Flyway remains the single source of truth.
+  - Made V2 seeding tolerant of legacy columns by conditionally dropping NOT NULL constraints on `optiona`…`optiond` if they exist, so inserts can succeed even on environments that previously booted with Hibernate DDL.
+  - Next migration can safely DROP the legacy columns after verifying no data resides in them.
+
 ### DTOs and Controllers
 - Added `backend/src/main/java/com/onlyyours/dto/CategoryDto.java` with fields: `id`, `name`, `description`, `sensitive`.
 - Added `backend/src/main/java/com/onlyyours/controller/ContentController.java`:

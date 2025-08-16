@@ -197,6 +197,7 @@ Changes made:
 - [x] **Database Seeding (via Flyway):**
     - [x] Create a new Flyway migration script `V2__Seed_Initial_Data.sql` in `src/main/resources/db/migration`.
     - [x] Added `INSERT` statements to populate `question_categories` and sample `questions` per category.
+    - [x] Post-startup fix: align `Question` entity column names to snake_case and set `spring.jpa.hibernate.ddl-auto=validate` to avoid Hibernate creating mismatched columns; add conditional constraint drops in `V2` for legacy `optiona`...`optiond` columns.
 - [x] **Content Endpoint:**
     - [x] Implemented `ContentController.java`.
     - [x] Created `GET /api/content/categories` returning a list of `CategoryDto`s.

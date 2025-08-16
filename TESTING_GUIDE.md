@@ -1,6 +1,18 @@
-# Only Yours - End-to-End Setup and Testing Guide (Sprints 0 → 2)
+# Only Yours - End-to-End Setup and Testing Guide (Sprints 0 → 3)
 
-This guide walks you through setting up the environment and thoroughly testing the app from the foundation (Sprint 0) through Authentication (Sprint 1) and Profile/Couple Linking (Sprint 2).
+This guide walks you through setting up the environment and thoroughly testing the app from the foundation (Sprint 0) through Authentication (Sprint 1), Profile/Couple Linking (Sprint 2), and Categories/WebSocket foundation (Sprint 3). Tests are ordered to build on one another.
+
+---
+
+## 0) Quickstart Test Flow (Sprints 0–3)
+
+1. Backend: configure `application.properties`, create DB, start backend.
+2. Frontend: set `API_URL`, install deps, run app on emulator/device.
+3. Sprint 1 – Sign-In: Sign in with Google, obtain JWT in app storage.
+4. Sprint 1 – Protected API: Call `/api/user/me` using the JWT.
+5. Sprint 2 – Couple Linking: Generate code (User A), redeem code (User B), verify `/api/couple`.
+6. Sprint 3 – Categories: Verify Flyway seed, call `/api/content/categories`, view `CategorySelection` screen.
+7. Sprint 3 – WebSocket: Confirm STOMP connect with JWT and auto-reconnect behavior.
 
 ---
 
@@ -330,4 +342,192 @@ Acceptance criteria (Sprint 3):
 - `CategorySelection` lists categories and shows a confirmation `Alert` for sensitive categories.
 - App establishes a STOMP session after login; invalid tokens are rejected on CONNECT; client auto-retries on temporary disconnects.
 
+---
+
+## 10) Common Errors & Fixes (FAQ)
+
+### Setup & Environment Issues
+
+**Q: "Backend won't start - Connection refused to database"**
+- **Cause**: PostgreSQL not running or wrong credentials.
+- **Fix**: 
+  ```bash
+  # Check if PostgreSQL is running
+  pg_ctl status
+  # Or using brew (macOS)
+  brew services list | grep postgres
+  # Start if needed
+  brew services start postgresql
+  # Verify DB exists
+  psql -U postgres -l | grep onlyyours
+  ```
+
+**Q: "Backend starts but Flyway fails with 'relation does not exist'"**
+- **Cause**: Database exists but is corrupted or partially migrated.
+- **Fix**: Drop and recreate the database:
+  ```bash
+  psql -U postgres -c "DROP DATABASE IF EXISTS onlyyours;"
+  psql -U postgres -c "CREATE DATABASE onlyyours;"
+  # Restart backend to re-run migrations
+  ```
+
+**Q: "Frontend can't reach backend from Android emulator"**
+- **Cause**: Using `localhost` instead of `10.0.2.2`.
+- **Fix**: Update `OnlyYoursApp/src/services/api.js`:
+  ```javascript
+  const API_URL = 'http://10.0.2.2:8080/api'; // Android emulator
+  ```
+
+**Q: "Frontend can't reach backend from physical device"**
+- **Cause**: Using localhost instead of LAN IP, or firewall blocking.
+- **Fix**: 
+  1. Find your computer's IP: `ifconfig | grep "inet " | grep -v 127.0.0.1`
+  2. Update API_URL to use that IP: `http://192.168.1.50:8080/api`
+  3. Ensure firewall allows port 8080 inbound
+  4. Ensure both devices on same Wi-Fi network
+
+### Authentication Issues
+
+**Q: "Google Sign-In fails with 'DEVELOPER_ERROR'"**
+- **Cause**: Mismatch between configured Client IDs and actual usage.
+- **Fix**: 
+  1. Verify `webClientId` in `App.js` matches the Web Client ID from Google Cloud Console
+  2. Verify `google.client.id` in `application.properties` matches the same Web Client ID
+  3. For Android: ensure Android Client ID is configured with correct package name and SHA-1
+
+**Q: "Sign-In succeeds but backend returns 401 'Invalid ID token'"**
+- **Cause**: Backend `google.client.id` doesn't match the Web Client ID used by the app.
+- **Fix**: Double-check both values are identical:
+  ```bash
+  # In application.properties
+  google.client.id=123456789-abcdef.apps.googleusercontent.com
+  # In App.js
+  webClientId: '123456789-abcdef.apps.googleusercontent.com'
+  ```
+
+**Q: "JWT expired errors after some time"**
+- **Cause**: JWT has 10-hour expiry (see `JwtService.java`).
+- **Fix**: Sign out and sign in again, or implement refresh token logic in future sprints.
+
+### API & Network Issues
+
+**Q: "API calls return 401 even after successful sign-in"**
+- **Cause**: JWT not stored or not included in requests.
+- **Fix**: 
+  1. Check `AsyncStorage`: In React Native debugger, inspect `AsyncStorage.getItem('userToken')`
+  2. Verify `api.js` interceptor adds `Authorization` header
+  3. Check network logs to confirm header is present
+
+**Q: "Categories endpoint returns empty array"**
+- **Cause**: Flyway V2 migration didn't run or failed.
+- **Fix**: 
+  ```bash
+  # Check migration status
+  psql -U postgres -d onlyyours -c "SELECT * FROM flyway_schema_history ORDER BY installed_rank;"
+  # If V2 is missing, restart backend to trigger migration
+  # If V2 failed, check backend logs for SQL errors
+  ```
+
+**Q: "Partner linking fails with 'Code not found'"**
+- **Cause**: Code was already used, expired, or typo in entry.
+- **Fix**: 
+  1. Generate a fresh code
+  2. Check database: `SELECT * FROM couples WHERE link_code IS NOT NULL;`
+  3. Ensure exact code match (case-sensitive)
+
+### WebSocket Issues
+
+**Q: "WebSocket connection fails immediately"**
+- **Cause**: Invalid JWT or wrong endpoint URL.
+- **Fix**: 
+  1. Verify you're logged in and have valid token in `AsyncStorage`
+  2. Check WebSocket URL construction in `WebSocketService.js`
+  3. Enable debug logging in `application.properties`:
+     ```
+     logging.level.org.springframework.web.socket=DEBUG
+     ```
+
+**Q: "WebSocket connects but disconnects immediately"**
+- **Cause**: JWT validation failure during STOMP CONNECT.
+- **Fix**: 
+  1. Check backend logs for authentication errors
+  2. Verify JWT hasn't expired
+  3. Test JWT validity: `curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/user/me`
+
+**Q: "App doesn't auto-reconnect after backend restart"**
+- **Cause**: Client retry logic not working or app backgrounded.
+- **Fix**: 
+  1. Check `WebSocketService.js` has `reconnectDelay: 5000`
+  2. Keep app in foreground during testing
+  3. Manually trigger reconnect by logging out and back in
+
+### Development Workflow Issues
+
+**Q: "Hot reload doesn't work for backend changes"**
+- **Cause**: Spring Boot DevTools limitation or not included.
+- **Fix**: 
+  1. Restart backend manually: `./gradlew bootRun`
+  2. For faster iteration, use `./gradlew bootRun --continuous`
+
+**Q: "React Native metro bundler errors"**
+- **Cause**: Cache issues or dependency conflicts.
+- **Fix**: 
+  ```bash
+  cd OnlyYoursApp
+  npx react-native start --reset-cache
+  # In another terminal
+  npx react-native run-android --reset-cache
+  ```
+
+**Q: "Database queries for testing return empty results"**
+- **Cause**: Wrong database, user permissions, or table names.
+- **Fix**: 
+  ```bash
+  # Verify you're in the right database
+  psql -U postgres -d onlyyours -c "\dt"
+  # Check table contents
+  psql -U postgres -d onlyyours -c "SELECT COUNT(*) FROM users;"
+  psql -U postgres -d onlyyours -c "SELECT COUNT(*) FROM question_categories;"
+  ```
+
+### Platform-Specific Issues
+
+**Q: "iOS build fails with pod errors"**
+- **Fix**: 
+  ```bash
+  cd OnlyYoursApp/ios
+  rm -rf Pods/ Podfile.lock
+  pod install
+  cd ..
+  npx react-native run-ios
+  ```
+
+**Q: "Android build fails with gradle errors"**
+- **Fix**: 
+  ```bash
+  cd OnlyYoursApp/android
+  ./gradlew clean
+  cd ..
+  npx react-native run-android
+  ```
+
+### General Debugging Tips
+
+1. **Check logs first**: Backend console, React Native metro bundler, device logs
+2. **Network inspection**: Use React Native Flipper or Chrome DevTools for network requests
+3. **Database state**: Use `psql` commands to inspect data between test steps
+4. **Incremental testing**: Test each API endpoint with `curl` before testing in the app
+5. **Token debugging**: Copy JWT from `AsyncStorage` and test directly with curl commands
+
+**Emergency Reset** (when all else fails):
+```bash
+# Backend: clean build and restart
+cd backend && ./gradlew clean build -x test && ./gradlew bootRun
+
+# Frontend: clean and reinstall
+cd OnlyYoursApp && rm -rf node_modules && npm install && npx react-native start --reset-cache
+
+# Database: clean slate
+psql -U postgres -c "DROP DATABASE IF EXISTS onlyyours; CREATE DATABASE onlyyours;"
+```
 

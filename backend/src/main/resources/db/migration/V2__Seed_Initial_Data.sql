@@ -7,6 +7,36 @@ INSERT INTO question_categories (name, description, is_sensitive) VALUES
 ('Memories', 'Shared moments and favorite memories', FALSE),
 ('Intimacy', 'Romance and relationship closeness', TRUE);
 
+-- Tolerate older schemas where Hibernate may have created camelCase columns without underscores
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'questions' AND column_name = 'optiona'
+    ) THEN
+        ALTER TABLE questions ALTER COLUMN optiona DROP NOT NULL;
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'questions' AND column_name = 'optionb'
+    ) THEN
+        ALTER TABLE questions ALTER COLUMN optionb DROP NOT NULL;
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'questions' AND column_name = 'optionc'
+    ) THEN
+        ALTER TABLE questions ALTER COLUMN optionc DROP NOT NULL;
+    END IF;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public' AND table_name = 'questions' AND column_name = 'optiond'
+    ) THEN
+        ALTER TABLE questions ALTER COLUMN optiond DROP NOT NULL;
+    END IF;
+END
+$$ LANGUAGE plpgsql;
+
 -- Questions for Getting to Know You
 INSERT INTO questions (category_id, text, option_a, option_b, option_c, option_d)
 SELECT id, 'What is your ideal weekend activity?', 'Hiking', 'Binge-watching shows', 'Trying new restaurants', 'Staying in and reading' FROM question_categories WHERE name = 'Getting to Know You';
