@@ -208,34 +208,126 @@ This completes end-to-end validation for Sprints 0–2.
 
 ## 9) Sprint 3 Testing: Categories & WebSocket Foundation
 
-Goal: Verify content seeding and WebSocket connectivity baseline.
+Goal: Verify seeded game content is available via REST and that the real-time foundation authenticates and connects over STOMP/WebSocket with JWT.
 
-### A) Backend Data Seeding
-- After starting the backend, confirm categories and questions are present:
-  ```bash
-  psql -U postgres -d onlyyours -c "SELECT id, name, is_sensitive FROM question_categories;"
-  psql -U postgres -d onlyyours -c "SELECT COUNT(*) FROM questions;"
-  ```
+Why: Category seeding and retrieval unblock pre-game flow. WebSocket auth/transport is critical for synchronous gameplay in later sprints.
 
-### B) Categories Endpoint
-- With a valid JWT, call the categories endpoint:
-  ```bash
-  TOKEN="<paste token>"
-  curl -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/content/categories | jq
-  ```
-- Expect a JSON array with category objects including `id`, `name`, `description`, `sensitive`.
+### A) Backend Data Seeding (Flyway)
+Prereq: Backend started with the same database as previous sprints.
 
-### C) Frontend Category Screen
-- In the app, navigate to `CategorySelection` (temporarily via deep link or by adding a nav button).
-- Expect a list of categories. Tapping a `sensitive` one shows a confirmation alert.
+1) Verify Flyway applied V2 migration
+   ```bash
+   psql -U postgres -d onlyyours -c "SELECT version, description, success FROM flyway_schema_history ORDER BY installed_rank;"
+   ```
+   - Expect a row with `version = '2'` and `description` similar to `Seed_Initial_Data` and `success = t`.
 
-### D) WebSocket Connectivity
-- Ensure you are logged in (token in `AsyncStorage`). On login, the app will attempt to connect to `/ws` with the JWT.
-- Inspect backend logs for WebSocket `CONNECT` and successful authentication.
-- Network debugging: you should see SockJS/XHR stream to `/ws/**`.
+2) Inspect seeded categories
+   ```bash
+   psql -U postgres -d onlyyours -c "SELECT id, name, is_sensitive FROM question_categories ORDER BY id;"
+   ```
+   - Expect: Getting to Know You, Daily Habits, Memories, Intimacy (is_sensitive = true for Intimacy).
 
-Troubleshooting:
-- If connecting from Android emulator, ensure the base URL used by the WebSocket client points to `http://10.0.2.2:8080` rather than `http://localhost:8080`.
-- Invalid or expired JWT will be rejected during STOMP `CONNECT`.
+3) Inspect seeded questions
+   ```bash
+   psql -U postgres -d onlyyours -c "SELECT category_id, COUNT(*) AS num_questions FROM questions GROUP BY category_id ORDER BY category_id;"
+   ```
+   - Expect ≥ 2 questions per category (as seeded).
+
+Notes:
+- Flyway runs pending migrations once; it will not duplicate seed data across restarts.
+
+### B) Categories REST Endpoint
+Concept: Authenticated REST returns a safe DTO for categories.
+
+1) Happy path with JWT
+   ```bash
+   TOKEN="<paste token>"
+   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/content/categories | jq
+   ```
+   - Expect an array of objects with fields: `id`, `name`, `description`, `sensitive`.
+
+2) Without JWT (security enforcement)
+   ```bash
+   curl -i http://localhost:8080/api/content/categories
+   ```
+   - Expect `401 Unauthorized` due to Spring Security (only `/api/auth/**` is public).
+
+3) Shape validation (minimal contract)
+   ```bash
+   curl -s -H "Authorization: Bearer $TOKEN" http://localhost:8080/api/content/categories \
+     | jq 'map(has("id") and has("name") and has("sensitive")) | all'
+   ```
+   - Expect `true`.
+
+Tips:
+- If you don’t have `jq`, omit it and visually inspect the JSON.
+- For physical devices, replace `http://localhost:8080` with your LAN IP (e.g., `http://192.168.1.50:8080`).
+
+### C) Frontend Category Selection Screen
+Concept: Client fetches categories and requires an explicit confirmation for sensitive categories.
+
+1) Platform base URL sanity
+   - `OnlyYoursApp/src/services/api.js` → `API_URL` should match your backend host:
+     - Android Emulator: `http://10.0.2.2:8080/api`
+     - iOS Simulator: `http://localhost:8080/api`
+     - Physical device: `http://<YOUR_COMPUTER_LAN_IP>:8080/api`
+
+2) Navigate and observe
+   - From Dashboard, tap “Choose Category” to open `CategorySelection`.
+   - Expect a loading indicator, then a list of categories rendered as cards.
+
+3) Sensitive category confirmation
+   - Tap `Intimacy` → Expect a native `Alert` warning. Choosing `Proceed` returns to previous screen (placeholder behavior for now).
+   - Tap a non-sensitive category → Immediate return to previous screen.
+
+Failure modes:
+- If the list is empty, verify the REST call succeeds in logs/DevTools and re-check `API_URL`.
+- A `401` in the network logs indicates a missing/expired JWT; sign in again.
+
+### D) WebSocket Connectivity & Auth (STOMP + SockJS)
+Concept: The app connects to `/ws` via SockJS transport and authenticates using the same JWT as REST.
+
+1) Automatic connect on login
+   - Ensure you’re logged in (token in `AsyncStorage`).
+   - On login, `AuthContext` triggers `WebSocketService.connect(baseUrl)`, which sets `Authorization: Bearer <token>` in STOMP connect headers.
+
+2) Backend-side verification
+   - Observe backend logs on connect. Optionally increase verbosity by adding to `backend/src/main/resources/application.properties`:
+     ```
+     logging.level.org.springframework.web.socket=DEBUG
+     logging.level.org.springframework.messaging=DEBUG
+     ```
+   - Expect a successful STOMP CONNECT and authenticated session; invalid tokens should result in errors and disconnect during CONNECT.
+
+3) Failure: missing/invalid token (Node script optional)
+   - You can simulate a bad connect using a quick Node script:
+     ```javascript
+     // test-ws.js
+     const { Client } = require('@stomp/stompjs');
+     const SockJS = require('sockjs-client');
+     const client = new Client({
+       webSocketFactory: () => new SockJS('http://localhost:8080/ws'),
+       connectHeaders: { Authorization: 'Bearer invalid_token' },
+       onStompError: f => console.log('STOMP ERROR', f.headers, f.body),
+       onWebSocketClose: () => console.log('WS closed'),
+     });
+     client.activate();
+     ```
+     ```bash
+     node test-ws.js
+     ```
+     - Expect an error and closed connection.
+
+4) Reconnection behavior
+   - The client retries every ~5s. With the app running, stop the backend, wait for a few retry attempts, then start backend; the client should reconnect automatically.
+
+Platform host notes for WebSocket:
+- Android Emulator: use `http://10.0.2.2:8080` as the base URL in `AuthContext`/`WebSocketService.connect()`.
+- Physical devices: use your LAN IP and ensure both are on the same network and firewall allows inbound connections.
+
+Acceptance criteria (Sprint 3):
+- `GET /api/content/categories` returns seeded data only with valid JWT; 401 otherwise.
+- `CategorySelection` lists categories and shows a confirmation `Alert` for sensitive categories.
+- App establishes a STOMP session after login; invalid tokens are rejected on CONNECT; client auto-retries on temporary disconnects.
 
 
