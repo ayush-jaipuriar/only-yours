@@ -205,6 +205,36 @@ npm test
 
 ---
 
+## 7.1) Postman Collection (Sprints 0–3)
+
+To accelerate manual testing, import the Postman collection included in the repo:
+
+- File: `postman/OnlyYours_S0_S3.postman_collection.json`
+
+How to use:
+- Import the collection into Postman.
+- Set collection variables:
+  - `base_url`: `http://localhost:8080` (or your LAN IP)
+  - `google_id_token_user_a`: a valid Google ID token for User A
+  - `google_id_token_user_b`: a valid Google ID token for User B
+- Run in order:
+  1. Auth → Sign in (User A)
+  2. Auth → Sign in (User B)
+  3. User → Get Me (both users)
+  4. Couple → Generate Code (User A)
+  5. Couple → Link with Code (User B)
+  6. Couple → Get Couple (both users)
+  7. Content → Get Categories (User A)
+- Negative cases included:
+  - Unauthorized access to protected endpoints
+  - Invalid or empty link code
+
+Notes:
+- Successful sign-in saves JWTs to collection variables `jwt_user_a` and `jwt_user_b` automatically.
+- Generated link code is captured to `link_code` and used by the redeem request.
+
+---
+
 ## 8) What to Observe (Acceptance Criteria)
 
 - After sign-in, `AsyncStorage` contains `userToken` and protected calls succeed.

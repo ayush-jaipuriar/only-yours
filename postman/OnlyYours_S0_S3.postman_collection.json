@@ -1,0 +1,597 @@
+{
+  "info": {
+    "_postman_id": "d3a3a0c6-1a7d-4f7e-a1c7-0f7e0a5a9b01",
+    "name": "OnlyYours Backend - Sprints 0–3",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Collection covering implemented REST APIs for OnlyYours through Sprint 3: Authentication, Profile, Couple Linking, and Categories. Includes positive and negative tests, with variables to simulate two users (User A and User B)."
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" },
+    { "key": "google_id_token_user_a", "value": "" },
+    { "key": "google_id_token_user_b", "value": "" },
+    { "key": "jwt_user_a", "value": "" },
+    { "key": "jwt_user_b", "value": "" },
+    { "key": "link_code", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Sign in with Google (User A)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google/signin",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "auth", "google", "signin" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"{{google_id_token_user_a}}\"\n}"
+            },
+            "description": "Exchanges a Google ID token for an application JWT. On success, saves token as collection variable `jwt_user_a`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 (OK) or 4xx on invalid token', function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.have.property('token');",
+                  "  pm.collectionVariables.set('jwt_user_a', data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in with Google (User B)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google/signin",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "auth", "google", "signin" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"{{google_id_token_user_b}}\"\n}"
+            },
+            "description": "Exchanges a Google ID token for an application JWT. On success, saves token as collection variable `jwt_user_b`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 (OK) or 4xx on invalid token', function () {",
+                  "  pm.expect([200, 400, 401]).to.include(pm.response.code);",
+                  "});",
+                  "if (pm.response.code === 200) {",
+                  "  const data = pm.response.json();",
+                  "  pm.expect(data).to.have.property('token');",
+                  "  pm.collectionVariables.set('jwt_user_b', data.token);",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in with Google (Invalid Token)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google/signin",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "auth", "google", "signin" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idToken\": \"invalid_token\"\n}"
+            },
+            "description": "Negative: invalid Google ID token should result in 4xx."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expect 4xx on invalid token', function () { pm.expect(pm.response.code).to.be.oneOf([400, 401]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign in with Google (Missing idToken)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/auth/google/signin",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "auth", "google", "signin" ]
+            },
+            "body": { "mode": "raw", "raw": "{}" },
+            "description": "Negative: missing idToken in body should fail."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expect non-200 on missing idToken', function () { pm.expect(pm.response.code).to.be.oneOf([400, 401, 422, 500]); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "User",
+      "item": [
+        {
+          "name": "Get Me (User A)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_a}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/me",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "user", "me" ]
+            },
+            "description": "Returns current user's profile (User A)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.expect(json).to.have.property('id');",
+                  "pm.expect(json).to.have.property('name');",
+                  "pm.expect(json).to.have.property('email');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me (User B)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_b}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/user/me",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "user", "me" ]
+            },
+            "description": "Returns current user's profile (User B)."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.expect(json).to.have.property('id');",
+                  "pm.expect(json).to.have.property('name');",
+                  "pm.expect(json).to.have.property('email');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Me (Unauthorized)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/user/me",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "user", "me" ]
+            },
+            "description": "No Authorization header; should be 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', function () { pm.expect(pm.response.code).to.eql(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Couple",
+      "item": [
+        {
+          "name": "Generate Code (User A)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_a}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple/generate-code",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "generate-code" ]
+            },
+            "description": "Generates a one-time link code for User A, saved as collection variable `link_code`."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.expect(json).to.have.property('code');",
+                  "pm.collectionVariables.set('link_code', json.code);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Couple (Unauthorized)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/couple",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple" ]
+            },
+            "description": "Negative: no Authorization header should yield 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', function () { pm.expect(pm.response.code).to.eql(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Generate Code (Unauthorized)",
+          "request": {
+            "method": "POST",
+            "url": {
+              "raw": "{{base_url}}/api/couple/generate-code",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "generate-code" ]
+            },
+            "description": "Negative: no Authorization header should yield 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', function () { pm.expect(pm.response.code).to.eql(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Link with Code (User B)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_b}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple/link",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "link" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{link_code}}\"\n}"
+            },
+            "description": "Redeems User A's code as User B to link accounts."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.expect(json).to.have.property('id');",
+                  "pm.expect(json).to.have.property('user1');",
+                  "pm.expect(json).to.have.property('user2');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Link with Code (User A self-redeem)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_a}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple/link",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "link" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{link_code}}\"\n}"
+            },
+            "description": "Negative: User A should not be able to redeem own code."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expect non-200 on self-redeem', function () { pm.expect(pm.response.code).to.be.oneOf([400, 401, 403, 422, 500]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Link with Reused Code (User B again)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_b}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple/link",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "link" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"{{link_code}}\"\n}"
+            },
+            "description": "Negative: after successful redeem, code is cleared; reusing should fail."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expect non-200 on reused code', function () { pm.expect(pm.response.code).to.be.oneOf([400, 401, 404, 422, 500]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Couple (User A)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_a}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple" ]
+            },
+            "description": "Gets couple info for User A. 200 when linked; 404 when not linked."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', function () { pm.expect([200,404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Couple (User B)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_b}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple" ]
+            },
+            "description": "Gets couple info for User B. 200 when linked; 404 when not linked."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200 or 404', function () { pm.expect([200,404]).to.include(pm.response.code); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Link with Invalid Code (User B)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_b}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple/link",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "link" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"ABC123\"\n}"
+            },
+            "description": "Negative: invalid/unknown code. Current implementation may return 400 or 500 depending on exception handling."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expect non-200 on invalid code', function () { pm.expect(pm.response.code).to.be.oneOf([400, 404, 422, 500]); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Link with Empty Code (User B)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_b}}" },
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/couple/link",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "couple", "link" ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"\"\n}"
+            },
+            "description": "Negative: empty code. Controller should return 400 Bad Request."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Expect 400 on empty code', function () { pm.expect(pm.response.code).to.eql(400); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Content",
+      "item": [
+        {
+          "name": "Get Categories (User A)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{jwt_user_a}}" }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/content/categories",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "content", "categories" ]
+            },
+            "description": "Returns seeded categories."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 200', function () { pm.response.to.have.status(200); });",
+                  "const arr = pm.response.json();",
+                  "pm.expect(Array.isArray(arr)).to.be.true;",
+                  "if (arr.length > 0) {",
+                  "  const c = arr[0];",
+                  "  pm.expect(c).to.have.property('id');",
+                  "  pm.expect(c).to.have.property('name');",
+                  "  pm.expect(c).to.have.property('sensitive');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Get Categories (Unauthorized)",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{base_url}}/api/content/categories",
+              "host": [ "{{base_url}}" ],
+              "path": [ "api", "content", "categories" ]
+            },
+            "description": "No Authorization header; should be 401."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status is 401 Unauthorized', function () { pm.expect(pm.response.code).to.eql(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+
