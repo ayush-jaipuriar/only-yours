@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 import { View, Button } from 'react-native';
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import axios from 'axios';
@@ -7,6 +7,12 @@ import { AuthContext } from '../state/AuthContext';
 
 const SignInScreen = () => {
     const { login } = useContext(AuthContext);
+
+    useEffect(() => {
+        GoogleSignin.configure({
+            webClientId: '216762620268-icv2u3cadj3u6jhji9pnnsvcdp03m66f.apps.googleusercontent.com',
+        });
+    }, []);
 
     const signIn = async () => {
         try {

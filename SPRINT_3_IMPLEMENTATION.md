@@ -60,6 +60,31 @@ This report documents the implementation details for Sprint 3, covering backend 
 - SockJS ensures compatibility with devices/networks where native WebSockets might be blocked.
 - Seeding through Flyway keeps reproducible environments across machines.
 
+### Flyway Validation Follow-up (2025-10-09)
+- Observed startup failure: `FlywayValidateException` complaining about checksum mismatch for `V2__Seed_Initial_Data.sql` when launching the backend.
+- Root cause: local database already ran an earlier version of V2. Subsequent edits to the script changed its checksum, so Flyway refuses to proceed to protect schema integrity.
+- Impacted components: Flyway initialization halts, preventing the `entityManagerFactory` bean from loading, which in turn cascades to `JwtAuthFilter` and other Spring beans.
+- Immediate remediation options:
+  - Revert `V2__Seed_Initial_Data.sql` to the exact bytes that generated the recorded checksum, or
+  - If the schema/data differences are intentional, run `flyway repair` (or drop/recreate the local database) so the stored checksum aligns with the new script.
+- Recommendation: Prefer creating a new migration (`V3__...`) for further data tweaks instead of mutating previously applied scripts, keeping environments deterministic.
+
+#### Local Database Reset via pgAdmin
+- Context: During development it is often acceptable to wipe the local PostgreSQL instance when Flyway validation fails and we do not need to preserve seeded data.
+- Steps in pgAdmin:
+  1. Launch pgAdmin and expand `Servers ▸ PostgreSQL ▸ Databases`.
+  2. Right-click the `onlyyours` database and choose `Disconnect` to ensure no active sessions block the drop.
+  3. Right-click `onlyyours` again, select `Drop/Delete`, check `Cascade` if dependent objects exist, and confirm.
+  4. Create a fresh database with the same name (`Create ▸ Database…`), owner `postgres`, encoding `UTF8`.
+  5. Restart the Spring Boot app; Flyway will recreate schema and seed data from `V1`/`V2`.
+- Rationale: Dropping the DB clears the Flyway history table so the current migration files become authoritative, restoring app startup.
+
+#### Entity Mapping Fix (2025-10-09)
+- After recreating the database the application failed with `Schema-validation: missing column [round1answer] in table [game_answers]`.
+- Diagnosis: The `GameAnswer` entity fields `round1Answer` and `round2Guess` were not annotated, so Hibernate expected camelCase column names (`round1answer`, `round2guess`) instead of the snake_case defined in `V1__Initial_Schema.sql`.
+- Resolution: Added `@Column(name = "round1_answer")` and `@Column(name = "round2_guess")` to `backend/src/main/java/com/onlyyours/model/GameAnswer.java` so the ORM mapping matches the Flyway schema, restoring successful EntityManager initialization.
+- Follow-up: The same validation surfaced for `GameSession` (`missing column [player1score]`). Annotated `player1Score` and `player2Score` with `@Column(name = "player1_score")` / `@Column(name = "player2_score")` in `backend/src/main/java/com/onlyyours/model/GameSession.java` to keep all DTO fields snake_case aligned.
+
 ## Next Steps
 - Implement invitation and game message payloads and controllers (Sprint 4).
 - Wire Dashboard to navigate to `CategorySelection` and initiate invitations.

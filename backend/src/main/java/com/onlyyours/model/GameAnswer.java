@@ -25,7 +25,9 @@ public class GameAnswer {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
+    @Column(name = "round1_answer")
     private String round1Answer;
 
+    @Column(name = "round2_guess")
     private String round2Guess;
 } 

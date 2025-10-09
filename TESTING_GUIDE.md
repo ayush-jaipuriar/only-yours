@@ -561,3 +561,274 @@ cd OnlyYoursApp && rm -rf node_modules && npm install && npx react-native start 
 psql -U postgres -c "DROP DATABASE IF EXISTS onlyyours; CREATE DATABASE onlyyours;"
 ```
 
+---
+
+## 11) macOS + Android Studio Emulator Setup (Step-by-Step)
+
+This section expands the macOS setup specifically for running the full end‑to‑end flow on an Android emulator.
+
+### 11.1) System prerequisites (macOS)
+
+- macOS 13+ (Ventura) or newer
+- Homebrew (package manager) — optional but recommended
+  ```bash
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  ```
+- Java 17 (JDK) — required for the backend and Android Gradle tasks
+  ```bash
+  brew install openjdk@17
+  # Add JAVA_HOME (zsh)
+  echo 'export PATH="/usr/local/opt/openjdk@17/bin:$PATH"' >> ~/.zshrc
+  echo 'export JAVA_HOME="$(/usr/libexec/java_home -v 17)"' >> ~/.zshrc
+  source ~/.zshrc
+  java -version
+  ```
+- Node.js 18 LTS or newer (React Native toolchain is tested with 18.x)
+  ```bash
+  brew install node@18
+  node -v && npm -v
+  ```
+- Watchman (optional, speeds up RN Metro on macOS)
+  ```bash
+  brew install watchman
+  ```
+- PostgreSQL 15 (local) or Docker (for DB)
+  ```bash
+  brew install postgresql@15
+  brew services start postgresql@15
+  psql --version
+  ```
+
+### 11.2) Android Studio + SDK components
+
+1. Install Android Studio (latest stable). Open Android Studio → SDK Manager → install:
+   - Android SDK Platform (Android 14 / API 34 or newer)
+   - Android SDK Platform-Tools
+   - Android SDK Build-Tools (latest)
+   - Android Emulator
+   - Google Play Services
+2. Ensure the SDK path exists: `~/Library/Android/sdk`.
+3. Create `OnlyYoursApp/android/local.properties` if missing:
+   ```
+   sdk.dir=/Users/<your-username>/Library/Android/sdk
+   ```
+
+### 11.3) Create Android Virtual Device (AVD)
+
+1. Android Studio → Device Manager → Create device.
+2. Choose a Pixel device profile → Select a system image WITH Play Store (for Google Sign-In).
+3. Name it (e.g., `OnlyYours-API34`).
+4. Start the emulator once to let Google Play Services update.
+
+### 11.4) Google Sign-In SHA‑1 (debug)
+
+From `OnlyYoursApp/android`:
+```bash
+./gradlew signingReport
+```
+- Copy the `Variant: debug` SHA‑1. You will use this in Google Cloud Console when creating the Android OAuth Client ID.
+
+### 11.5) Verify Java toolchain for Android Gradle
+
+If you see "Unsupported class file major version" or Java mismatch during `signingReport` or `run-android`, ensure JDK 17 is used:
+```bash
+echo "org.gradle.java.home=$(/usr/libexec/java_home -v 17)" >> OnlyYoursApp/android/gradle.properties
+```
+
+---
+
+## 12) Google OAuth Setup (Step-by-Step)
+
+1. Google Cloud Console → Create project (or reuse existing).
+2. Configure OAuth Consent Screen (External → testing/production as you prefer).
+3. Credentials → Create Credentials:
+   - Android Client ID:
+     - Package name: `com.onlyyoursapp` (verify in `OnlyYoursApp/android/app/src/main/AndroidManifest.xml`)
+     - SHA‑1: use the debug SHA‑1 from 11.4
+   - Web Application Client ID:
+     - Copy the Web Client ID value.
+4. Configure the project:
+   - Backend `backend/src/main/resources/application.properties`:
+     ```
+     google.client.id=<YOUR_WEB_CLIENT_ID>
+     ```
+   - Frontend `OnlyYoursApp/App.js` (or equivalent init):
+     ```javascript
+     GoogleSignin.configure({ webClientId: '<YOUR_WEB_CLIENT_ID>' })
+     ```
+5. Validation:
+   - If Android Client ID or SHA‑1 is wrong → Google Sign-In shows DEVELOPER_ERROR.
+   - If Web Client ID mismatch between app and backend → backend rejects `idToken`.
+
+---
+
+## 13) What must be running on your Mac during testing
+
+- PostgreSQL server (local or Docker)
+- Backend Spring Boot app (port 8080)
+- React Native Metro bundler
+- Android Emulator (1 or 2 instances)
+- Optional: Postman (for API validation)
+
+Quick commands:
+```bash
+# 1) Start DB (Homebrew service already started in 11.1)
+createdb onlyyours || true
+
+# 2) Start backend
+cd backend && ./gradlew bootRun
+
+# 3) Start Metro bundler (new terminal)
+cd OnlyYoursApp && npm start -- --reset-cache
+
+# 4) Launch app on emulator (ensure AVD is running)
+cd OnlyYoursApp && npm run android
+```
+
+Networking note (Android emulator): use `http://10.0.2.2:8080` as host for reaching your macOS backend.
+
+---
+
+## 14) End-to-End Runbook (Single Emulator)
+
+This validates Sprints 1–3 end‑to‑end with a single user.
+
+1) Backend configuration
+```bash
+cd backend
+vi src/main/resources/application.properties
+# Set DB creds, jwt.secret, and google.client.id
+./gradlew bootRun
+```
+
+2) Frontend configuration
+```bash
+cd OnlyYoursApp
+vi src/services/api.js     # Set API_URL to http://10.0.2.2:8080/api
+vi App.js                  # Set GoogleSignin.configure({ webClientId })
+npm install
+npm start -- --reset-cache
+```
+
+3) Launch emulator and app
+```bash
+# In Android Studio, start your AVD (Play Store image)
+cd OnlyYoursApp && npm run android
+```
+
+4) Sign in (Sprint 1)
+- On `SignInScreen`, tap Google Sign-In → choose account.
+- Expected: backend returns JWT, app stores token, navigates to Dashboard.
+
+5) Profile and Protected API (Sprint 2)
+- Navigate to `Profile` → expect name/email loaded from `GET /api/user/me`.
+- `Logout` should remove token and navigate back to `SignIn`.
+
+6) Categories and WebSocket (Sprint 3)
+- Navigate to `CategorySelection` → expect non-empty list from `GET /api/content/categories`.
+- Sensitive category tap shows confirmation alert.
+- WebSocket connects automatically on login (observe backend logs if debug enabled).
+
+Acceptance checks (single user):
+- Valid JWT in app storage after login.
+- Authenticated calls succeed; unauthenticated calls return 401.
+- Categories load with correct shape.
+
+---
+
+## 15) End-to-End Runbook (Two Emulators: Partner Linking)
+
+Use two AVDs side-by-side to test the full couple linking flow.
+
+Prep:
+1. Create two AVDs (both Play Store images). Example: `OnlyYours-A` and `OnlyYours-B`.
+2. Sign each emulator into a distinct Google account (Settings → Accounts) to simplify sign-in.
+
+Flow:
+1) User A: Login → `PartnerLink` → tap `Generate Code` → note 6-character code.
+2) User B: Login → `PartnerLink` → enter code → `Connect`.
+3) Expect success and navigation to `Dashboard` showing partner linkage on both emulators.
+
+Verifications (optional):
+```bash
+# Using User B's JWT
+curl -H "Authorization: Bearer $TOKEN_B" http://localhost:8080/api/couple | jq
+```
+
+Edge cases:
+- Self-redeem (User A uses own code) → backend validation error.
+- Reuse code after linking → should fail; codes are single‑use and cleared.
+
+---
+
+## 16) Postman Collection Usage (Expanded)
+
+If you prefer validating APIs independently or capturing tokens:
+
+1) Import `postman/OnlyYours_S0_S3.postman_collection.json`.
+2) Set variables: `base_url`, `google_id_token_user_a`, `google_id_token_user_b`.
+3) Run requests in order (Auth, User, Couple, Content). The collection captures JWTs and link codes to variables.
+4) Compare responses to acceptance criteria in sections 4, 5, and 9.
+
+Tip: Use Postman to confirm backend correctness before debugging the app UI.
+
+---
+
+## 17) Advanced Diagnostics & Tools (macOS)
+
+### 17.1) Android debugging
+```bash
+adb devices
+adb logcat | grep -i onlyyours
+adb reverse tcp:8080 tcp:8080   # for physical device hitting localhost backend
+```
+
+### 17.2) Backend logging
+Add to `backend/src/main/resources/application.properties` to debug WebSockets:
+```
+logging.level.org.springframework.web.socket=DEBUG
+logging.level.org.springframework.messaging=DEBUG
+```
+
+### 17.3) Database quick checks
+```bash
+psql -U postgres -d onlyyours -c "\dt"
+psql -U postgres -d onlyyours -c "SELECT COUNT(*) FROM users;"
+psql -U postgres -d onlyyours -c "SELECT * FROM couples;"
+```
+
+### 17.4) Common macOS pitfalls
+- Outdated Google Play Services in emulator → update via Play Store inside the AVD.
+- Wrong `API_URL` for emulator → must use `http://10.0.2.2:8080/api`.
+- Java mismatch → ensure JDK 17 and `org.gradle.java.home` set.
+- Firewall blocking port 8080 → allow incoming connections for Java.
+
+---
+
+## 18) Commands Cheat Sheet (Copy/Paste)
+
+```bash
+# Backend
+cd backend && ./gradlew bootRun
+
+# Create DB
+createdb onlyyours || true
+
+# Verify Flyway migrations
+psql -U postgres -d onlyyours -c "SELECT version, description FROM flyway_schema_history ORDER BY installed_rank;"
+
+# Frontend
+cd OnlyYoursApp && npm install
+cd OnlyYoursApp && npm start -- --reset-cache
+cd OnlyYoursApp && npm run android
+
+# Android signing report (SHA-1)
+cd OnlyYoursApp/android && ./gradlew signingReport
+```
+
+---
+
+## Changelog
+
+- 2025-10-09: Expanded macOS + Android emulator setup (Section 11), Google OAuth steps (12), required running services checklist (13), single- and two-emulator end-to-end runbooks (14–15), Postman usage expansion (16), advanced diagnostics (17), and command cheat sheet (18).
+

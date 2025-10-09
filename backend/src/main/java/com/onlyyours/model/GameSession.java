@@ -21,8 +21,10 @@ public class GameSession {
     @Column(nullable = false)
     private GameStatus status;
 
+    @Column(name = "player1_score")
     private Integer player1Score;
 
+    @Column(name = "player2_score")
     private Integer player2Score;
 
     public enum GameStatus {
