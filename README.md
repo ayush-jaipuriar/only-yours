@@ -12,7 +12,7 @@ OnlyYours is a full-stack application featuring a mobile client built with React
 ## Tech Stack
 
 ### Frontend
-- **React Native:** A framework for building native mobile apps using React.
+- **React Native:** A framework for building native mobile apps using React. See the decision record: [Frontend Stack Decision](./FRONTEND_DECISION.md).
 - **React Navigation:** For routing and navigation.
 - **Axios:** For making HTTP requests to the backend.
 - **Google Sign-In:** For user authentication.

@@ -89,3 +89,19 @@ This report documents the implementation details for Sprint 3, covering backend 
 - Implement invitation and game message payloads and controllers (Sprint 4).
 - Wire Dashboard to navigate to `CategorySelection` and initiate invitations.
 - Add connection status surface in UI and reconnection indicators.
+### React Native Metro Startup Fix (2025-10-09)
+- **Symptom observed:** Running `npm start` or `npm run android` inside `OnlyYoursApp` failed with `Cannot find module ... node_modules/debug/src/index.js` emitted by Metro.
+- **Root cause:** The `debug` package inside `node_modules` had been installed with extension-less files (`src/index`, `src/browser`, `src/node`, `src/common`) instead of the expected `.js` files. Node uses the `main` field from `debug/package.json` (`./src/index.js`) and, because `src/index.js` did not exist, module resolution failed. The most plausible cause is a previous interrupted/corrupted npm install.
+- **Resolution steps executed:**
+  - Removed the stale `node_modules` directory to discard the corrupted installation.
+  - Re-ran `npm install` from `OnlyYoursApp`, restoring the `debug` module with the proper `*.js` files and satisfying Metro’s dependency graph.
+- **Verification:** `npm start` now launches Metro (v0.76.5) without module errors. After verifying the fix, Metro was stopped using `pkill -f "react-native start"` so the environment is clean for subsequent manual runs.
+
+### Android Build Compatibility Reset (2025-10-09)
+- **Scenario:** After the Metro fix, Android builds failed during `:app:checkDebugAarMetadata` because newer AndroidX dependencies (core-ktx 1.15, activity 1.8, etc.) require compile/target SDK ≥34 and AGP ≥8, while our React Native baseline (0.72) ships with AGP 7.4.x.
+- **Goal:** Restore a stable Android toolchain that aligns with the React Native 0.72 template while we plan a future upgrade path.
+- **Changes applied:**
+  - Pinned `android/build.gradle` to the RN 0.72 defaults: `compileSdkVersion`/`targetSdkVersion` 33, `buildToolsVersion` 33.0.0, AGP `7.4.2`.
+  - Reset the Gradle wrapper to `gradle-7.6.1` (compatible with AGP 7.4.x) via `./android/gradlew wrapper` using JDK 17.
+  - Restored `android/gradle.properties` JVM args to the template defaults and reintroduced `org.gradle.java.home` pointing at Azul JDK 17.0.15.
+- **Follow-up:** The build now expects the Android SDK 33 platform and JDK 17. Upgrading to SDK 34+ or AGP 8.x will require moving the app to a newer React Native release.

@@ -219,47 +219,205 @@ Changes made:
     - [x] Shows a confirmation `Alert` when a sensitive category is tapped.
 - [x] **WebSocket Integration:**
     - [x] After login and on silent auth, `AuthContext` calls `WebSocketService.connect()`; service auto-retries and disconnects on logout.
+- [x] **Metro Startup Maintenance:**
+    - [x] Handle cases where the Metro bundler fails due to corrupted `node_modules` dependencies by reinstalling packages to restore missing modules (e.g., `debug/src/index.js`).
+- [x] **Android Toolchain Baseline:**
+    - [x] Keep Android Gradle Plugin at `7.4.2`, Gradle wrapper at `7.6.1`, and compile/target SDK 33 to stay aligned with React Native 0.72 until a coordinated upgrade.
+
+**Note:** Sprint 3 has been completed. See [`SPRINT_3_IMPLEMENTATION.md`](SPRINT_3_IMPLEMENTATION.md) for detailed implementation report.
+
+---
+
+## React Native Upgrade (Completed - Feb 2026)
+
+**Goal:** Modernize the React Native stack to version 0.75.4 with New Architecture for improved performance, stability, and future compatibility.
+
+### Status: ✅ COMPLETE
+
+The React Native upgrade has been successfully completed:
+- ✅ React Native upgraded: 0.72.0 → 0.75.4
+- ✅ Android toolchain modernized: AGP 7.4.2 → 8.7.3, Gradle 7.6.1 → 8.10
+- ✅ New Architecture enabled (Fabric + TurboModules)
+- ✅ Hermes engine optimized
+- ✅ Yarn 4.10.3 adopted as package manager
+- ✅ All dependencies updated to compatible versions
+
+**Comprehensive Documentation:** See [`RN_UPGRADE_PRD.md`](RN_UPGRADE_PRD.md) for complete upgrade specification, testing strategy, and rollback plan.
+
+**Remaining Validation Tasks:**
+- Performance benchmarking vs RN 0.72 baseline
+- iOS physical device testing
+- Comprehensive E2E testing
+- Documentation finalization
 
 ---
 
 ## Sprint 4: Core Gameplay - Round 1 (Answering) (Week 5)
 
+**Status:** ✅ COMPLETE - 54 automated tests passing, manual E2E testing pending
+
+**Comprehensive Documentation:** See [`SPRINT_4_PRD.md`](SPRINT_4_PRD.md) for complete technical specification, user stories, API contracts, and testing strategy.
+
 **Goal:** Implement the first round of the core gameplay loop where both players synchronously answer a series of questions about themselves.
 
+**Implementation Progress**: As of Feb 21, 2026
+- ✅ Backend: All DTOs, entities, repositories, services, and controllers complete
+- ✅ Frontend: All screens, contexts, and navigation complete
+- ✅ Testing: 54 automated tests passing (unit + integration + WebSocket + performance)
+- ✅ Bug fixes: Fixed entity/repository mismatches, WebSocket security, JWT filter error handling
+- ✅ Performance profiling: WebSocket latency ~56ms avg, full game 2.4s
+- ⏸️ Manual E2E Testing: Pending (requires 2 devices)
+
 ### Backend Technical Tasks
-- [ ] **Game DTOs (WebSocket Payloads):**
-    - [ ] Create POJOs for WebSocket messages: `GameInvitation.java`, `QuestionPayload.java`, `AnswerPayload.java`.
-- [ ] **Game WebSocket Controller (`GameController.java`):**
-    - [ ] Use the `@Controller` annotation (not `@RestController`).
-    - [ ] **Invitation Flow:**
-        - [ ] `@MessageMapping("/game.invite")`: Receives an invitation from a user (containing category ID). Creates a `game_sessions` record with `INVITED` status. Sends an invitation message to the partner's private queue (`/user/queue/game-events`) using `SimpMessagingTemplate`.
-        - [ ] `@MessageMapping("/game.accept")`: Partner accepts the invitation.
-    - [ ] **Game Logic (in `GameService`):**
-        - [ ] On acceptance, load questions from the selected category.
-        - [ ] Change game status to `ROUND1`.
-        - [ ] Broadcast the first question to the game topic (`/topic/game/{sessionId}`).
-    - [ ] **Answering Flow:**
-        - [ ] `@MessageMapping("/game.answer")`: Receives an `AnswerPayload` from a player.
-        - [ ] Persist the `round1_answer` in the `game_answers` table.
-        - [ ] Check if both players have answered the current question.
-        - [ ] If both have answered, broadcast the next question.
-        - [ ] If only one has answered, wait.
+- [x] **Game DTOs (WebSocket Payloads):**
+    - [x] Create POJOs for WebSocket messages: `GameInvitationDto.java`, `QuestionPayloadDto.java`, `AnswerRequestDto.java`, `GameStatusDto.java`, `InvitationResponseDto.java`.
+    - **Implementation**: All DTOs created with comprehensive documentation in `backend/src/main/java/com/onlyyours/dto/`
+- [x] **GameSession Entity Updates:**
+    - [x] Added fields: `categoryId`, `questionIds`, `currentQuestionIndex`, `createdAt`, `startedAt`, `completedAt`
+    - [x] Added `DECLINED` status to enum
+    - [x] Created migration script `V3__Add_Game_Session_Fields.sql`
+    - **Implementation**: `backend/src/main/java/com/onlyyours/model/GameSession.java`
+- [x] **Repository Methods:**
+    - [x] Added custom query methods to `GameSessionRepository`, `GameAnswerRepository`, `QuestionRepository`
+    - **Implementation**: Enhanced all repository interfaces with game-specific queries
+- [x] **Game Service (`GameService.java`):**
+    - [x] Implemented `createInvitation()`: Creates session, validates couple and category
+    - [x] Implemented `acceptInvitation()`: Loads questions, starts ROUND1, returns first question
+    - [x] Implemented `declineInvitation()`: Updates status to DECLINED
+    - [x] Implemented `submitAnswer()`: Records answer, checks if both answered, advances to next question
+    - [x] Implemented `areBothPlayersAnswered()`: Utility method
+    - [x] Implemented `getGameSession()`: Session retrieval
+    - **Implementation**: 350+ lines with comprehensive error handling in `backend/src/main/java/com/onlyyours/service/GameService.java`
+- [x] **Game WebSocket Controller (`GameController.java`):**
+    - [x] `@MessageMapping("/game.invite")`: Creates invitation and sends to partner's private queue
+    - [x] `@MessageMapping("/game.accept")`: Accepts invitation, starts game, broadcasts first question
+    - [x] `@MessageMapping("/game.decline")`: Declines invitation, notifies inviter
+    - [x] `@MessageMapping("/game.answer")`: Receives answer, broadcasts next question or Round 1 complete status
+    - [x] Error handling with private error queue
+    - **Implementation**: 250+ lines in `backend/src/main/java/com/onlyyours/controller/GameController.java`
 
 ### Frontend Technical Tasks
-- [ ] **Global Game State (`GameContext.js`):**
-    - [ ] Create a new context to manage the state of an active game: `sessionId`, `currentQuestion`, `players`, `scores`, etc.
-- [ ] **Invitation Handling:**
-    - [ ] On the `DashboardScreen`, the "Start New Game" button navigates to `CategorySelectionScreen`.
-    - [ ] Selecting a category sends a `/app/game.invite` message via the `WebSocketService`.
-    - [ ] The `WebSocketService` must listen on the private `/user/queue/game-events` topic.
-    - [ ] When an invitation message is received, show an `Alert` with "Accept" and "Decline" buttons.
-    - [ ] Tapping "Accept" sends a `/app/game.accept` message and navigates both players to the `GameScreen`.
-- [ ] **Game Screen Implementation (`GameScreen.js`):**
-    - [ ] Subscribe to the game topic: `/topic/game/{sessionId}`.
-    - [ ] When a `QuestionPayload` message arrives, update the component's state to display the question text and answer options.
-    - [ ] The prompt should read "How would you answer?".
-    - [ ] When the user selects an answer and clicks "Submit", send a `/app/game.answer` message with the question ID and selected option.
-    - [ ] After submitting, show a loading/waiting indicator until the next question arrives from the server.
+- [x] **Global Game State (`GameContext.js`):**
+    - [x] Created context managing `activeSession`, `currentQuestion`, `myAnswer`, `waitingForPartner`, `gameStatus`
+    - [x] Implemented `startGame()`, `submitAnswer()`, `endGame()` methods
+    - [x] WebSocket subscription to `/topic/game/{sessionId}` with automatic question updates
+    - [x] Integrated with `App.js` provider hierarchy
+    - **Implementation**: `OnlyYoursApp/src/state/GameContext.js`
+- [x] **Game Screen Implementation (`GameScreen.js`):**
+    - [x] Progress indicator (Question X of Y) with animated progress bar
+    - [x] Question display with centered text and card styling
+    - [x] Four option buttons (A, B, C, D) with letter badges and full option text
+    - [x] Submit button (disabled until option selected)
+    - [x] "Waiting for partner..." indicator with spinner after submission
+    - [x] Auto-advance to next question when both players answer
+    - [x] Round 1 complete alert and navigation back to dashboard
+    - **Implementation**: 300+ lines with complete styling in `OnlyYoursApp/src/screens/GameScreen.js`
+- [x] **Dashboard Screen Updates:**
+    - [x] Added "Start New Game" button that checks couple status
+    - [x] Validates partner link before navigating to category selection
+    - [x] Improved UI with modern styling and proper user feedback
+    - **Implementation**: Enhanced `OnlyYoursApp/src/screens/DashboardScreen.js`
+- [x] **Category Selection Screen Updates:**
+    - [x] Sends `/app/game.invite` WebSocket message on category selection
+    - [x] Shows confirmation dialog for sensitive categories
+    - [x] Displays "Invitation sent, waiting..." alert with cancel option
+    - [x] Improved card-based UI with sensitive category highlighting
+    - **Implementation**: Updated `OnlyYoursApp/src/screens/CategorySelectionScreen.js`
+- [x] **Invitation Handling (`AuthContext.js`):**
+    - [x] Subscribed to `/user/queue/game-events` after WebSocket connection
+    - [x] Shows Alert with partner name, category info, and Accept/Decline buttons
+    - [x] On Accept: sends `/app/game.accept`, starts game in GameContext, navigates to GameScreen
+    - [x] On Decline: sends `/app/game.decline`, notifies inviter
+    - [x] Handles invitation declined status messages
+    - [x] Wired navigation and game context refs for cross-context communication
+    - **Implementation**: Enhanced `OnlyYoursApp/src/state/AuthContext.js`
+- [x] **Navigation Updates (`AppNavigator.js`):**
+    - [x] Added Game screen to stack navigator
+    - [x] Configured with `headerLeft: null` and `gestureEnabled: false` to prevent accidental exit
+    - [x] Registered navigation ref with AuthContext for invitation handling
+    - **Implementation**: Updated `OnlyYoursApp/src/navigation/AppNavigator.js`
+
+### Testing Tasks
+- [x] **Backend Unit Tests (54 total, all passing):**
+    - [x] `JwtServiceTest.java` (9 tests): Token generation, validation, expiry, extraction, different users
+    - [x] `CoupleServiceTest.java` (9 tests): Generate code, redeem, self-link, already-used, invalid code, find couple
+    - [x] `GameServiceTest.java` (14 tests): Invitation CRUD, answer submission (first/both/duplicate/invalid), round completion, state transitions
+    - [x] `RestControllerTest.java` (12 tests): MockMvc tests for UserController, CoupleController, ContentController, SecurityFilter
+    - [x] `GameControllerWebSocketTest.java` (6 tests): Full WebSocket flow - connect, invite, accept, decline, answer
+    - [x] `WebSocketPerformanceTest.java` (3 tests): Connection latency, invitation round-trip, full 8-question game timing
+    - [x] `OnlyYoursBackendApplicationTests.java` (1 test): Context load
+- [x] **Bug Fixes Discovered During Testing:**
+    - [x] Fixed `javax.validation` → `jakarta.validation` (Spring Boot 3.x compatibility)
+    - [x] Fixed `UUID categoryId` → `Integer categoryId` type mismatch throughout service/controller/DTO chain
+    - [x] Fixed `GameAnswer` entity relationship setters (`setQuestion()`/`setUser()` instead of non-existent `setQuestionId()`/`setUserId()`)
+    - [x] Fixed `GameAnswerRepository` method naming (`Question_Id`/`User_Id` for JPA relationship traversal)
+    - [x] Fixed `QuestionRepository` JPQL query (`q.category.id` instead of `q.categoryId`)
+    - [x] Fixed `JwtAuthFilter` to catch and handle malformed token exceptions (was throwing 500)
+    - [x] Fixed `WebSocketSecurityConfig` principal propagation (STOMP CONNECT user not being set on session)
+    - [x] Fixed `WebSocketConfig` broker destinations (added `/queue` for user-specific message delivery)
+    - [x] Fixed `SecurityConfig` to permit `/ws/**` endpoint for WebSocket handshake
+    - [x] Fixed `@GeneratedValue` conflicts with manual UUID setting in tests and service
+    - [x] Added `@Builder.Default` for Lombok DTO fields with default values
+    - [x] Added `spring-boot-starter-validation` dependency for Jakarta validation annotations
+    - [x] Fixed H2 test config: PostgreSQL compatibility mode, proper JWT secret length
+- [x] **Performance Profiling Results:**
+    - [x] STOMP connection time: **6ms** ✅
+    - [x] Invitation round-trip latency: **58ms** ✅ (target: <200ms)
+    - [x] Average answer submission latency: **56.3ms** ✅ (target: <200ms)
+    - [x] Full 8-question game completion: **2.4 seconds** ✅
+    - [x] JVM memory usage during gameplay: **58MB** ✅
+- [x] **Frontend Unit Tests (14 tests):**
+    - [x] `GameContext.test.js` (6 tests): Provider enforcement, game lifecycle, WebSocket integration
+    - [x] `GameScreen.test.js` (8 tests): Rendering, option selection, submit states, waiting indicator
+- [ ] **E2E Manual Testing (pending - requires 2 physical devices):**
+    - [ ] Test Case 1: Happy path - complete 8-question game with two devices
+    - [ ] Test Case 2: Invitation declined flow
+    - [ ] Test Case 3: Connection loss during game
+    - [ ] Test Case 4: App backgrounding
+    - [ ] Test Case 5: Simultaneous answer submission
+
+### Files Created/Modified (Sprint 4)
+
+**Backend - New Files:**
+- `backend/src/main/java/com/onlyyours/dto/GameInvitationDto.java`
+- `backend/src/main/java/com/onlyyours/dto/QuestionPayloadDto.java`
+- `backend/src/main/java/com/onlyyours/dto/AnswerRequestDto.java`
+- `backend/src/main/java/com/onlyyours/dto/GameStatusDto.java`
+- `backend/src/main/java/com/onlyyours/dto/InvitationResponseDto.java`
+- `backend/src/main/java/com/onlyyours/service/GameService.java`
+- `backend/src/main/java/com/onlyyours/controller/GameController.java`
+- `backend/src/main/resources/db/migration/V3__Add_Game_Session_Fields.sql`
+
+**Backend - Modified Files:**
+- `backend/src/main/java/com/onlyyours/model/GameSession.java`
+- `backend/src/main/java/com/onlyyours/repository/GameSessionRepository.java`
+- `backend/src/main/java/com/onlyyours/repository/GameAnswerRepository.java` (fixed method naming for JPA relationships)
+- `backend/src/main/java/com/onlyyours/repository/QuestionRepository.java` (fixed method naming for JPA relationships)
+- `backend/src/main/java/com/onlyyours/security/JwtAuthFilter.java` (added exception handling for malformed tokens)
+- `backend/src/main/java/com/onlyyours/security/SecurityConfig.java` (permitted `/ws/**` endpoint)
+- `backend/src/main/java/com/onlyyours/config/WebSocketConfig.java` (added `/queue` to broker destinations)
+- `backend/src/main/java/com/onlyyours/config/WebSocketSecurityConfig.java` (fixed principal propagation)
+- `backend/build.gradle` (added `spring-boot-starter-validation`)
+- `backend/src/test/resources/application.properties` (PostgreSQL mode, proper JWT secret)
+
+**Backend - Test Files (New):**
+- `backend/src/test/java/com/onlyyours/service/JwtServiceTest.java` (9 tests)
+- `backend/src/test/java/com/onlyyours/service/CoupleServiceTest.java` (9 tests)
+- `backend/src/test/java/com/onlyyours/service/GameServiceTest.java` (14 tests - rewritten)
+- `backend/src/test/java/com/onlyyours/controller/RestControllerTest.java` (12 tests)
+- `backend/src/test/java/com/onlyyours/controller/GameControllerWebSocketTest.java` (6 tests)
+- `backend/src/test/java/com/onlyyours/controller/WebSocketPerformanceTest.java` (3 tests)
+
+**Frontend - New Files:**
+- `OnlyYoursApp/src/state/GameContext.js`
+- `OnlyYoursApp/src/screens/GameScreen.js`
+
+**Frontend - Modified Files:**
+- `OnlyYoursApp/App.js` (added GameProvider)
+- `OnlyYoursApp/src/state/AuthContext.js` (invitation handling)
+- `OnlyYoursApp/src/screens/DashboardScreen.js` (Start Game button)
+- `OnlyYoursApp/src/screens/CategorySelectionScreen.js` (WebSocket invitation)
+- `OnlyYoursApp/src/navigation/AppNavigator.js` (Game screen route)
 
 ---
 
@@ -341,3 +499,27 @@ Changes made:
     - [ ] Deploy the containerized backend application to the production environment.
 - [ ] **HTTPS Configuration:**
     - [ ] Configure a load balancer or API gateway to terminate SSL/TLS and enforce HTTPS for all API traffic. 
+
+---
+
+## Architectural Decisions and Frontend Direction
+
+### Frontend Stack Decision (2025-10-10)
+- [x] Documented frontend stack evaluation and decision to stay on React Native with a modernization plan. See [`FRONTEND_DECISION.md`](FRONTEND_DECISION.md) for details, rationale, and next steps.
+
+### React Native Upgrade (2026-02)
+- [x] Completed React Native upgrade to 0.75.4 with New Architecture. See [`RN_UPGRADE_PRD.md`](RN_UPGRADE_PRD.md) for complete implementation details, testing results, and validation tasks.
+
+### Sprint Implementation Documentation
+- [x] Sprint 1: Authentication & User Onboarding - See [`SPRINT_1_IMPLEMENTATION.md`](SPRINT_1_IMPLEMENTATION.md)
+- [x] Sprint 2: Core Profile & Couple Linking - See [`SPRINT_2_IMPLEMENTATION.md`](SPRINT_2_IMPLEMENTATION.md)
+- [x] Sprint 3: Game Setup & Real-time Foundation - See [`SPRINT_3_IMPLEMENTATION.md`](SPRINT_3_IMPLEMENTATION.md)
+- [ ] Sprint 4: Core Gameplay - Round 1 (Answering) - See [`SPRINT_4_PRD.md`](SPRINT_4_PRD.md) for implementation specification
+
+### Comprehensive Project Status
+- [x] See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for the end-to-end implementation status document covering architecture, file inventory, API contracts, pending work, known issues, and roadmap.
+
+### Notes
+- React Native and Android/iOS toolchains have been successfully upgraded to reduce dev friction and leverage New Architecture for performance.
+- Sprint 4 core implementation is complete; testing and polish pending.
+- All foundational infrastructure (auth, WebSocket, database) is complete and stable.

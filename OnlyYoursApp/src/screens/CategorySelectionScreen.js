@@ -1,71 +1,202 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  ActivityIndicator,
+  Alert,
+} from 'react-native';
 import api from '../services/api';
+import WebSocketService from '../services/WebSocketService';
 
-const CategoryCard = ({ item, onPress }) => (
-  <TouchableOpacity
-    style={{ padding: 16, borderRadius: 8, borderWidth: 1, borderColor: '#ddd', marginBottom: 12 }}
-    onPress={() => onPress(item)}
-  >
-    <Text style={{ fontSize: 16, fontWeight: '600' }}>{item.name}</Text>
-    {item.description ? <Text style={{ color: '#666', marginTop: 4 }}>{item.description}</Text> : null}
-    {item.sensitive ? <Text style={{ color: '#c00', marginTop: 6 }}>Sensitive</Text> : null}
-  </TouchableOpacity>
-);
-
+/**
+ * CategorySelectionScreen displays available question categories.
+ * 
+ * Sprint 4 Update:
+ * - Sends game invitation via WebSocket when category selected
+ * - Shows confirmation dialog for sensitive categories
+ * - Displays "Invitation sent..." alert
+ * 
+ * Flow:
+ * 1. User selects category
+ * 2. If sensitive: show confirmation dialog
+ * 3. Send /app/game.invite WebSocket message
+ * 4. Show "Waiting for partner..." alert
+ */
 const CategorySelectionScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
 
+  /**
+   * Load categories from backend on mount.
+   */
+  useEffect(() => {
+    loadCategories();
+  }, []);
+
   const loadCategories = async () => {
-    setLoading(true);
     try {
-      const res = await api.get('/content/categories');
-      setCategories(res.data);
-    } catch (e) {
+      const response = await api.get('/api/content/categories');
+      setCategories(response.data);
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      Alert.alert('Error', 'Failed to load categories');
       setCategories([]);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const handleSelect = (category) => {
+  /**
+   * Handle category selection.
+   * Shows confirmation for sensitive categories, then sends invitation.
+   */
+  const handleCategorySelect = (category) => {
     if (category.sensitive) {
       Alert.alert(
-        'Sensitive Category',
-        'This category contains sensitive topics. Do you want to proceed?',
+        'Sensitive Content',
+        `${category.name} contains mature topics. Continue?`,
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Proceed', onPress: () => navigation.goBack() },
+          { text: 'Continue', onPress: () => sendInvitation(category) },
         ]
       );
     } else {
-      navigation.goBack();
+      sendInvitation(category);
     }
   };
 
+  /**
+   * Send game invitation via WebSocket.
+   * Shows alert with option to cancel while waiting.
+   */
+  const sendInvitation = (category) => {
+    console.log('[CategorySelection] Sending invitation for:', category.name);
+
+    try {
+      // Send invitation via WebSocket
+      WebSocketService.sendMessage('/app/game.invite', {
+        categoryId: category.id.toString(),
+      });
+
+      // Show waiting state
+      Alert.alert(
+        'Invitation Sent',
+        `Waiting for your partner to accept...`,
+        [
+          { 
+            text: 'Cancel', 
+            onPress: () => {
+              // User can go back to dashboard
+              navigation.goBack();
+            }
+          }
+        ]
+      );
+    } catch (error) {
+      console.error('[CategorySelection] Error sending invitation:', error);
+      Alert.alert('Error', 'Failed to send invitation. Please try again.');
+    }
+  };
+
+  /**
+   * Render a single category card.
+   */
+  const renderCategory = ({ item }) => (
+    <TouchableOpacity
+      style={[styles.categoryCard, item.sensitive && styles.sensitiveCard]}
+      onPress={() => handleCategorySelect(item)}
+      activeOpacity={0.7}>
+      <Text style={styles.categoryName}>{item.name}</Text>
+      <Text style={styles.categoryDescription}>{item.description}</Text>
+      {item.sensitive && (
+        <Text style={styles.sensitiveLabel}>Mature Content</Text>
+      )}
+    </TouchableOpacity>
+  );
+
   if (loading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator />
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#6200ea" />
+        <Text style={styles.loadingText}>Loading categories...</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, padding: 16 }}>
+    <View style={styles.container}>
+      <Text style={styles.title}>Select a Category</Text>
       <FlatList
         data={categories}
-        keyExtractor={(item) => String(item.id)}
-        renderItem={({ item }) => <CategoryCard item={item} onPress={handleSelect} />}
+        renderItem={renderCategory}
+        keyExtractor={item => item.id.toString()}
+        contentContainerStyle={styles.listContent}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#f5f5f5',
+  },
+  centered: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f5f5f5',
+  },
+  loadingText: {
+    marginTop: 10,
+    fontSize: 16,
+    color: '#666',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    padding: 20,
+    color: '#333',
+  },
+  listContent: {
+    padding: 15,
+  },
+  categoryCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+  },
+  sensitiveCard: {
+    borderWidth: 2,
+    borderColor: '#ff6f00',
+  },
+  categoryName: {
+    fontSize: 20,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 8,
+  },
+  categoryDescription: {
+    fontSize: 14,
+    color: '#666',
+    lineHeight: 20,
+  },
+  sensitiveLabel: {
+    marginTop: 10,
+    fontSize: 12,
+    color: '#ff6f00',
+    fontWeight: '600',
+  },
+});
 
 export default CategorySelectionScreen;
 
