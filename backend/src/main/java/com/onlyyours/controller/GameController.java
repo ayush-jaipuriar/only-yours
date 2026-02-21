@@ -256,17 +256,23 @@ public class GameController {
                 GameSession session = gameService.getGameSession(request.getSessionId());
                 
                 if (session.getStatus() == GameSession.GameStatus.ROUND2) {
-                    // Round 1 complete, notify both players
                     String gameTopic = "/topic/game/" + request.getSessionId();
+
                     messagingTemplate.convertAndSend(
                             gameTopic,
                             GameStatusDto.builder()
                                     .sessionId(request.getSessionId())
                                     .status("ROUND1_COMPLETE")
-                                    .message("Round 1 complete! Proceeding to Round 2...")
+                                    .message("Round 1 complete! Now guess your partner's answers...")
                                     .build()
                     );
                     log.info("Round 1 complete: session={}", request.getSessionId());
+
+                    QuestionPayloadDto firstRound2Q =
+                            gameService.getFirstRound2Question(request.getSessionId());
+                    messagingTemplate.convertAndSend(gameTopic, firstRound2Q);
+                    log.info("Round 2 started: session={}, first question broadcasted",
+                            request.getSessionId());
                 }
                 // Else: only one player answered, waiting for partner (already sent confirmation above)
             }
@@ -278,11 +284,64 @@ public class GameController {
     }
 
     /**
-     * Helper method to send error messages to a user's private error queue.
-     * 
-     * @param userEmail User's email (principal name)
-     * @param errorMessage Error message to display
+     * Handles guess submission during Round 2.
+     *
+     * Message destination: /app/game.guess
+     * Expected payload: { "sessionId": "uuid", "questionId": 42, "guess": "B" }
+     *
+     * Flow:
+     * 1. Submit guess via GameService → receive correctness feedback
+     * 2. Send private GUESS_RESULT to this player
+     * 3. If both players guessed:
+     *    a. Next question exists → broadcast it
+     *    b. Last question → calculate scores, broadcast GAME_RESULTS
      */
+    @MessageMapping("/game.guess")
+    public void handleGuess(@Payload GuessRequestDto request, Principal principal) {
+        try {
+            String userEmail = principal.getName();
+            User user = userRepository.findByEmail(userEmail)
+                    .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
+
+            GuessResultDto result = gameService.submitGuess(
+                    request.getSessionId(),
+                    user.getId(),
+                    request.getQuestionId(),
+                    request.getGuess()
+            );
+
+            messagingTemplate.convertAndSendToUser(
+                    userEmail,
+                    "/queue/game-events",
+                    result
+            );
+
+            if (gameService.areBothPlayersGuessed(request.getSessionId(), request.getQuestionId())) {
+                Optional<QuestionPayloadDto> nextQuestion =
+                        gameService.getNextRound2Question(request.getSessionId());
+
+                String gameTopic = "/topic/game/" + request.getSessionId();
+
+                if (nextQuestion.isPresent()) {
+                    messagingTemplate.convertAndSend(gameTopic, nextQuestion.get());
+                    log.info("Round 2 next question broadcasted: session={}, question={}",
+                            request.getSessionId(), nextQuestion.get().getQuestionNumber());
+                } else {
+                    GameResultsDto results =
+                            gameService.calculateAndCompleteGame(request.getSessionId());
+                    messagingTemplate.convertAndSend(gameTopic, results);
+                    log.info("Game completed: session={}, p1={}, p2={}",
+                            request.getSessionId(), results.getPlayer1Score(),
+                            results.getPlayer2Score());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Error handling guess from {}: {}", principal.getName(), e.getMessage(), e);
+            sendErrorToUser(principal.getName(), "Failed to submit guess: " + e.getMessage());
+        }
+    }
+
     private void sendErrorToUser(String userEmail, String errorMessage) {
         messagingTemplate.convertAndSendToUser(
                 userEmail,

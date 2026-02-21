@@ -1,6 +1,8 @@
 package com.onlyyours.service;
 
 import com.onlyyours.dto.GameInvitationDto;
+import com.onlyyours.dto.GameResultsDto;
+import com.onlyyours.dto.GuessResultDto;
 import com.onlyyours.dto.QuestionPayloadDto;
 import com.onlyyours.model.*;
 import com.onlyyours.repository.*;
@@ -281,5 +283,308 @@ class GameServiceTest {
     void testGetGameSession_NotFound() {
         assertThrows(IllegalArgumentException.class, () ->
             gameService.getGameSession(UUID.randomUUID()));
+    }
+
+    // ============================================================
+    // Sprint 5: Round 2 (Guessing) & Results Tests
+    // ============================================================
+
+    private QuestionPayloadDto playRound1ToCompletion(UUID sessionId) {
+        QuestionPayloadDto currentQ = gameService.acceptInvitation(sessionId, user2.getId());
+        for (int i = 0; i < 7; i++) {
+            gameService.submitAnswer(sessionId, user1.getId(), currentQ.getQuestionId(), "A");
+            Optional<QuestionPayloadDto> next = gameService.submitAnswer(
+                    sessionId, user2.getId(), currentQ.getQuestionId(), "B");
+            if (next.isPresent()) {
+                currentQ = next.get();
+            }
+        }
+        gameService.submitAnswer(sessionId, user1.getId(), currentQ.getQuestionId(), "A");
+        gameService.submitAnswer(sessionId, user2.getId(), currentQ.getQuestionId(), "B");
+        return currentQ;
+    }
+
+    @Test
+    void testGetFirstRound2Question() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.ROUND2, session.getStatus());
+
+        QuestionPayloadDto firstRound2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        assertNotNull(firstRound2Q);
+        assertEquals("ROUND2", firstRound2Q.getRound());
+        assertEquals(1, firstRound2Q.getQuestionNumber());
+        assertEquals(invitation.getSessionId(), firstRound2Q.getSessionId());
+    }
+
+    @Test
+    void testSubmitGuess_CorrectGuess() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        GuessResultDto result = gameService.submitGuess(
+                invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "B");
+
+        assertNotNull(result);
+        assertEquals("GUESS_RESULT", result.getType());
+        assertEquals("B", result.getYourGuess());
+        assertEquals("B", result.getPartnerAnswer());
+        assertTrue(result.isCorrect());
+        assertEquals(1, result.getCorrectCount());
+    }
+
+    @Test
+    void testSubmitGuess_IncorrectGuess() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        GuessResultDto result = gameService.submitGuess(
+                invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "C");
+
+        assertNotNull(result);
+        assertFalse(result.isCorrect());
+        assertEquals("C", result.getYourGuess());
+        assertEquals("B", result.getPartnerAnswer());
+        assertEquals(0, result.getCorrectCount());
+    }
+
+    @Test
+    void testSubmitGuess_InvalidFormat() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+        gameService.getFirstRound2Question(invitation.getSessionId());
+
+        assertThrows(IllegalArgumentException.class, () ->
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), 1, "X"));
+    }
+
+    @Test
+    void testSubmitGuess_WrongGameStatus() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+
+        assertThrows(IllegalStateException.class, () ->
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), 1, "A"));
+    }
+
+    @Test
+    void testSubmitGuess_DuplicateGuess_Idempotent() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        GuessResultDto first = gameService.submitGuess(
+                invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "B");
+        GuessResultDto duplicate = gameService.submitGuess(
+                invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "C");
+
+        assertEquals(first.isCorrect(), duplicate.isCorrect());
+        assertEquals("B", duplicate.getYourGuess());
+    }
+
+    @Test
+    void testAreBothPlayersGuessed_NoneGuessed() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        assertFalse(gameService.areBothPlayersGuessed(invitation.getSessionId(), r2Q.getQuestionId()));
+    }
+
+    @Test
+    void testAreBothPlayersGuessed_OneGuessed() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+        gameService.submitGuess(invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "B");
+
+        assertFalse(gameService.areBothPlayersGuessed(invitation.getSessionId(), r2Q.getQuestionId()));
+    }
+
+    @Test
+    void testAreBothPlayersGuessed_BothGuessed() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+        gameService.submitGuess(invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "B");
+        gameService.submitGuess(invitation.getSessionId(), user2.getId(), r2Q.getQuestionId(), "A");
+
+        assertTrue(gameService.areBothPlayersGuessed(invitation.getSessionId(), r2Q.getQuestionId()));
+    }
+
+    @Test
+    void testGetNextRound2Question_HasMore() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+        gameService.getFirstRound2Question(invitation.getSessionId());
+
+        Optional<QuestionPayloadDto> nextQ = gameService.getNextRound2Question(invitation.getSessionId());
+
+        assertTrue(nextQ.isPresent());
+        assertEquals(2, nextQ.get().getQuestionNumber());
+        assertEquals("ROUND2", nextQ.get().getRound());
+    }
+
+    @Test
+    void testGetNextRound2Question_LastQuestion() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+        gameService.getFirstRound2Question(invitation.getSessionId());
+
+        for (int i = 0; i < 7; i++) {
+            Optional<QuestionPayloadDto> q = gameService.getNextRound2Question(invitation.getSessionId());
+            assertTrue(q.isPresent(), "Expected question " + (i + 2) + " to be present");
+        }
+
+        Optional<QuestionPayloadDto> afterLast = gameService.getNextRound2Question(invitation.getSessionId());
+        assertFalse(afterLast.isPresent(), "Should be no question after all 8");
+    }
+
+    @Test
+    void testCalculateAndCompleteGame_AllCorrect() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        for (int i = 0; i < 8; i++) {
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "B");
+            gameService.submitGuess(invitation.getSessionId(), user2.getId(), r2Q.getQuestionId(), "A");
+            Optional<QuestionPayloadDto> next = gameService.getNextRound2Question(invitation.getSessionId());
+            if (next.isPresent()) {
+                r2Q = next.get();
+            }
+        }
+
+        GameResultsDto results = gameService.calculateAndCompleteGame(invitation.getSessionId());
+
+        assertEquals(8, results.getPlayer1Score());
+        assertEquals(8, results.getPlayer2Score());
+        assertEquals("Soulmates! You know each other perfectly!", results.getMessage());
+
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.COMPLETED, session.getStatus());
+        assertNotNull(session.getCompletedAt());
+    }
+
+    @Test
+    void testCalculateAndCompleteGame_AllWrong() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        for (int i = 0; i < 8; i++) {
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "D");
+            gameService.submitGuess(invitation.getSessionId(), user2.getId(), r2Q.getQuestionId(), "D");
+            Optional<QuestionPayloadDto> next = gameService.getNextRound2Question(invitation.getSessionId());
+            if (next.isPresent()) {
+                r2Q = next.get();
+            }
+        }
+
+        GameResultsDto results = gameService.calculateAndCompleteGame(invitation.getSessionId());
+
+        assertEquals(0, results.getPlayer1Score());
+        assertEquals(0, results.getPlayer2Score());
+        assertEquals("Lots to discover about each other!", results.getMessage());
+    }
+
+    @Test
+    void testCalculateAndCompleteGame_MixedScores() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+
+        for (int i = 0; i < 8; i++) {
+            String user1Guess = (i < 5) ? "B" : "D";
+            String user2Guess = (i < 3) ? "A" : "D";
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), user1Guess);
+            gameService.submitGuess(invitation.getSessionId(), user2.getId(), r2Q.getQuestionId(), user2Guess);
+            Optional<QuestionPayloadDto> next = gameService.getNextRound2Question(invitation.getSessionId());
+            if (next.isPresent()) {
+                r2Q = next.get();
+            }
+        }
+
+        GameResultsDto results = gameService.calculateAndCompleteGame(invitation.getSessionId());
+
+        assertEquals(5, results.getPlayer1Score());
+        assertEquals(3, results.getPlayer2Score());
+        assertEquals("Good start! Keep playing to learn more.", results.getMessage());
+    }
+
+    @Test
+    void testFullGameLifecycle_Round1ThroughScoring() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+
+        QuestionPayloadDto currentQ = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+        assertEquals("ROUND1", currentQ.getRound());
+
+        for (int i = 0; i < 7; i++) {
+            gameService.submitAnswer(invitation.getSessionId(), user1.getId(), currentQ.getQuestionId(), "A");
+            Optional<QuestionPayloadDto> next = gameService.submitAnswer(
+                    invitation.getSessionId(), user2.getId(), currentQ.getQuestionId(), "B");
+            assertTrue(next.isPresent(), "Should get next question for question " + (i + 1));
+            currentQ = next.get();
+            assertEquals("ROUND1", currentQ.getRound());
+        }
+
+        gameService.submitAnswer(invitation.getSessionId(), user1.getId(), currentQ.getQuestionId(), "A");
+        gameService.submitAnswer(invitation.getSessionId(), user2.getId(), currentQ.getQuestionId(), "B");
+
+        GameSession sessionAfterR1 = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.ROUND2, sessionAfterR1.getStatus());
+
+        QuestionPayloadDto r2Q = gameService.getFirstRound2Question(invitation.getSessionId());
+        assertEquals("ROUND2", r2Q.getRound());
+
+        for (int i = 0; i < 8; i++) {
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), r2Q.getQuestionId(), "B");
+            gameService.submitGuess(invitation.getSessionId(), user2.getId(), r2Q.getQuestionId(), "A");
+            Optional<QuestionPayloadDto> next = gameService.getNextRound2Question(invitation.getSessionId());
+            if (next.isPresent()) {
+                r2Q = next.get();
+                assertEquals("ROUND2", r2Q.getRound());
+            }
+        }
+
+        GameResultsDto results = gameService.calculateAndCompleteGame(invitation.getSessionId());
+
+        assertEquals(8, results.getPlayer1Score());
+        assertEquals(8, results.getPlayer2Score());
+        assertEquals(8, results.getTotalQuestions());
+        assertNotNull(results.getPlayer1Name());
+        assertNotNull(results.getPlayer2Name());
+        assertEquals("GAME_RESULTS", results.getType());
+
+        GameSession finalSession = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.COMPLETED, finalSession.getStatus());
+        assertNotNull(finalSession.getCompletedAt());
+        assertEquals(8, finalSession.getPlayer1Score());
+        assertEquals(8, finalSession.getPlayer2Score());
+    }
+
+    @Test
+    void testGetResultMessage_AllTiers() {
+        assertEquals("Soulmates! You know each other perfectly!", gameService.getResultMessage(16));
+        assertEquals("Soulmates! You know each other perfectly!", gameService.getResultMessage(14));
+        assertEquals("Great connection! You really know each other.", gameService.getResultMessage(13));
+        assertEquals("Great connection! You really know each other.", gameService.getResultMessage(10));
+        assertEquals("Good start! Keep playing to learn more.", gameService.getResultMessage(9));
+        assertEquals("Good start! Keep playing to learn more.", gameService.getResultMessage(6));
+        assertEquals("Lots to discover about each other!", gameService.getResultMessage(5));
+        assertEquals("Lots to discover about each other!", gameService.getResultMessage(0));
     }
 }

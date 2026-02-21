@@ -8,6 +8,7 @@ import ProfileScreen from '../screens/ProfileScreen';
 import PartnerLinkScreen from '../screens/PartnerLinkScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import GameScreen from '../screens/GameScreen';
+import ResultsScreen from '../screens/ResultsScreen';
 
 const Stack = createStackNavigator();
 
@@ -62,8 +63,17 @@ const AppNavigator = () => {
               component={GameScreen}
               options={{
                 title: 'Game',
-                headerLeft: null,  // Prevent back navigation during game
-                gestureEnabled: false,  // Disable swipe-back gesture
+                headerLeft: null,
+                gestureEnabled: false,
+              }}
+            />
+            <Stack.Screen
+              name="Results"
+              component={ResultsScreen}
+              options={{
+                title: 'Results',
+                headerLeft: null,
+                gestureEnabled: false,
               }}
             />
           </>

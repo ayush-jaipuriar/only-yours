@@ -25,4 +25,12 @@ public interface GameAnswerRepository extends JpaRepository<GameAnswer, UUID> {
     );
     
     List<GameAnswer> findByGameSession_IdOrderByQuestion_Id(UUID gameSessionId);
+
+    long countByGameSession_IdAndQuestion_IdAndRound2GuessIsNotNull(
+        UUID gameSessionId, Integer questionId
+    );
+
+    List<GameAnswer> findByGameSession_IdAndUser_IdAndRound2GuessIsNotNull(
+        UUID gameSessionId, UUID userId
+    );
 }

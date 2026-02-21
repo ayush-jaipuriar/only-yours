@@ -423,34 +423,75 @@ The React Native upgrade has been successfully completed:
 
 ## Sprint 5: Core Gameplay - Round 2 (Guessing) & Results (Week 6)
 
+**Status:** ✅ COMPLETE - 70 backend tests, 21 frontend tests, 0 failures
+
+**Comprehensive Documentation:** See [`SPRINT_5_PLAN.md`](SPRINT_5_PLAN.md) for complete technical specification and implementation checklist.
+
 **Goal:** Complete the core gameplay loop by implementing the guessing round (Round 2) and displaying the final scores.
 
+**Implementation Progress**: As of Feb 21, 2026
+- ✅ Backend: 3 new DTOs, 6 new service methods, new WebSocket endpoint, V4 migration
+- ✅ Frontend: Round 2 UI, transition screen, guess feedback overlay, ResultsScreen
+- ✅ Testing: 70 backend tests + 21 frontend tests, all passing
+- ✅ Full game lifecycle tested end-to-end (invitation → Round 1 → Round 2 → scoring)
+
 ### Backend Technical Tasks
-- [ ] **Game State Transition:**
-    - [ ] In `GameService`, after the last question of Round 1 is answered by both players, update the game status to `ROUND2`.
-    - [ ] Broadcast the first question again, but with a payload indicating it's the guessing round.
-- [ ] **Guessing Logic:**
-    - [ ] `@MessageMapping("/game.guess")`: Receives a guess from a player.
-    - [ ] Persist the guess to the `round2_guess` column in the `game_answers` table.
-    - [ ] Fetch the partner's actual `round1_answer` for that same question.
-    - [ ] Send a private message back to the guessing player with the result (e.g., `{ correct: true/false, partnerAnswer: 'C' }`).
-    - [ ] Check if both players have guessed the current question. If so, broadcast the next question for guessing.
-- [ ] **Scoring and Completion:**
-    - [ ] After the last guess of Round 2, trigger a scoring calculation.
-    - [ ] In `GameService`, query the `game_answers` table for the session, and calculate scores for each player.
-    - [ ] Update the `game_sessions` status to `COMPLETED`.
-    - [ ] Broadcast a final `ResultsPayload` (with both players' scores) to the game topic.
+- [x] **Game State Transition:**
+    - [x] In `GameService`, after the last question of Round 1 is answered by both players, update the game status to `ROUND2`.
+    - [x] Broadcast the first question again via `getFirstRound2Question()`, with payload indicating it's the guessing round (`round="ROUND2"`).
+- [x] **Guessing Logic:**
+    - [x] `@MessageMapping("/game.guess")`: Receives a guess from a player via `GuessRequestDto`.
+    - [x] Persist the guess to the `round2_guess` column in the `game_answers` table (with dedup protection).
+    - [x] Fetch the partner's actual `round1_answer` for that same question.
+    - [x] Send a private `GuessResultDto` back to the guessing player with the result (correct/incorrect, partnerAnswer, correctCount).
+    - [x] Check if both players have guessed the current question via `areBothPlayersGuessed()`. If so, broadcast the next question for guessing.
+- [x] **Scoring and Completion:**
+    - [x] After the last guess of Round 2, trigger `calculateAndCompleteGame()` scoring calculation.
+    - [x] In `GameService`, query the `game_answers` table for the session, calculate scores for each player (correct guesses of partner's answers).
+    - [x] Update the `game_sessions` status to `COMPLETED` with `completedAt` timestamp and `player1Score`/`player2Score`.
+    - [x] Broadcast a `GameResultsDto` (with both players' scores, names, and tier-based message) to the game topic.
 
 ### Frontend Technical Tasks
-- [ ] **Game Screen Update for Round 2:**
-    - [ ] When a question payload for Round 2 arrives, update the UI prompt to "How did [Partner's Name] answer?".
-    - [ ] Listen for the private guess feedback message on a user-specific queue.
-    - [ ] On receipt, briefly display the result (e.g., "Correct! Your partner chose [Answer]") before the next question loads.
-- [ ] **Results Screen (`ResultsScreen.js`):**
-    - [ ] When the final `ResultsPayload` arrives on the game topic, navigate to this new screen.
-    - [ ] Display the final scores for both players in a celebratory, visually appealing format.
-    - [ ] Include a "Play Again" button that navigates back to the `CategorySelectionScreen`.
-    - [ ] Include a "Back to Dashboard" button.
+- [x] **Game Screen Update for Round 2:**
+    - [x] When a question payload for Round 2 arrives, update the UI prompt to "How did your partner answer?".
+    - [x] Listen for the private guess feedback message on `/user/queue/game-events`.
+    - [x] On receipt, briefly display the result ("Correct!"/"Not quite!") with partner's actual answer for 2.5 seconds before the next question loads.
+    - [x] Show running correct count in Round 2 badge.
+    - [x] Show transition screen between Round 1 and Round 2 with loading animation.
+- [x] **Results Screen (`ResultsScreen.js`):**
+    - [x] When the final `GameResultsDto` arrives on the game topic, navigate to Results screen.
+    - [x] Display the final scores for both players with animated score counters in celebratory format.
+    - [x] Include tier-based result message (Soulmates/Great connection/Good start/Lots to discover).
+    - [x] Include a "Play Again" button that navigates to the `CategorySelectionScreen`.
+    - [x] Include a "Back to Dashboard" button.
+
+### Files Created/Modified (Sprint 5)
+
+**Backend - New Files:**
+- `backend/src/main/java/com/onlyyours/dto/GuessRequestDto.java`
+- `backend/src/main/java/com/onlyyours/dto/GuessResultDto.java`
+- `backend/src/main/java/com/onlyyours/dto/GameResultsDto.java`
+- `backend/src/main/resources/db/migration/V4__Seed_Additional_Questions.sql`
+
+**Backend - Modified Files:**
+- `backend/src/main/java/com/onlyyours/service/GameService.java` (+6 methods, modified buildQuestionPayload)
+- `backend/src/main/java/com/onlyyours/controller/GameController.java` (+handleGuess, modified handleAnswer)
+- `backend/src/main/java/com/onlyyours/repository/GameAnswerRepository.java` (+2 query methods)
+- `backend/src/test/java/com/onlyyours/service/GameServiceTest.java` (+16 test cases → 30 total)
+
+**Frontend - New Files:**
+- `OnlyYoursApp/src/screens/ResultsScreen.js`
+- `OnlyYoursApp/src/screens/__tests__/ResultsScreen.test.js` (8 tests)
+- `OnlyYoursApp/jest.config.js` (updated for test infrastructure)
+- `OnlyYoursApp/jest.setup.js`
+- `OnlyYoursApp/jest/react-native-mock.js`
+
+**Frontend - Modified Files:**
+- `OnlyYoursApp/src/state/GameContext.js` (+5 state vars, +2 methods, handles GUESS_RESULT/GAME_RESULTS)
+- `OnlyYoursApp/src/screens/GameScreen.js` (Round 2 UI, transition, feedback overlay)
+- `OnlyYoursApp/src/navigation/AppNavigator.js` (+Results route)
+- `OnlyYoursApp/src/state/__tests__/GameContext.test.js` (11 tests, updated for Sprint 5)
+- `OnlyYoursApp/src/screens/__tests__/GameScreen.test.js` (2 tests, updated for Sprint 5)
 
 ---
 
