@@ -40,6 +40,7 @@ User A selects a category  →  Partner B receives invitation  →  Both answer 
 | Feature | Status | Sprint |
 |---------|--------|--------|
 | Google Sign-In authentication | ✅ Complete | Sprint 1 |
+| Email/password authentication migration (Phase 1) | 🚧 In Progress (core implementation complete, manual sign-off pending) | Auth Migration |
 | JWT-based stateless security | ✅ Complete | Sprint 1 |
 | User profile viewing | ✅ Complete | Sprint 2 |
 | Couple linking (invite code) | ✅ Complete | Sprint 2 |

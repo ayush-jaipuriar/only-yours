@@ -3,21 +3,88 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 
 const API_URL = 'http://localhost:8080/api';
+const AUTH_ENDPOINT_PREFIX = '/auth/';
 
 const api = axios.create({
     baseURL: API_URL,
 });
 
+const refreshClient = axios.create({
+    baseURL: API_URL,
+});
+
 /**
- * REQUEST INTERCEPTOR — attaches the JWT to every outgoing API call.
+ * AsyncStorage keys for auth payload.
  *
- * Concept: Axios interceptors are middleware that run before/after every request.
- * By attaching the token here, we don't need to manually add headers in each screen.
- * This is the Single Responsibility Principle applied to HTTP clients.
+ * We keep access and refresh tokens separate:
+ * - accessToken: short-lived JWT used on normal API requests
+ * - refreshToken: long-lived opaque token used only with /auth/refresh
  */
+const STORAGE_KEYS = {
+    accessToken: 'accessToken',
+    refreshToken: 'refreshToken',
+    userData: 'userData',
+};
+
+let _logoutHandler = null;
+let isRefreshing = false;
+let refreshPromise = null;
+let pendingQueue = [];
+
+const isAuthEndpoint = (url = '') => url.includes(AUTH_ENDPOINT_PREFIX);
+const isRefreshEndpoint = (url = '') => url.includes('/auth/refresh');
+
+const processPendingQueue = (error, accessToken = null) => {
+    pendingQueue.forEach(({ resolve, reject }) => {
+        if (error) {
+            reject(error);
+            return;
+        }
+        resolve(accessToken);
+    });
+    pendingQueue = [];
+};
+
+const persistAuthPayload = async (payload) => {
+    const writes = [];
+
+    if (payload?.accessToken) {
+        writes.push([STORAGE_KEYS.accessToken, payload.accessToken]);
+    }
+    if (payload?.refreshToken) {
+        writes.push([STORAGE_KEYS.refreshToken, payload.refreshToken]);
+    }
+    if (payload?.user) {
+        writes.push([STORAGE_KEYS.userData, JSON.stringify(payload.user)]);
+    }
+
+    if (writes.length > 0) {
+        await AsyncStorage.multiSet(writes);
+    }
+};
+
+const clearAuthStorage = async () => {
+    await AsyncStorage.multiRemove([
+        STORAGE_KEYS.accessToken,
+        STORAGE_KEYS.refreshToken,
+        STORAGE_KEYS.userData,
+    ]);
+};
+
+const refreshAccessToken = async () => {
+    const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.refreshToken);
+    if (!refreshToken) {
+        throw new Error('Missing refresh token');
+    }
+
+    const response = await refreshClient.post('/auth/refresh', { refreshToken });
+    await persistAuthPayload(response.data);
+    return response.data.accessToken;
+};
+
 api.interceptors.request.use(
     async (config) => {
-        const token = await AsyncStorage.getItem('userToken');
+        const token = await AsyncStorage.getItem(STORAGE_KEYS.accessToken);
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -26,24 +93,6 @@ api.interceptors.request.use(
     (error) => Promise.reject(error)
 );
 
-/**
- * RESPONSE INTERCEPTOR — global error handling for all API responses.
- *
- * Why a global interceptor?
- * Without this, every single API call needs a catch block that handles
- * 401s, network errors, and server errors. That's repetitive and easy to miss.
- * With this interceptor, common errors are handled once and consistently.
- *
- * Error handling strategy:
- * - 401 Unauthorized: Token expired or invalid → force logout + show message
- *   (Note: auth.logout is set via setLogoutHandler() to avoid circular imports)
- * - 5xx Server Error: Backend crashed or unavailable → user-friendly alert
- * - No response (network error): Device is offline or server unreachable → alert
- * - All other errors: Propagated to the calling code for local handling
- *   (e.g., 400 Bad Request from invalid couple code is handled in PartnerLinkScreen)
- */
-let _logoutHandler = null;
-
 export const setLogoutHandler = (fn) => {
     _logoutHandler = fn;
 };
@@ -51,20 +100,66 @@ export const setLogoutHandler = (fn) => {
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
+        const originalRequest = error.config || {};
         const status = error.response?.status;
+        const requestUrl = originalRequest.url || '';
 
-        if (status === 401) {
-            // Token has expired or is invalid — clear storage and force re-authentication
-            await AsyncStorage.removeItem('userToken');
-            if (_logoutHandler) {
-                _logoutHandler();
+        if (status === 401 && !isAuthEndpoint(requestUrl)) {
+            if (isRefreshEndpoint(requestUrl)) {
+                await clearAuthStorage();
+                if (_logoutHandler) {
+                    await _logoutHandler();
+                }
+                Alert.alert(
+                    'Session Expired',
+                    'Your session has expired. Please sign in again.',
+                    [{ text: 'OK' }]
+                );
+                return Promise.reject(error);
             }
-            Alert.alert(
-                'Session Expired',
-                'Your session has expired. Please sign in again.',
-                [{ text: 'OK' }]
-            );
-        } else if (status >= 500) {
+
+            if (originalRequest._retry) {
+                return Promise.reject(error);
+            }
+
+            originalRequest._retry = true;
+
+            if (isRefreshing) {
+                return new Promise((resolve, reject) => {
+                    pendingQueue.push({ resolve, reject });
+                }).then((newAccessToken) => {
+                    originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                    return api(originalRequest);
+                });
+            }
+
+            isRefreshing = true;
+            refreshPromise = refreshAccessToken();
+
+            try {
+                const newAccessToken = await refreshPromise;
+                processPendingQueue(null, newAccessToken);
+                originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+                return api(originalRequest);
+            } catch (refreshError) {
+                processPendingQueue(refreshError, null);
+                await clearAuthStorage();
+                if (_logoutHandler) {
+                    await _logoutHandler();
+                }
+                Alert.alert(
+                    'Session Expired',
+                    'Your session has expired. Please sign in again.',
+                    [{ text: 'OK' }]
+                );
+                return Promise.reject(refreshError);
+            } finally {
+                isRefreshing = false;
+                refreshPromise = null;
+            }
+        }
+
+        if (status >= 500) {
             Alert.alert(
                 'Server Error',
                 'Something went wrong on our end. Please try again in a moment.',
@@ -79,7 +174,6 @@ api.interceptors.response.use(
             );
         }
 
-        // Always propagate the error so individual screens can also handle it
         return Promise.reject(error);
     }
 );

@@ -1,10 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { AuthProvider, useAuth } from './src/state/AuthContext';
 import { GameProvider } from './src/state/GameContext';
 import AppNavigator from './src/navigation/AppNavigator';
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import ReconnectionBanner from './src/components/ReconnectionBanner';
 
@@ -31,12 +30,6 @@ const AppShell = () => {
 };
 
 const App = () => {
-  useEffect(() => {
-    GoogleSignin.configure({
-      webClientId: '216762620268-7cqrrmkujnqat14tsusuhokhjoqeqlme.apps.googleusercontent.com',
-    });
-  }, []);
-
   return (
     /**
      * AppErrorBoundary: Outermost wrapper — catches any unhandled React errors.

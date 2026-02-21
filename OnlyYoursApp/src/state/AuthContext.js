@@ -2,9 +2,15 @@ import React, { createContext, useEffect, useState, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import WebSocketService from '../services/WebSocketService';
-import { setLogoutHandler } from '../services/api';
+import api, { setLogoutHandler } from '../services/api';
 
 export const AuthContext = createContext();
+const API_BASE = 'http://localhost:8080';
+const STORAGE_KEYS = {
+  accessToken: 'accessToken',
+  refreshToken: 'refreshToken',
+  userData: 'userData',
+};
 
 /**
  * Custom hook to access auth context.
@@ -28,7 +34,6 @@ export const useAuth = () => {
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const [apiBase, setApiBase] = useState('http://localhost:8080');
   const [wsConnectionState, setWsConnectionState] = useState('disconnected');
 
   // Store navigation ref for invitation handling
@@ -130,7 +135,12 @@ export const AuthProvider = ({ children }) => {
     try {
       WebSocketService.subscribe('/user/queue/game-events', (message) => {
         try {
-          const payload = JSON.parse(message.body);
+          const payload =
+            typeof message === 'string'
+              ? JSON.parse(message)
+              : (message && typeof message === 'object' && 'body' in message)
+                ? JSON.parse(message.body)
+                : message;
           console.log('[AuthContext] Game event received:', payload.type);
           
           if (payload.type === 'INVITATION') {
@@ -147,24 +157,58 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const persistAuthPayload = async (authPayload) => {
+    const writes = [];
+    if (authPayload?.accessToken) {
+      writes.push([STORAGE_KEYS.accessToken, authPayload.accessToken]);
+    }
+    if (authPayload?.refreshToken) {
+      writes.push([STORAGE_KEYS.refreshToken, authPayload.refreshToken]);
+    }
+    if (authPayload?.user) {
+      writes.push([STORAGE_KEYS.userData, JSON.stringify(authPayload.user)]);
+    }
+    if (writes.length > 0) {
+      await AsyncStorage.multiSet(writes);
+    }
+  };
+
+  const clearAuthStorage = async () => {
+    await AsyncStorage.multiRemove([
+      STORAGE_KEYS.accessToken,
+      STORAGE_KEYS.refreshToken,
+      STORAGE_KEYS.userData,
+    ]);
+  };
+
+  const connectRealtime = async () => {
+    WebSocketService.setConnectionStateListener(setWsConnectionState);
+    await WebSocketService.connect(API_BASE);
+    subscribeToGameEvents();
+  };
+
   /**
-   * Login and connect WebSocket with game event subscription.
-   * Also registers the logout handler with the Axios interceptor so
-   * 401 responses trigger logout without a circular import.
+   * Login and persist auth payload.
+   *
+   * authPayload must match backend AuthResponseDto:
+   * {
+   *   accessToken: string,
+   *   refreshToken: string,
+   *   user: { id, username, email }
+   * }
    */
-  const login = async (userData) => {
+  const login = async (authPayload) => {
+    await persistAuthPayload(authPayload);
     setIsLoggedIn(true);
-    if (userData) {
-      setUser(userData);
+    if (authPayload?.user) {
+      setUser(authPayload.user);
     }
 
-    // Register logout callback for the global Axios 401 interceptor
-    setLogoutHandler(logout);
+    // 401-triggered logout should skip server logout endpoint to avoid loops.
+    setLogoutHandler(() => logout({ skipServerLogout: true }));
 
     try {
-      WebSocketService.setConnectionStateListener(setWsConnectionState);
-      await WebSocketService.connect(apiBase);
-      subscribeToGameEvents();
+      await connectRealtime();
     } catch (error) {
       console.error('[AuthContext] WebSocket connection error:', error);
     }
@@ -173,8 +217,19 @@ export const AuthProvider = ({ children }) => {
   /**
    * Logout and disconnect WebSocket.
    */
-  const logout = async () => {
-    await AsyncStorage.removeItem('userToken');
+  const logout = async ({ skipServerLogout = false } = {}) => {
+    if (!skipServerLogout) {
+      try {
+        const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.refreshToken);
+        if (refreshToken) {
+          await api.post('/auth/logout', { refreshToken });
+        }
+      } catch (error) {
+        console.warn('[AuthContext] Logout API call failed; continuing local logout');
+      }
+    }
+
+    await clearAuthStorage();
     setIsLoggedIn(false);
     setUser(null);
     setWsConnectionState('disconnected');
@@ -183,25 +238,52 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Silent authentication on app start.
-   * Also registers the logout handler for the global Axios interceptor.
+   * Uses refresh token to bootstrap a fresh access token.
    */
   useEffect(() => {
-    setLogoutHandler(logout);
+    let isMounted = true;
+    setLogoutHandler(() => logout({ skipServerLogout: true }));
 
     (async () => {
-      const token = await AsyncStorage.getItem('userToken');
-      if (token) {
-        setIsLoggedIn(true);
+      const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.refreshToken);
+      const storedUserJson = await AsyncStorage.getItem(STORAGE_KEYS.userData);
+
+      if (storedUserJson) {
         try {
-          WebSocketService.setConnectionStateListener(setWsConnectionState);
-          await WebSocketService.connect(apiBase);
-          subscribeToGameEvents();
+          setUser(JSON.parse(storedUserJson));
         } catch (error) {
-          console.error('[AuthContext] Silent auth WebSocket error:', error);
+          console.warn('[AuthContext] Failed to parse stored user data');
+        }
+      }
+
+      if (!refreshToken) {
+        return;
+      }
+
+      try {
+        const response = await api.post('/auth/refresh', { refreshToken });
+        if (!isMounted) {
+          return;
+        }
+
+        await persistAuthPayload(response.data);
+        setIsLoggedIn(true);
+        if (response.data?.user) {
+          setUser(response.data.user);
+        }
+
+        await connectRealtime();
+      } catch (error) {
+        if (isMounted) {
+          await logout({ skipServerLogout: true });
         }
       }
     })();
-  }, [apiBase]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 

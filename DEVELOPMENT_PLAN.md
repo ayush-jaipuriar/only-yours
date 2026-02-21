@@ -615,6 +615,27 @@ The React Native upgrade has been successfully completed:
 ### Comprehensive Project Status
 - [x] See [`PROJECT_STATUS.md`](PROJECT_STATUS.md) for the end-to-end implementation status document covering architecture, file inventory, API contracts, pending work, known issues, and roadmap.
 
+### Deployment & Manual Testing Guides
+- [x] GCP production deployment strategy and runbook draft: [`GCP_DEPLOYMENT_PLAN.md`](GCP_DEPLOYMENT_PLAN.md)
+- [x] Two-device Android manual testing runbook for Sprint 6: [`MANUAL_TESTING_GUIDE_SPRINT6.md`](MANUAL_TESTING_GUIDE_SPRINT6.md)
+- [x] Refined deployment decisions: release tags only, Cloud Run min instances=1, emulator optional gate, and no-USB test paths documented.
+- [x] Expanded beginner-first local setup in manual guide: toolchain install checks, DB/backend/frontend startup sequence, Android Studio emulator setup, first-run smoke checklist, and troubleshooting.
+- [x] Added deep hand-holding for Android Studio setup in manual guide: exact click paths, SDK Manager tabs, component verification, PATH setup, AVD creation details, and beginner pitfalls checklist.
+- [x] Added migration feasibility analysis for Expo + email/password auth with checklist, effort estimates, risk matrix, and go/no-go framework: [`EXPO_EMAIL_AUTH_FEASIBILITY.md`](EXPO_EMAIL_AUTH_FEASIBILITY.md)
+- [x] Added comprehensive two-phase auth migration PRD (Phase 1 email/password in RN CLI, Phase 2 Expo migration) with sectioned implementation checklists and stabilization gates: [`AUTH_MIGRATION_PRD.md`](AUTH_MIGRATION_PRD.md)
+- [x] Expanded auth migration PRD with week-by-week sprint schedule, daily checkpoints, milestone gates, and file-by-file implementation sequencing for execution tracking.
+- [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` in detail for email/password auth migration manual verification:
+    - [x] Replaced Google Sign-In specific manual cases with auth migration matrix (signup/login/logout/forgot/reset/refresh/revocation).
+    - [x] Added detailed preconditions, step-by-step execution, expected outcomes, and security-negative validations.
+    - [x] Updated release gate + evidence expectations to include auth-critical path proof.
+    - [x] Kept linking/game/resilience/UX manual suites aligned with auth-first flow.
+- [x] Created deep-dive implementation sprint plan for auth migration with architecture rationale, per-phase checklists, and progress counters: [`AUTH_MIGRATION_SPRINT_PLAN.md`](AUTH_MIGRATION_SPRINT_PLAN.md)
+- [x] Phase 1 implementation checkpoint completed for backend + frontend core auth migration:
+    - [x] Backend: new schema migration `V5__Email_Auth_Foundation.sql`, user model evolution, token entities/repositories, and full auth API endpoint set.
+    - [x] Frontend: migrated to email/password screens (`SignIn`, `SignUp`, `ForgotPassword`, `ResetPassword`) and dual-token refresh lifecycle in `AuthContext` + `api.js`.
+    - [x] Testing: added auth-focused backend service/integration/security tests and frontend screen tests; full backend and frontend suites are green.
+    - [ ] Remaining before Phase 1 closure: local non-test PostgreSQL migration validation, docs finalization, and manual sign-off matrix (including physical Android device pass).
+
 ### Notes
 - React Native and Android/iOS toolchains have been successfully upgraded to reduce dev friction and leverage New Architecture for performance.
 - Sprint 4 core implementation is complete; testing and polish pending.

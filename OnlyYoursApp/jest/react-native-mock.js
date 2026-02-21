@@ -49,6 +49,7 @@ module.exports = {
   },
   View: createMockComponent('View'),
   Text: createMockComponent('Text'),
+  TextInput: createMockComponent('TextInput'),
   TouchableOpacity: createMockComponent('TouchableOpacity'),
   ScrollView: createMockComponent('ScrollView'),
   ActivityIndicator: createMockComponent('ActivityIndicator'),

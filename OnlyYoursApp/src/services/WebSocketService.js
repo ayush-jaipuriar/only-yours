@@ -41,7 +41,7 @@ class WebSocketService {
   }
 
   async connect(baseUrl) {
-    const token = await AsyncStorage.getItem('userToken');
+    const token = await AsyncStorage.getItem('accessToken');
     if (!token) throw new Error('Missing auth token');
 
     const wsUrl = `${baseUrl.replace(/\/?$/, '')}/ws`;
