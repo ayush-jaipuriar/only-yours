@@ -4,6 +4,7 @@ import com.onlyyours.model.Couple;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.CoupleRepository;
 import com.onlyyours.repository.UserRepository;
+import lombok.extern.slf4j.Slf4j;
 import java.security.SecureRandom;
 import java.util.Locale;
 import java.util.Optional;
@@ -11,7 +12,21 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/**
+ * Manages the couple linking lifecycle.
+ *
+ * A "couple" is a permanent two-way bond between two users, identified by a UUID.
+ * The linking process uses a short-lived alphanumeric code:
+ * 1. User A calls generateLinkCode() → a Couple record is created with user1=A and a random code
+ * 2. User B calls redeemLinkCode(code) → user2 is set to B, code is nullified (one-time use)
+ *
+ * Business rules enforced:
+ * - A user cannot redeem their own code (self-linking prevention)
+ * - A code can only be redeemed once (user2 must be null)
+ * - Invalid codes (non-existent or expired) return IllegalArgumentException
+ */
 @Service
+@Slf4j
 public class CoupleService {
 
     private final CoupleRepository coupleRepository;
@@ -26,35 +41,47 @@ public class CoupleService {
 
     @Transactional
     public String generateLinkCode(UUID userId) {
-        User user = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        // If user already part of a couple, return existing or block based on rules; for MVP, allow creating new if no active link
         Couple couple = new Couple();
         couple.setUser1(user);
         couple.setLinkCode(randomCode(6));
         coupleRepository.save(couple);
+        log.info("Link code generated for userId={} (code length={})", userId, couple.getLinkCode().length());
         return couple.getLinkCode();
     }
 
     @Transactional
     public Couple redeemLinkCode(UUID userId, String code) {
-        User redeemer = userRepository.findById(userId).orElseThrow(() -> new IllegalArgumentException("User not found"));
+        User redeemer = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
+
         Optional<Couple> coupleOpt = coupleRepository.findByLinkCode(code);
-        Couple couple = coupleOpt.orElseThrow(() -> new IllegalArgumentException("Invalid code"));
+        Couple couple = coupleOpt.orElseThrow(() -> {
+            log.warn("Invalid link code attempted by userId={}", userId);
+            return new IllegalArgumentException("Invalid code");
+        });
 
         if (couple.getUser2() != null) {
+            log.warn("Already-used link code attempted by userId={}", userId);
             throw new IllegalStateException("Code already used");
         }
         if (couple.getUser1() != null && couple.getUser1().getId().equals(userId)) {
+            log.warn("Self-link attempt rejected for userId={}", userId);
             throw new IllegalArgumentException("Cannot redeem own code");
         }
 
         couple.setUser2(redeemer);
         couple.setLinkCode(null);
-        return coupleRepository.save(couple);
+        Couple saved = coupleRepository.save(couple);
+        log.info("Couple linked successfully: coupleId={}, user1Id={}, user2Id={}",
+                saved.getId(), saved.getUser1().getId(), saved.getUser2().getId());
+        return saved;
     }
 
     public Optional<Couple> findCoupleForUser(UUID userId) {
+        log.debug("Looking up couple for userId={}", userId);
         return coupleRepository.findByUser1_IdOrUser2_Id(userId, userId);
     }
 

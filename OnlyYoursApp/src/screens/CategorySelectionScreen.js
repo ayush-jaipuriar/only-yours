@@ -5,11 +5,12 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
+import LoadingSpinner from '../components/LoadingSpinner';
+import EmptyState from '../components/EmptyState';
 
 /**
  * CategorySelectionScreen displays available question categories.
@@ -28,6 +29,7 @@ import WebSocketService from '../services/WebSocketService';
 const CategorySelectionScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [loadError, setLoadError] = useState(false);
 
   /**
    * Load categories from backend on mount.
@@ -37,12 +39,14 @@ const CategorySelectionScreen = ({ navigation }) => {
   }, []);
 
   const loadCategories = async () => {
+    setLoading(true);
+    setLoadError(false);
     try {
       const response = await api.get('/api/content/categories');
       setCategories(response.data);
     } catch (error) {
       console.error('Error loading categories:', error);
-      Alert.alert('Error', 'Failed to load categories');
+      setLoadError(true);
       setCategories([]);
     } finally {
       setLoading(false);
@@ -118,17 +122,34 @@ const CategorySelectionScreen = ({ navigation }) => {
   );
 
   if (loading) {
+    return <LoadingSpinner message="Loading categories..." />;
+  }
+
+  if (loadError) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6200ea" />
-        <Text style={styles.loadingText}>Loading categories...</Text>
-      </View>
+      <EmptyState
+        icon="⚠️"
+        title="Couldn't Load Categories"
+        message="Check your connection and try again."
+        actionLabel="Retry"
+        onAction={loadCategories}
+      />
+    );
+  }
+
+  if (categories.length === 0) {
+    return (
+      <EmptyState
+        icon="📂"
+        title="No Categories Yet"
+        message="Question categories will appear here once they're available."
+      />
     );
   }
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select a Category</Text>
+      <Text style={styles.title}>What do you want to explore?</Text>
       <FlatList
         data={categories}
         renderItem={renderCategory}
@@ -143,17 +164,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f5f5f5',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
   },
   title: {
     fontSize: 24,

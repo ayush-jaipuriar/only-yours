@@ -1,0 +1,44 @@
+# ─────────────────────────────────────────────────────────────────
+# .dockerignore — Files to exclude from the Docker build context
+#
+# Why this matters:
+# When you run `docker build`, Docker sends all files in the build
+# context (this directory) to the Docker daemon. Large or irrelevant
+# files slow down the build and bloat the image.
+# ─────────────────────────────────────────────────────────────────
+
+# Git metadata
+.git
+.gitignore
+
+# Gradle build output (will be rebuilt inside the container)
+build/
+.gradle/
+out/
+
+# Test results
+test-results/
+reports/
+
+# IDE files
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+# Documentation
+*.md
+
+# Backup files
+*.bak
+*.backup
+*.zip
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files (must never be in Docker image)
+.env
+.env.*

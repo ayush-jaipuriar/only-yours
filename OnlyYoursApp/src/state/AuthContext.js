@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import WebSocketService from '../services/WebSocketService';
+import { setLogoutHandler } from '../services/api';
 
 export const AuthContext = createContext();
 
@@ -28,7 +29,8 @@ export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const [apiBase, setApiBase] = useState('http://localhost:8080');
-  
+  const [wsConnectionState, setWsConnectionState] = useState('disconnected');
+
   // Store navigation ref for invitation handling
   const navigationRef = useRef(null);
   const gameContextRef = useRef(null);
@@ -147,20 +149,24 @@ export const AuthProvider = ({ children }) => {
 
   /**
    * Login and connect WebSocket with game event subscription.
+   * Also registers the logout handler with the Axios interceptor so
+   * 401 responses trigger logout without a circular import.
    */
   const login = async (userData) => {
     setIsLoggedIn(true);
     if (userData) {
       setUser(userData);
     }
-    
+
+    // Register logout callback for the global Axios 401 interceptor
+    setLogoutHandler(logout);
+
     try {
+      WebSocketService.setConnectionStateListener(setWsConnectionState);
       await WebSocketService.connect(apiBase);
-      // Subscribe to game events after connection
       subscribeToGameEvents();
     } catch (error) {
       console.error('[AuthContext] WebSocket connection error:', error);
-      // Service will auto-retry
     }
   };
 
@@ -171,20 +177,24 @@ export const AuthProvider = ({ children }) => {
     await AsyncStorage.removeItem('userToken');
     setIsLoggedIn(false);
     setUser(null);
+    setWsConnectionState('disconnected');
     WebSocketService.disconnect();
   };
 
   /**
    * Silent authentication on app start.
+   * Also registers the logout handler for the global Axios interceptor.
    */
   useEffect(() => {
+    setLogoutHandler(logout);
+
     (async () => {
       const token = await AsyncStorage.getItem('userToken');
       if (token) {
         setIsLoggedIn(true);
         try {
+          WebSocketService.setConnectionStateListener(setWsConnectionState);
           await WebSocketService.connect(apiBase);
-          // Subscribe to game events after silent auth
           subscribeToGameEvents();
         } catch (error) {
           console.error('[AuthContext] Silent auth WebSocket error:', error);
@@ -199,6 +209,7 @@ export const AuthProvider = ({ children }) => {
       user, 
       login, 
       logout,
+      wsConnectionState,
       setNavigationRef,
       setGameContextRef,
     }}>

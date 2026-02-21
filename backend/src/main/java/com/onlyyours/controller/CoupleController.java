@@ -37,14 +37,18 @@ public class CoupleController {
     }
 
     @PostMapping("/link")
-    public ResponseEntity<CoupleDto> link(@RequestBody Map<String, String> body, Principal principal) {
+    public ResponseEntity<?> link(@RequestBody Map<String, String> body, Principal principal) {
         String code = body.get("code");
         if (code == null || code.isBlank()) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Code is required");
         }
         UUID userId = getCurrentUserId(principal);
-        Couple couple = coupleService.redeemLinkCode(userId, code.trim());
-        return ResponseEntity.ok(toDto(couple));
+        try {
+            Couple couple = coupleService.redeemLinkCode(userId, code.trim());
+            return ResponseEntity.ok(toDto(couple));
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @GetMapping("")
