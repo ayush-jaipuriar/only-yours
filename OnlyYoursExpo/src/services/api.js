@@ -1,8 +1,7 @@
-import axios from 'axios/dist/browser/axios.cjs';
+import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
-
-const API_URL = 'http://localhost:8080/api';
+import { API_URL } from '../config';
 const AUTH_ENDPOINT_PREFIX = '/auth/';
 
 const api = axios.create({
@@ -104,7 +103,9 @@ api.interceptors.response.use(
         const status = error.response?.status;
         const requestUrl = originalRequest.url || '';
 
-        if (status === 401 && !isAuthEndpoint(requestUrl)) {
+        // Some Spring Security paths return 403 for missing/invalid auth instead of 401.
+        // Treat both as auth-expiry triggers so refresh-and-retry works consistently.
+        if ((status === 401 || status === 403) && !isAuthEndpoint(requestUrl)) {
             if (isRefreshEndpoint(requestUrl)) {
                 await clearAuthStorage();
                 if (_logoutHandler) {

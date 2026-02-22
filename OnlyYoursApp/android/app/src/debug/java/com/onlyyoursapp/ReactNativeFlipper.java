@@ -8,15 +8,12 @@ package com.onlyyoursapp;
 
 import android.content.Context;
 import com.facebook.react.ReactInstanceManager;
-import com.facebook.react.defaults.DefaultFlipperReactNativeJavaPlugin;
 
 public final class ReactNativeFlipper {
   private ReactNativeFlipper() {}
 
+  @SuppressWarnings("unused")
   public static void initializeFlipper(Context context, ReactInstanceManager reactInstanceManager) {
-    if (BuildConfig.IS_NEW_ARCHITECTURE_ENABLED) {
-      return;
-    }
-    DefaultFlipperReactNativeJavaPlugin.Companion.load(context, reactInstanceManager);
+    // Flipper integration is intentionally disabled for this project configuration.
   }
 }

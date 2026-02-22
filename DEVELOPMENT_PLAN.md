@@ -635,8 +635,62 @@ The React Native upgrade has been successfully completed:
     - [x] Frontend: migrated to email/password screens (`SignIn`, `SignUp`, `ForgotPassword`, `ResetPassword`) and dual-token refresh lifecycle in `AuthContext` + `api.js`.
     - [x] Testing: added auth-focused backend service/integration/security tests and frontend screen tests; full backend and frontend suites are green.
     - [ ] Remaining before Phase 1 closure: local non-test PostgreSQL migration validation, docs finalization, and manual sign-off matrix (including physical Android device pass).
+- [x] Fixed RN 0.75 Metro red-screen bundle failures encountered during emulator validation and documented recovery in Sprint 6 manual guide:
+    - [x] Runtime bundling fix: forced Axios to browser-compatible entry in `OnlyYoursApp/src/services/api.js` (`axios/dist/browser/axios.cjs`) to avoid Node `crypto` resolution errors.
+    - [x] Babel pipeline fix: switched to `module:@react-native/babel-preset` in `OnlyYoursApp/babel.config.js` and removed legacy `.babelrc` to eliminate transform conflicts (`private methods` / `duplicate __self`).
+    - [x] Stability verification: confirmed Metro serves Android bundle with HTTP 200 and app install/launch succeeds after rerun.
+    - [x] Documentation update: expanded `MANUAL_TESTING_GUIDE_SPRINT6.md` troubleshooting with exact symptoms, root causes, and step-by-step repair commands.
+- [x] Stabilized Android local run pipeline for Sprint 6 manual testing after auth migration dependency/tooling drift:
+    - [x] Repaired broken Gradle wrapper bootstrap by restoring `OnlyYoursApp/android/gradle/wrapper/gradle-wrapper.jar` (fixes `org.gradle.wrapper.GradleWrapperMain` startup failure).
+    - [x] Restored missing Android SDK ext config in `OnlyYoursApp/android/build.gradle` (`minSdkVersion`, `compileSdkVersion`, `targetSdkVersion`, `ndkVersion`) so app module can resolve build constants.
+    - [x] Disabled New Architecture in `OnlyYoursApp/android/gradle.properties` for compatibility with the current dependency set during manual testing (`newArchEnabled=false`).
+    - [x] Removed obsolete Google Sign-In native dependency and pinned `react-native-gesture-handler` to `2.20.0` to align with `react-native@0.75.4`.
+    - [x] Removed legacy duplicate autolinking line from `OnlyYoursApp/android/app/build.gradle` and converted debug Flipper helper to a no-op stub to resolve Java compile-time integration mismatches.
+    - [x] Verified full local flow with Java 17 and emulator install: `npx react-native run-android` now builds and launches successfully (post-uninstall fix for `INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+
+- [x] Phase 2 Expo Managed Workflow Migration implemented (Feb 2026):
+    - [x] Created `OnlyYoursExpo/` — fresh Expo SDK 54 managed project (React 19.1.0, RN 0.81.5) alongside `OnlyYoursApp/` (kept as fallback).
+    - [x] Configured `OnlyYoursExpo/app.json`: name "Only Yours", slug "only-yours", android package `com.onlyyoursapp`, `newArchEnabled: false` for compatibility.
+    - [x] Created `OnlyYoursExpo/eas.json`: development (debug APK via `assembleDebug`), preview (release APK), and production (AAB) build profiles.
+    - [x] Installed all Expo SDK 54-compatible deps via `npx expo install`: `@react-navigation/native`, `@react-navigation/stack`, `react-native-gesture-handler`, `react-native-safe-area-context`, `react-native-screens`, `@react-native-async-storage/async-storage`. Added `axios` and `@stomp/stompjs` as pure-JS deps.
+    - [x] Migrated all 27 `src/` JS files from `OnlyYoursApp/src` to `OnlyYoursExpo/src` — no changes needed except two service files.
+    - [x] Fixed `OnlyYoursExpo/src/services/api.js`: reverted Axios import from `axios/dist/browser/axios.cjs` back to standard `import axios from 'axios'` (Expo Metro resolves correctly without the hack).
+    - [x] Fixed `OnlyYoursExpo/src/services/WebSocketService.js`: removed `sockjs-client` import and `webSocketFactory` in favour of `brokerURL` pointing to `ws://host/ws-native` — Expo's native WebSocket connects directly without SockJS/DOM dependencies.
+    - [x] Added `/ws-native` raw STOMP WebSocket endpoint to `backend/src/main/java/com/onlyyours/config/WebSocketConfig.java` (alongside existing SockJS `/ws` endpoint).
+    - [x] Wrote `OnlyYoursExpo/App.js` root component: `GestureHandlerRootView` → `AuthProvider` → `AppShell` (reads `wsConnectionState`) → `GameProvider` → `AppNavigator` + `ReconnectionBanner`.
+    - [x] Verified Metro bundle: `npx expo export --platform android` completes in ~10 s, 974 modules, 0 errors, 2.62 MB bundle (requires Node 24 — `.nvmrc` set to 24 in `OnlyYoursExpo/`).
+    - [x] Installed `eas-cli@18.0.3` globally. EAS project config ready; first cloud build requires `eas login` then `eas build --platform android --profile preview` (see MANUAL_TESTING_GUIDE_SPRINT6.md).
+    - [x] Applied Option A (Same Wi-Fi LAN) runtime backend configuration for Expo physical-device testing:
+        - [x] Set `OnlyYoursExpo/src/services/api.js` `API_URL` to `http://192.168.1.101:8080/api`.
+        - [x] Set `OnlyYoursExpo/src/state/AuthContext.js` `API_BASE` to `http://192.168.1.101:8080`.
+        - [x] Verified backend LAN reachability from laptop using `curl http://192.168.1.101:8080/actuator/health` (`{\"status\":\"UP\"}`).
+    - [x] Fixed backend JWT secret decoding bug causing signup/login 500s with error `Illegal base64 character: '_'`:
+        - [x] Updated `backend/src/main/java/com/onlyyours/service/JwtService.java` to use `Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8))` for both signing and parsing.
+        - [x] Replaced deprecated string-based JWT key overloads in `signWith(...)` and parser `setSigningKey(...)`.
+        - [x] Verified with `cd backend && ./gradlew test` (BUILD SUCCESSFUL).
+    - [x] Fixed Expo "Couldn't Load Profile" auth-retry gap + normalized manual guide to Expo-only:
+        - [x] Updated `OnlyYoursExpo/src/services/api.js` interceptor to treat `403` same as `401` for token-refresh retry flow.
+        - [x] Updated `backend/src/main/java/com/onlyyours/security/SecurityConfig.java` to return explicit `401 Unauthorized` for unauthenticated requests via `authenticationEntryPoint`.
+        - [x] Verified backend test suite after security changes: `cd backend && ./gradlew test` (BUILD SUCCESSFUL).
+        - [x] Removed remaining `OnlyYoursApp`/RN CLI command references from `MANUAL_TESTING_GUIDE_SPRINT6.md` and rewrote boot/networking/troubleshooting to Expo physical-device flow end-to-end.
+    - [x] Fixed remaining Expo 401/403 profile + couple status runtime issues:
+        - [x] Normalized API paths in Expo screens to avoid accidental `/api/api/...` routes:
+            - `OnlyYoursExpo/src/screens/ProfileScreen.js`: `/api/user/me` -> `/user/me`
+            - `OnlyYoursExpo/src/screens/DashboardScreen.js`: `/api/couple` -> `/couple`
+            - `OnlyYoursExpo/src/screens/CategorySelectionScreen.js`: `/api/content/categories` -> `/content/categories`
+        - [x] Validated route mismatch behavior by curl (`/api/user/me` -> 200, `/api/api/user/me` -> 401) to confirm root cause.
+        - [x] Removed `newArchEnabled: false` from `OnlyYoursExpo/app.json` to align with Expo Go runtime and remove startup warning.
+        - [x] Cleared stale Metro port conflict by stopping legacy process on `8081` (`pid 13129`), so Expo can run on default `8081` instead of auto-switching to `8082`.
+        - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` with explicit `npx expo` command usage and 401/403 troubleshooting notes.
+    - [x] Hardened Expo runtime guard + startup diagnostics for physical-device runs:
+        - [x] Added Node/NPM engine guard in `OnlyYoursExpo/package.json` (`node: >=24 <25`, `npm: >=11 <12`) to make runtime expectations explicit.
+        - [x] Verified Metro serves both platform bundles under Node 24 (`/index.bundle?platform=ios|android` -> HTTP 200) to rule out JS compile failures.
+        - [x] Confirmed active Expo dev server process is running on Node 24 (`~/.nvm/versions/node/v24.x/bin/node`) before troubleshooting device-side loading.
+        - [x] Updated Expo troubleshooting notes in `MANUAL_TESTING_GUIDE_SPRINT6.md` with a deterministic "long spinner" triage flow (Node runtime, QR freshness, LAN/tunnel path, backend reachability).
+    - [ ] Physical device EAS build validation: pending `eas login` + first cloud build + install on Android phone.
 
 ### Notes
 - React Native and Android/iOS toolchains have been successfully upgraded to reduce dev friction and leverage New Architecture for performance.
 - Sprint 4 core implementation is complete; testing and polish pending.
 - All foundational infrastructure (auth, WebSocket, database) is complete and stable.
+- Phase 2 Expo migration is complete at the code level. Local emulator is no longer required. Use `eas build` + physical device for all future mobile testing.

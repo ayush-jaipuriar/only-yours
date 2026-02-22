@@ -370,20 +370,20 @@ Reason:
 
 ## Section A - Compatibility Discovery
 
-- [ ] Confirm Expo SDK version compatible with current React/React Native stack.
-- [ ] Audit all dependencies for Expo compatibility.
-- [ ] Identify replacements for non-compatible modules.
+- [x] Confirm Expo SDK version compatible with current React/React Native stack. (Expo SDK 54, RN 0.81.5, React 19.1.0 — Feb 2026)
+- [x] Audit all dependencies for Expo compatibility. (All core deps compatible; sockjs-client removed, replaced by native WS)
+- [x] Identify replacements for non-compatible modules. (sockjs-client → native WebSocket via brokerURL in @stomp/stompjs)
 
 ## Section B - Migration Foundation
 
-- [ ] Add Expo config files and scripts.
-- [ ] Align bundler/dev workflow for Expo.
-- [ ] Ensure Android build succeeds via Expo/EAS dev build.
+- [x] Add Expo config files and scripts. (app.json, eas.json, .nvmrc, package.json with expo scripts)
+- [x] Align bundler/dev workflow for Expo. (Expo Metro — confirmed 974 modules bundle clean, 0 errors)
+- [ ] Ensure Android build succeeds via Expo/EAS dev build. (EAS CLI v18 installed; requires eas login + eas build to trigger cloud build — see MANUAL_TESTING_GUIDE_SPRINT6.md)
 
 ## Section C - Runtime Validation
 
-- [ ] Verify auth flows still pass (register/login/refresh/forgot/reset).
-- [ ] Verify WebSocket gameplay flows still pass.
+- [ ] Verify auth flows still pass (register/login/refresh/forgot/reset). (pending physical device test)
+- [ ] Verify WebSocket gameplay flows still pass. (pending physical device test)
 - [ ] Verify notifications/permissions (if any later) still behave.
 
 ## Section D - CI Automation
@@ -394,9 +394,9 @@ Reason:
 
 ## Section E - Docs and Team Workflow
 
-- [ ] Update setup docs for Expo-based dev flow.
-- [ ] Update manual testing runbook for Expo commands.
-- [ ] Add troubleshooting for Expo-specific issues.
+- [x] Update setup docs for Expo-based dev flow. (see MANUAL_TESTING_GUIDE_SPRINT6.md — Phase 2 Expo section)
+- [x] Update manual testing runbook for Expo commands.
+- [x] Add troubleshooting for Expo-specific issues.
 
 ---
 
