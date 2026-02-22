@@ -28,11 +28,17 @@ export const GameProvider = ({ children }) => {
   const [correctCount, setCorrectCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
+  const activeSessionRef = useRef(null);
   const topicSubRef = useRef(null);
   const privateSubRef = useRef(null);
 
   const startGame = (sessionId) => {
     console.log('[GameContext] Starting game:', sessionId);
+
+    if (activeSessionRef.current === sessionId && topicSubRef.current) {
+      console.log('[GameContext] Session already active, skipping reset:', sessionId);
+      return;
+    }
 
     if (topicSubRef.current) {
       try {
@@ -54,6 +60,7 @@ export const GameProvider = ({ children }) => {
       }
     }
 
+    activeSessionRef.current = sessionId;
     setActiveSession(sessionId);
     setGameStatus('playing');
     setRound('round1');
@@ -65,8 +72,7 @@ export const GameProvider = ({ children }) => {
     setCorrectCount(0);
     setIsTransitioning(false);
 
-    const gameTopic = `/topic/game/${sessionId}`;
-    const sub = WebSocketService.subscribe(gameTopic, (payload) => {
+    const applyGamePayload = (payload) => {
       console.log('[GameContext] Received message:', payload.type || payload.status);
 
       if (payload.type === 'QUESTION') {
@@ -90,6 +96,11 @@ export const GameProvider = ({ children }) => {
         setGameStatus('completed');
         setIsTransitioning(false);
       }
+    };
+
+    const gameTopic = `/topic/game/${sessionId}`;
+    const sub = WebSocketService.subscribe(gameTopic, (payload) => {
+      applyGamePayload(payload);
     });
 
     topicSubRef.current = sub;
@@ -102,6 +113,8 @@ export const GameProvider = ({ children }) => {
           setGuessResult(payload);
           setCorrectCount(payload.correctCount || 0);
           setWaitingForPartner(true);
+        } else {
+          applyGamePayload(payload);
         }
       },
     );
@@ -183,6 +196,7 @@ export const GameProvider = ({ children }) => {
     }
 
     setActiveSession(null);
+    activeSessionRef.current = null;
     setCurrentQuestion(null);
     setMyAnswer(null);
     setWaitingForPartner(false);
@@ -210,6 +224,7 @@ export const GameProvider = ({ children }) => {
           privateSubRef.current = null;
         }
       }
+      activeSessionRef.current = null;
     };
   }, []);
 

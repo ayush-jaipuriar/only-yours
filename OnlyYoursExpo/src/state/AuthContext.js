@@ -130,7 +130,13 @@ export const AuthProvider = ({ children }) => {
         gameContextRef.current.startGame(sessionId);
       }
       if (navigationRef.current) {
-        navigationRef.current.navigate('Game', { sessionId });
+        const currentRoute = navigationRef.current.getCurrentRoute?.();
+        const isSameGameRoute =
+          currentRoute?.name === 'Game' &&
+          currentRoute?.params?.sessionId === sessionId;
+        if (!isSameGameRoute) {
+          navigationRef.current.navigate('Game', { sessionId });
+        }
       }
     };
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   Platform,
   ToastAndroid,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -32,6 +33,7 @@ const CategorySelectionScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [loadError, setLoadError] = useState(false);
+  const [isInviteInFlight, setIsInviteInFlight] = useState(false);
 
   /**
    * Load categories from backend on mount.
@@ -39,6 +41,12 @@ const CategorySelectionScreen = ({ navigation }) => {
   useEffect(() => {
     loadCategories();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      setIsInviteInFlight(false);
+    }, [])
+  );
 
   const loadCategories = async () => {
     setLoading(true);
@@ -82,11 +90,23 @@ const CategorySelectionScreen = ({ navigation }) => {
     console.log('[CategorySelection] Sending invitation for:', category.name);
 
     try {
+      if (isInviteInFlight) {
+        if (Platform.OS === 'android') {
+          ToastAndroid.show('Invitation already pending. Please wait.', ToastAndroid.SHORT);
+        } else {
+          Alert.alert('Invitation Pending', 'Please wait for your partner to respond.');
+        }
+        return;
+      }
+
+      setIsInviteInFlight(true);
+
       if (!WebSocketService.isConnected()) {
         Alert.alert(
           'Realtime Disconnected',
           'Cannot send invitation right now because realtime connection is not ready. Please wait a few seconds and try again.'
         );
+        setIsInviteInFlight(false);
         return;
       }
 
@@ -104,6 +124,7 @@ const CategorySelectionScreen = ({ navigation }) => {
     } catch (error) {
       console.error('[CategorySelection] Error sending invitation:', error);
       Alert.alert('Error', 'Failed to send invitation. Please try again.');
+      setIsInviteInFlight(false);
     }
   };
 
@@ -112,8 +133,13 @@ const CategorySelectionScreen = ({ navigation }) => {
    */
   const renderCategory = ({ item }) => (
     <TouchableOpacity
-      style={[styles.categoryCard, item.sensitive && styles.sensitiveCard]}
+      style={[
+        styles.categoryCard,
+        item.sensitive && styles.sensitiveCard,
+        isInviteInFlight && styles.disabledCard,
+      ]}
       onPress={() => handleCategorySelect(item)}
+      disabled={isInviteInFlight}
       activeOpacity={0.7}>
       <Text style={styles.categoryName}>{item.name}</Text>
       <Text style={styles.categoryDescription}>{item.description}</Text>
@@ -207,6 +233,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#ff6f00',
     fontWeight: '600',
+  },
+  disabledCard: {
+    opacity: 0.6,
   },
 });
 

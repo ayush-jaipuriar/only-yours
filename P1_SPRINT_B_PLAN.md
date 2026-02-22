@@ -304,6 +304,10 @@ push/PR to main
 | `OnlyYoursExpo/src/services/NotificationService.js` | Added Firebase-init specific diagnostics + projectId fallback + deviceId registration | Makes push failures actionable and improves backend token metadata for multi-device testing |
 | `OnlyYoursExpo/app.config.js` | Added dynamic Expo config to wire `googleServicesFile` only when file exists | Keeps local builds stable without Firebase file while enabling push setup as soon as config file is added |
 | `OnlyYoursExpo/scripts/local-android-build.sh` | Added `EXPO_FORCE_PREBUILD=1` path + Firebase config copy step | Ensures native config/plugins can be resynced deterministically and reduces local push setup drift |
+| `OnlyYoursExpo/src/state/GameContext.js` | Made `startGame()` idempotent per session and added shared payload handler for topic/private channels | Prevents duplicate resets that can blank `currentQuestion` and avoids diverging state between sender/receiver |
+| `backend/src/main/java/com/onlyyours/controller/GameController.java` | Added first-question private fallback to both users on accept (in addition to topic broadcast) | Covers rare subscribe timing race where one device can miss initial `/topic/game/{sessionId}` question |
+| `OnlyYoursExpo/src/screens/CategorySelectionScreen.js` | Added invite-in-flight guard and disabled repeated category taps until screen refocus | Prevents accidental multi-session invitation spam that can desynchronize both devices |
+| `OnlyYoursExpo/src/state/AuthContext.js` | Added same-route navigation guard before navigating to `Game` | Reduces duplicate navigation churn during rapid `INVITATION_SENT` + `INVITATION_ACCEPTED` event sequences |
 
 ### User Action Required
 

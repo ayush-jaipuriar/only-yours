@@ -785,9 +785,9 @@ Fix:
 
 1. In Firebase Console (same project as your FCM setup), download Android config file:
    - `google-services.json`
-2. Place file at:
+1. Place file at:
    - `OnlyYoursExpo/google-services.json`
-3. Rebuild the local dev client with native config resync:
+1. Rebuild the local dev client with native config resync:
 
 ```bash
 cd OnlyYoursExpo
@@ -795,7 +795,7 @@ EXPO_FORCE_PREBUILD=1 npm run android:local-build
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-4. Restart Metro and reopen app on both phones:
+1. Restart Metro and reopen app on both phones:
 
 ```bash
 cd OnlyYoursExpo
@@ -823,6 +823,25 @@ Fix checklist:
    - `[AuthContext] Game status: INVITATION_SENT`
    - `[AuthContext] Game status: INVITATION_ACCEPTED`
    - `[GameContext] Starting game: <sessionId>`
+
+### Problem: One phone shows question, other is stuck on "Loading question..."
+
+This is usually a realtime session-sync issue caused by duplicate invitations or initial-question delivery timing.
+
+Fix checklist:
+
+1. Prevent multi-invite overlap during one pending session:
+   - After pressing invite once, wait for partner action.
+   - Latest app code now blocks repeated sends while an invite is in flight.
+1. Ensure both devices run latest JS bundle:
+   - Force-close both apps, restart Metro with `-c`, reopen both apps.
+1. Validate session IDs line up on both phones:
+   - Both sides should log the same `sessionId` for `Starting game` and first `QUESTION`.
+1. If one side still misses first question:
+   - Retry once with fresh invite. Backend now sends first question via both:
+     - topic broadcast (`/topic/game/{sessionId}`)
+     - private fallback (`/user/queue/game-events`)
+   - This should eliminate subscription timing misses.
 
 ### Problem: Expo requests fail with `401/403` and Profile shows "Couldn't Load Profile"
 

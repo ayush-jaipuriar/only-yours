@@ -158,6 +158,19 @@ public class GameController {
                             .build()
             );
 
+            // Send first question directly as private fallback in case a client
+            // misses the initial topic broadcast during rapid subscribe transitions.
+            messagingTemplate.convertAndSendToUser(
+                    inviter.getEmail(),
+                    "/queue/game-events",
+                    firstQuestion
+            );
+            messagingTemplate.convertAndSendToUser(
+                    accepterEmail,
+                    "/queue/game-events",
+                    firstQuestion
+            );
+
             // Broadcast first question to both players on game topic
             String gameTopic = "/topic/game/" + sessionId;
             messagingTemplate.convertAndSend(gameTopic, firstQuestion);
