@@ -332,15 +332,12 @@ npm install
 **`WebSocket connection timed out` in app logs**
 
 - Ensure backend includes `/ws-native` in security permit list (already fixed).
-- Ensure app has latest realtime fix for React Native STOMP framing (`forceBinaryWSFrames` + `appendMissingNULLonIncoming`) from `OnlyYoursExpo/src/services/WebSocketService.js`.
 - Restart backend and app:
 
 ```bash
 cd backend && ./gradlew bootRun
 cd ../OnlyYoursExpo && npx expo start --dev-client -c
 ```
-
-- Force-close the app on both phones and reopen from the dev client after Metro is ready (prevents stale bundle/runtime state).
 
 **App cannot reach backend**
 
@@ -748,7 +745,7 @@ Most common causes and fixes:
 
 1. Backend security not permitting native endpoint path
    - Ensure `/ws-native` and `/ws-native/**` are permitted in `SecurityConfig` (already fixed in latest code).
-1. Backend restarted is stale / old process still running
+2. Backend restarted is stale / old process still running
    - Restart backend with latest code:
 
 ```bash
@@ -756,92 +753,13 @@ cd backend
 ./gradlew bootRun
 ```
 
-1. Frontend still running stale bundle
+3. Frontend still running stale bundle
    - Restart Metro and reload dev client:
 
 ```bash
 cd OnlyYoursExpo
 npx expo start --dev-client -c
 ```
-
-1. React Native STOMP frame parsing edge case on Android dev client
-   - Symptom: socket opens but STOMP `CONNECTED` never arrives, then timeout.
-   - Fix already applied in app code:
-     - `forceBinaryWSFrames: true`
-     - `appendMissingNULLonIncoming: true`
-   - After pulling latest code, **fully close and reopen app** on each device.
-
-1. Quick realtime verification after restart
-   - In Expo logs, confirm you see:
-     - `[WebSocket] Socket opened: ws://<LAN_IP>:8080/ws-native`
-     - `[WebSocket] STOMP connected`
-   - If `Socket opened` appears without `STOMP connected`, share those logs; it means handshake reached backend but STOMP negotiation is not completing.
-
-### Problem: Push registration fails with `Default FirebaseApp is not initialized`
-
-This means Android Firebase config is missing from the dev client build, so Expo cannot fetch a push token.
-
-Fix:
-
-1. In Firebase Console (same project as your FCM setup), download Android config file:
-   - `google-services.json`
-1. Place file at:
-   - `OnlyYoursExpo/google-services.json`
-1. Rebuild the local dev client with native config resync:
-
-```bash
-cd OnlyYoursExpo
-EXPO_FORCE_PREBUILD=1 npm run android:local-build
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk
-```
-
-1. Restart Metro and reopen app on both phones:
-
-```bash
-cd OnlyYoursExpo
-npx expo start --dev-client -c
-```
-
-Expected logs after fix:
-
-- `[Notifications] Push token registered with backend`
-- No FirebaseApp initialization warning
-
-### Problem: Sender still sees "Waiting for partner..." after invite is accepted
-
-This can happen if one app is still running an old JS bundle with a blocking invitation alert flow.
-
-Fix checklist:
-
-1. Ensure latest JS is loaded on both phones:
-   - Fully close app on both devices
-   - Restart Metro with cache clear (`npx expo start --dev-client -c`)
-2. Re-test invite flow:
-   - Sender should not get a blocking modal after invite
-   - Both users should transition to `Game` screen once invitation is accepted
-3. If asymmetry persists, capture logs around:
-   - `[AuthContext] Game status: INVITATION_SENT`
-   - `[AuthContext] Game status: INVITATION_ACCEPTED`
-   - `[GameContext] Starting game: <sessionId>`
-
-### Problem: One phone shows question, other is stuck on "Loading question..."
-
-This is usually a realtime session-sync issue caused by duplicate invitations or initial-question delivery timing.
-
-Fix checklist:
-
-1. Prevent multi-invite overlap during one pending session:
-   - After pressing invite once, wait for partner action.
-   - Latest app code now blocks repeated sends while an invite is in flight.
-1. Ensure both devices run latest JS bundle:
-   - Force-close both apps, restart Metro with `-c`, reopen both apps.
-1. Validate session IDs line up on both phones:
-   - Both sides should log the same `sessionId` for `Starting game` and first `QUESTION`.
-1. If one side still misses first question:
-   - Retry once with fresh invite. Backend now sends first question via both:
-     - topic broadcast (`/topic/game/{sessionId}`)
-     - private fallback (`/user/queue/game-events`)
-   - This should eliminate subscription timing misses.
 
 ### Problem: Expo requests fail with `401/403` and Profile shows "Couldn't Load Profile"
 
