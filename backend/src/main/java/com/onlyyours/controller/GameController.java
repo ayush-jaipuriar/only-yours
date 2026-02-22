@@ -80,7 +80,18 @@ public class GameController {
                     ? couple.getUser2() 
                     : couple.getUser1();
 
-            // Send invitation to partner's private queue
+            // Send confirmation to inviter
+            messagingTemplate.convertAndSendToUser(
+                    inviterEmail,
+                    "/queue/game-events",
+                    GameStatusDto.builder()
+                            .sessionId(invitation.getSessionId())
+                            .status("INVITATION_SENT")
+                            .message("Invitation sent to " + partner.getName())
+                            .build()
+            );
+
+            // Send invitation to partner's private queue after inviter is subscribed
             messagingTemplate.convertAndSendToUser(
                     partner.getEmail(),
                     "/queue/game-events",
@@ -92,17 +103,6 @@ public class GameController {
                     "Game Invitation",
                     inviter.getName() + " wants to play with you!",
                     Map.of("type", "INVITATION", "sessionId", invitation.getSessionId().toString())
-            );
-
-            // Send confirmation to inviter
-            messagingTemplate.convertAndSendToUser(
-                    inviterEmail,
-                    "/queue/game-events",
-                    GameStatusDto.builder()
-                            .sessionId(invitation.getSessionId())
-                            .status("INVITATION_SENT")
-                            .message("Invitation sent to " + partner.getName())
-                            .build()
             );
 
             log.info("Invitation sent: session={}, inviter={}, invitee={}", 
@@ -141,6 +141,22 @@ public class GameController {
 
             // Accept invitation and get first question
             QuestionPayloadDto firstQuestion = gameService.acceptInvitation(sessionId, accepter.getId());
+
+            GameSession session = gameService.getGameSession(sessionId);
+            Couple couple = session.getCouple();
+            User inviter = couple.getUser1().getId().equals(accepter.getId())
+                    ? couple.getUser2()
+                    : couple.getUser1();
+
+            messagingTemplate.convertAndSendToUser(
+                    inviter.getEmail(),
+                    "/queue/game-events",
+                    GameStatusDto.builder()
+                            .sessionId(sessionId)
+                            .status("INVITATION_ACCEPTED")
+                            .message(accepter.getName() + " accepted your invitation")
+                            .build()
+            );
 
             // Broadcast first question to both players on game topic
             String gameTopic = "/topic/game/" + sessionId;

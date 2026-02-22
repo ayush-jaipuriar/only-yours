@@ -28,11 +28,31 @@ export const GameProvider = ({ children }) => {
   const [correctCount, setCorrectCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const [subscription, setSubscription] = useState(null);
+  const topicSubRef = useRef(null);
   const privateSubRef = useRef(null);
 
   const startGame = (sessionId) => {
     console.log('[GameContext] Starting game:', sessionId);
+
+    if (topicSubRef.current) {
+      try {
+        topicSubRef.current.unsubscribe();
+      } catch (error) {
+        console.error('[GameContext] Error unsubscribing previous topic listener:', error);
+      } finally {
+        topicSubRef.current = null;
+      }
+    }
+
+    if (privateSubRef.current) {
+      try {
+        privateSubRef.current.unsubscribe();
+      } catch (error) {
+        console.error('[GameContext] Error unsubscribing previous private listener:', error);
+      } finally {
+        privateSubRef.current = null;
+      }
+    }
 
     setActiveSession(sessionId);
     setGameStatus('playing');
@@ -72,7 +92,7 @@ export const GameProvider = ({ children }) => {
       }
     });
 
-    setSubscription(sub);
+    topicSubRef.current = sub;
 
     const privateSub = WebSocketService.subscribe(
       '/user/queue/game-events',
@@ -147,14 +167,18 @@ export const GameProvider = ({ children }) => {
   const endGame = () => {
     console.log('[GameContext] Ending game');
 
-    if (subscription) {
-      try { subscription.unsubscribe(); } catch (error) {
+    if (topicSubRef.current) {
+      try { topicSubRef.current.unsubscribe(); } catch (error) {
         console.error('[GameContext] Error unsubscribing:', error);
+      } finally {
+        topicSubRef.current = null;
       }
     }
     if (privateSubRef.current) {
       try { privateSubRef.current.unsubscribe(); } catch (error) {
         console.error('[GameContext] Error unsubscribing private:', error);
+      } finally {
+        privateSubRef.current = null;
       }
     }
 
@@ -163,29 +187,31 @@ export const GameProvider = ({ children }) => {
     setMyAnswer(null);
     setWaitingForPartner(false);
     setGameStatus(null);
-    setSubscription(null);
     setRound(null);
     setGuessResult(null);
     setScores(null);
     setCorrectCount(0);
     setIsTransitioning(false);
-    privateSubRef.current = null;
   };
 
   useEffect(() => {
     return () => {
-      if (subscription) {
-        try { subscription.unsubscribe(); } catch (error) {
+      if (topicSubRef.current) {
+        try { topicSubRef.current.unsubscribe(); } catch (error) {
           console.error('[GameContext] Error during cleanup:', error);
+        } finally {
+          topicSubRef.current = null;
         }
       }
       if (privateSubRef.current) {
         try { privateSubRef.current.unsubscribe(); } catch (error) {
           console.error('[GameContext] Error during private cleanup:', error);
+        } finally {
+          privateSubRef.current = null;
         }
       }
     };
-  }, [subscription]);
+  }, []);
 
   useEffect(() => {
     if (setGameContextRef) {

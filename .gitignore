@@ -39,3 +39,7 @@ out/
 # Environment files (secrets)
 .env
 .env.*
+
+# Expo prebuild generated native directories (managed workflow)
+OnlyYoursExpo/android/
+OnlyYoursExpo/ios/

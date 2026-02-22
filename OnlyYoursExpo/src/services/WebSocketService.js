@@ -23,6 +23,7 @@ class WebSocketService {
     this.subscriptions = new Map();
     this.onConnectionStateChange = null;
     this._nextSubId = 1;
+    this.connectPromise = null;
   }
 
   /**
@@ -40,32 +41,60 @@ class WebSocketService {
     }
   }
 
+  isConnected() {
+    return Boolean(this.client && this.client.active && this.connected);
+  }
+
   async connect(baseUrl) {
+    if (this.isConnected()) {
+      return;
+    }
+    if (this.connectPromise) {
+      return this.connectPromise;
+    }
+
     const token = await AsyncStorage.getItem('accessToken');
     if (!token) throw new Error('Missing auth token');
 
     const brokerURL = `${baseUrl.replace(/^http/, 'ws').replace(/\/?$/, '')}/ws-native`;
-
-    return new Promise((resolve, reject) => {
-      const CONNECTION_TIMEOUT_MS = 10000;
+    const webSocketFactory = typeof WebSocket === 'function'
+      ? () => new WebSocket(brokerURL, ['v12.stomp', 'v11.stomp', 'v10.stomp'])
+      : undefined;
+    const promise = new Promise((resolve, reject) => {
+      const CONNECTION_TIMEOUT_MS = 15000;
       let settled = false;
 
-      const timeout = setTimeout(() => {
+      const rejectOnce = (message) => {
         if (!settled) {
           settled = true;
-          reject(new Error('WebSocket connection timed out'));
+          clearTimeout(timeout);
+          reject(new Error(message));
         }
+      };
+
+      const timeout = setTimeout(() => {
+        rejectOnce(`WebSocket connection timed out (${brokerURL})`);
       }, CONNECTION_TIMEOUT_MS);
 
       this.client = new Client({
         brokerURL,
+        webSocketFactory,
         connectHeaders: {
           Authorization: `Bearer ${token}`,
         },
         debug: () => {},
+        // React Native WebSocket implementations can strip STOMP NULL frame terminators.
+        // These flags keep frame parsing stable on Android dev clients.
+        forceBinaryWSFrames: true,
+        appendMissingNULLonIncoming: true,
         reconnectDelay: 5000,
 
+        onWebSocketOpen: () => {
+          console.log('[WebSocket] Socket opened:', brokerURL);
+        },
+
         onConnect: () => {
+          console.log('[WebSocket] STOMP connected');
           this.connected = true;
           this._emitConnectionState('connected');
           if (!settled) {
@@ -84,30 +113,48 @@ class WebSocketService {
           console.error('[WebSocket] STOMP error:', frame.headers['message']);
           this.connected = false;
           this._emitConnectionState('reconnecting');
-          if (!settled) {
-            settled = true;
-            clearTimeout(timeout);
-            reject(new Error(frame.headers['message'] || 'STOMP connection error'));
-          }
+          rejectOnce(frame.headers['message'] || 'STOMP connection error');
         },
 
-        onWebSocketClose: () => {
+        onWebSocketClose: (event) => {
+          const code = event?.code != null ? `code=${event.code}` : 'code=unknown';
+          const reason = event?.reason ? ` reason=${event.reason}` : '';
+          console.warn(`[WebSocket] Socket closed (${code}${reason})`);
+
           if (this.client && this.client.active) {
             this._emitConnectionState('reconnecting');
           } else {
             this._emitConnectionState('disconnected');
           }
+          if (settled) {
+            return;
+          }
+          rejectOnce(`WebSocket closed before CONNECTED (${code}${reason})`);
+        },
+
+        onWebSocketError: (event) => {
+          const message = event?.message || 'Unknown WebSocket error';
+          rejectOnce(`WebSocket error: ${message}`);
         },
       });
 
       this.client.activate();
     });
+
+    const trackedPromise = promise.finally(() => {
+      if (this.connectPromise === trackedPromise) {
+        this.connectPromise = null;
+      }
+    });
+    this.connectPromise = trackedPromise;
+    return trackedPromise;
   }
 
   disconnect() {
     if (this.client) {
       this.client.deactivate();
       this.client = null;
+      this.connectPromise = null;
       this.connected = false;
       this.subscriptions.clear();
       this._emitConnectionState('disconnected');
@@ -119,12 +166,19 @@ class WebSocketService {
 
     const subId = this._nextSubId++;
     const stompSub = this.client.subscribe(destination, (message) => {
-      try {
-        const body = JSON.parse(message.body);
-        callback(body);
-      } catch (e) {
-        callback(message.body);
+      const rawBody = message.body;
+      const trimmedBody = typeof rawBody === 'string' ? rawBody.trim() : rawBody;
+
+      if (typeof trimmedBody === 'string' && (trimmedBody.startsWith('{') || trimmedBody.startsWith('['))) {
+        try {
+          callback(JSON.parse(trimmedBody));
+          return;
+        } catch (error) {
+          console.warn('[WebSocket] Failed to parse message body as JSON:', error?.message || error);
+        }
       }
+
+      callback(rawBody);
     });
 
     if (!this.subscriptions.has(destination)) {
@@ -164,9 +218,10 @@ class WebSocketService {
   }
 
   sendMessage(destination, body) {
-    if (!this.client || !this.connected) return;
+    if (!this.client || !this.connected) return false;
     const payload = typeof body === 'string' ? body : JSON.stringify(body);
     this.client.publish({ destination, body: payload });
+    return true;
   }
 
   getConnectionState() {

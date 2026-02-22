@@ -4,7 +4,116 @@
 **Goal:** Give you a zero-confusion, step-by-step way to verify current implemented features before GCP deployment, including the new email/password auth system.
 **Scope:** Current features only (email/password auth, linking, gameplay rounds, results, error/reconnect behavior).
 
-> **Frontend is now Expo (`OnlyYoursExpo/`).** All mobile dev commands below use `OnlyYoursExpo/` and `npx expo`. No local emulator is required — use EAS cloud builds and physical Android devices.
+> **Frontend is now Expo (`OnlyYoursExpo/`).** All mobile dev commands below use `OnlyYoursExpo/` and `npx expo`. This guide prioritizes **local builds on your machine**; use EAS cloud only as fallback.
+
+---
+
+## Quick Start (Copy-Paste Runbook)
+
+Use this when you want to start a full local manual test session quickly.
+
+### Terminal A — Backend
+
+```bash
+cd /Users/ayushjaipuriar/Documents/GitHub/only-yours/backend
+./gradlew bootRun
+```
+
+Wait until backend is fully started, then verify:
+
+```bash
+curl -s http://localhost:8080/actuator/health
+```
+
+Expected: `{"status":"UP"}`
+
+### Terminal B — Frontend Build + Metro
+
+```bash
+cd /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+npm install
+npm run android:local-build
+npx expo start --dev-client -c
+```
+
+### Terminal C — APK install (if needed)
+
+```bash
+cd /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo
+adb devices
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Terminal D — ADB over Wi-Fi (cable-free installs)
+
+Use this to install APKs wirelessly on both phones.
+
+#### Method 1 (recommended, Android 11+): Wireless debugging pairing
+
+On each phone:
+
+1. Enable **Developer options**
+2. Enable **Wireless debugging**
+3. Tap **Pair device with pairing code**
+4. Note:
+   - Pairing endpoint: `<PHONE_IP>:<PAIRING_PORT>`
+   - Debug endpoint: `<PHONE_IP>:<DEBUG_PORT>`
+   - Pairing code
+
+From laptop:
+
+```bash
+# Pair (enter the 6-digit pairing code when prompted)
+adb pair <PHONE_IP>:<PAIRING_PORT>
+
+# Connect for normal adb commands
+adb connect <PHONE_IP>:<DEBUG_PORT>
+
+# Verify
+adb devices
+```
+
+Install APK over Wi-Fi:
+
+```bash
+adb -s <PHONE_IP>:<DEBUG_PORT> install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Repeat connect/install for Device A and Device B.
+
+#### Method 2 (older fallback): one-time USB then tcpip
+
+```bash
+adb devices
+adb -s <USB_SERIAL> tcpip 5555
+adb connect <PHONE_IP>:5555
+adb -s <PHONE_IP>:5555 install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+Useful cleanup:
+
+```bash
+adb disconnect <PHONE_IP>:<PORT>
+adb disconnect   # disconnect all wifi adb sessions
+```
+
+### One-time/occasional checks
+
+```bash
+# confirm phone-accessible backend endpoint (replace with your current LAN IP)
+curl -s http://192.168.1.101:8080/actuator/health
+
+# confirm frontend env is set for phone-on-Wi-Fi
+rg "EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/.env
+```
+
+### If you see common failures
+
+- **WebSocket timeout:** restart backend + `npx expo start --dev-client -c`
+- **Resend key missing in logs:** verify root `.env` has `RESEND_API_KEY`, then restart backend
+- **Node API errors (`toReversed`)**: run `nvm use 24` before Expo commands
 
 ---
 
@@ -74,16 +183,14 @@ From terminal, run:
 java -version
 node -v
 npm -v
-yarn -v
 adb version
 ```
 
 Expected:
 
 - Java 17
-- Node 20.19.4+ recommended (Node 18 can work locally but may emit engine warnings)
+- Node 24.x (required for this Expo SDK 54 setup)
 - npm available
-- Yarn 4.x available (project package manager)
 - adb available
 
 If `adb` is missing, install Android Studio and SDK Platform Tools first (Step 2).
@@ -122,147 +229,137 @@ Do this once per device:
 
 ### 2.4 - Success criteria for Step 2
 
-- [ ] Expo Go installed on both devices
+- [ ] Android test devices are ready (Expo Go optional, dev client preferred)
 - [ ] Both devices share the same Wi-Fi as laptop
 - [ ] (Optional) `adb version` works if USB/APK flow is needed
 
 ---
 
-## Step 2 (Preferred Alternative): Expo + EAS Workflow — No Emulator Needed
+## Step 2 (Preferred): Local Android Build + Dev Client Workflow
 
-> Primary workflow: EAS builds happen in the cloud; you run the app on physical Android devices.
+> Primary workflow: build Android locally on laptop, install on device, run via dev client.
 
-### Why Expo + EAS instead of local emulator
+### Why local builds first
 
-- No emulator performance issues, Gradle wrapper corruption, or JDK mismatches.
-- EAS cloud builds Android APKs in ~5-10 minutes — you just download and install.
-- `npx expo start` + **Expo Go** app on your phone gives instant JS-only hot reload.
-- Matches the production EAS delivery path.
+- Faster and deterministic once local toolchain is configured.
+- No cloud queue wait or monthly build quota concerns.
+- Better for native debugging and environment parity with your machine.
+- Required for push-notification validation (Expo Go cannot fully cover this path).
 
 ### Prerequisites
 
-- Node 24 must be used for `OnlyYoursExpo/` (Expo SDK 54 requires Node ≥ 20).
-- An Expo account (free at <https://expo.dev>).
-- `eas-cli` already installed globally (done during Phase 2 migration).
-- A physical Android device (Android 10+).
-
-### Cost model (what is free vs paid)
-
-Short answer: **yes, you can start for free**.
-
-- `npx expo start` + Expo Go is free for local development.
-- Expo account signup is free.
-- EAS Build has a free tier (monthly limits apply).
-- If you exceed free-tier quota or need faster/priority builds, you move to paid plans.
-
-Practical recommendation for this project:
-
-- Use Expo Go during day-to-day coding (free).
-- Use EAS builds only for milestone APKs (usually stays within free-tier limits for small projects).
-
-Note: pricing/limits can change over time. Always verify current limits at `https://expo.dev/pricing`.
+- Node 24 in `OnlyYoursExpo/` terminal (`.nvmrc` is `24`)
+- Java 17 available
+- Android SDK + platform-tools installed (`adb` must work)
+- Physical Android device on same Wi-Fi as laptop
 
 ### Step A — Switch to Node 24
 
 ```bash
+source "$HOME/.nvm/nvm.sh"
 nvm use 24
-# Or permanently: nvm alias default 24
-node -v   # should print v24.x.x
+node -v
+npm -v
 ```
 
-### Step B — Install the Expo Go app on your phone
-
-1. Open Google Play Store on your Android device.
-2. Search for **"Expo Go"** (by Expo Inc.) and install it.
-
-Expo Go lets you run the JS bundle from your laptop directly on the phone over Wi-Fi — no APK install needed for JS-only changes. It cannot run custom native modules, but all our dependencies are compatible.
-
-### Step C — Start the Metro bundler
+### Step B — Run local build script (recommended)
 
 ```bash
 cd OnlyYoursExpo
-npx expo start
+npm run android:local-build
 ```
 
-Metro will print a QR code. Scan it with the Expo Go app on your phone. The app loads instantly over your local Wi-Fi.
+What this script does:
 
-Important: The backend URL in `OnlyYoursExpo/src/services/api.js` must point to your laptop IP (not `localhost`):
+1. Ensures Node 24+
+2. Sets Java 17
+3. Sets Android SDK env vars
+4. Runs `expo prebuild` for Android
+5. Runs `./gradlew assembleDebug`
+
+Expected artifact:
 
 ```text
-# Backend must point to laptop LAN IP (not localhost):
-BASE_URL = 'http://192.168.x.x:8080'
+OnlyYoursExpo/android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-To find your laptop IP: `ipconfig getifaddr en0` (Mac).
-
-### Step D — First EAS cloud build (generates a full APK)
-
-Expo Go is enough for JS testing. When you need a full native APK (for testing push notifications, deep links, or production-like behavior), use EAS:
+### Step C — Install APK on phone
 
 ```bash
-# 1. Log in to your Expo account (one-time browser flow)
-eas login
-
-# 2. Link this project to your EAS account (one-time)
-cd OnlyYoursExpo
-eas build:configure
-
-# 3. Trigger a preview build (release APK, fastest)
-eas build --platform android --profile preview
-
-# 4. When build completes (~5-10 min), EAS prints a QR code / download URL.
-#    Download the .apk file and install it:
-adb install path/to/downloaded.apk
-# OR scan the EAS QR code from your phone and install directly.
+adb devices
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 ```
 
-### Step E — EAS development build (for custom native modules)
+### Step D — Start Metro for dev client
 
-If you add a native module that Expo Go cannot run:
+```bash
+cd OnlyYoursExpo
+npx expo start --dev-client -c
+```
+
+Open the installed dev client app on phone and attach to Metro.
+
+### Step E — Cloud fallback only
+
+Use EAS cloud only if local build path is blocked:
 
 ```bash
 eas build --platform android --profile development
 ```
 
-This produces a special `expo-dev-client` APK that behaves like Expo Go but includes your custom native code. Install it once; then use `npx expo start` to hot-reload JS without rebuilding.
+### Step F — Troubleshooting local-build path
 
-### Step F — Troubleshooting Expo-specific issues
+**`configs.toReversed is not a function`**
 
-**`configs.toReversed is not a function` when running `npx expo start`**
+- Cause: Node too old.
+- Fix:
 
-- Cause: Running under Node 18 instead of Node 24.
-- Fix: `nvm use 24` then retry.
+```bash
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+```
 
-### QR code scanned but app doesn't load
+**`npm ERESOLVE` during Expo/native module install**
 
-- Cause: Phone and laptop on different Wi-Fi networks, or VPN active.
-- Fix: Connect both to same network; disable VPN; use tunnel mode: `npx expo start --tunnel`.
-- If spinner keeps rolling for >30s on multiple phones, treat it as a transport-path issue first (not an app-code issue):
-  1. Kill old Metro processes and restart with fresh cache: `npx expo start --clear`.
-  2. Re-scan the new QR (old QR can point to stale port/session).
-  3. Confirm Metro receives bundle requests (you should see `iOS/Android Bundled ...` logs after scan).
-  4. If no bundle logs appear, switch host mode: `npx expo start --tunnel`.
+- Project fix is applied via `OnlyYoursExpo/.npmrc` (`legacy-peer-deps=true`).
+- Retry:
 
-**`Metro encountered an error: Unable to resolve module`**
+```bash
+cd OnlyYoursExpo
+npm install
+```
 
-- Likely a missing dependency. Run: `cd OnlyYoursExpo && npm install` then retry.
+**`WebSocket connection timed out` in app logs**
 
-**EAS build fails with `Project not found`**
+- Ensure backend includes `/ws-native` in security permit list (already fixed).
+- Ensure app has latest realtime fix for React Native STOMP framing (`forceBinaryWSFrames` + `appendMissingNULLonIncoming`) from `OnlyYoursExpo/src/services/WebSocketService.js`.
+- Restart backend and app:
 
-- Run `eas build:configure` first to link the project to your EAS account.
+```bash
+cd backend && ./gradlew bootRun
+cd ../OnlyYoursExpo && npx expo start --dev-client -c
+```
 
-**App crashes on physical device: `Cannot connect to server`**
+- Force-close the app on both phones and reopen from the dev client after Metro is ready (prevents stale bundle/runtime state).
 
-- The phone can't reach your backend at `localhost`. Use your LAN IP address in `api.js` BASE_URL.
-- Confirm backend is running: `curl http://192.168.x.x:8080/actuator/health`
+**App cannot reach backend**
 
-### Success criteria for Expo setup
+- Check `OnlyYoursExpo/.env`:
+  - `EXPO_PUBLIC_API_URL=http://<LAPTOP_LAN_IP>:8080`
+- Verify backend health from laptop:
 
-- [ ] `nvm use 24` works and `node -v` prints v24.x.x
-- [ ] `cd OnlyYoursExpo && npx expo start` runs without errors
-- [ ] QR code appears and Expo Go loads the app on the phone
-- [ ] Sign-in screen is visible on the phone
-- [ ] `eas login` completes successfully (for APK builds)
+```bash
+curl http://<LAPTOP_LAN_IP>:8080/actuator/health
+```
+
+### Success criteria for local setup
+
+- [ ] Node 24 active in terminal
+- [ ] `npm run android:local-build` completes
+- [ ] APK exists at debug output path
+- [ ] APK installs on device
+- [ ] `npx expo start --dev-client -c` starts cleanly
+- [ ] App launches and calls backend over LAN
 
 ---
 
@@ -323,6 +420,13 @@ Current defaults (already present):
 - DB password: `root`
 - JWT secret has a default (override for realistic security testing)
 - Google client ID may still exist as a legacy config but is not required for current email/password flows
+- Resend sender defaults to `onboarding@resend.dev` unless overridden
+
+Backend now imports env files automatically via:
+
+- `spring.config.import=optional:file:.env[.properties],optional:file:../.env[.properties]`
+
+This means running `./gradlew bootRun` inside `backend/` can still pick up secrets from root `../.env`.
 
 For local testing, you can start with defaults.
 
@@ -333,6 +437,8 @@ export DATABASE_URL="jdbc:postgresql://localhost:5432/onlyyours"
 export DATABASE_USERNAME="postgres"
 export DATABASE_PASSWORD="root"
 export JWT_SECRET="your_long_random_secret_here"
+export RESEND_API_KEY="re_your_resend_api_key_here"
+export RESEND_FROM_EMAIL="onboarding@resend.dev"
 ```
 
 ## Step 6 - Start backend
@@ -362,25 +468,21 @@ Because the app now runs on your physical phone (Expo Go / EAS APK), the backend
 
 ### Option A (recommended): Same Wi-Fi LAN
 
-Update these files:
+Update this file:
 
-- `OnlyYoursExpo/src/services/api.js`
-  - `API_URL = 'http://<your-laptop-lan-ip>:8080/api'`
-- `OnlyYoursExpo/src/state/AuthContext.js`
-  - `API_BASE = 'http://<your-laptop-lan-ip>:8080'`
+- `OnlyYoursExpo/.env`
+  - `EXPO_PUBLIC_API_URL=http://<your-laptop-lan-ip>:8080`
 
 Example:
 
 ```text
-API_URL = 'http://192.168.1.23:8080/api'
-API_BASE = 'http://192.168.1.23:8080'
+EXPO_PUBLIC_API_URL=http://192.168.1.23:8080
 ```
 
 Current workspace setting (this machine, current Wi-Fi):
 
 ```text
-OnlyYoursExpo/src/services/api.js      -> http://192.168.1.101:8080/api
-OnlyYoursExpo/src/state/AuthContext.js -> http://192.168.1.101:8080
+OnlyYoursExpo/.env -> EXPO_PUBLIC_API_URL=http://192.168.1.101:8080
 ```
 
 Find your laptop LAN IP on macOS:
@@ -396,7 +498,7 @@ Why this is required:
 
 ### Option B: Tunnel mode (different networks or strict Wi-Fi)
 
-If phone and laptop cannot be on the same LAN, expose backend via a secure tunnel (for testing only), then point `API_URL`/`API_BASE` to that HTTPS URL.
+If phone and laptop cannot be on the same LAN, expose backend via a secure tunnel (for testing only), then point `EXPO_PUBLIC_API_URL` to that HTTPS URL.
 
 Example tools:
 
@@ -408,18 +510,20 @@ Important:
 - Use tunnels only for local testing.
 - Keep JWT secret strong and do not expose admin endpoints.
 
-## Step 8 - Install frontend dependencies and start Expo
+## Step 8 - Install frontend dependencies, build local APK, then start Expo
 
 ```bash
 cd OnlyYoursExpo
 npm install
-npx expo start
+npm run android:local-build
+npx expo start --dev-client -c
 ```
 
 Important:
 
 - Use `npx expo ...` commands.
 - `npm expo start` is invalid and will fail with "Unknown command: expo".
+- For day-to-day testing, dev client is primary (`--dev-client`).
 
 Keep this terminal running.
 
@@ -434,7 +538,7 @@ Important package-manager note:
 - Root repo (`only-yours`) is Yarn-managed for the legacy RN CLI app.
 - `OnlyYoursExpo/` is npm-managed (`package-lock.json`) and should use npm commands.
 - Use commands in the matching project directory to avoid lockfile drift:
-  - `OnlyYoursExpo` -> `npm install`, `npx expo start`
+- `OnlyYoursExpo` -> `npm install`, `npm run android:local-build`, `npx expo start --dev-client -c`
 
 If npm reports transient dependency issues in `OnlyYoursExpo`, retry with:
 
@@ -446,9 +550,9 @@ and then retry normal npm workflow.
 
 ## Step 9 - Prepare two physical Android devices
 
-1. Install Expo Go on Device A and Device B.
+1. Ensure local dev client APK is installed on Device A and Device B.
 2. Ensure both phones are on the same Wi-Fi as your laptop.
-3. Confirm backend URL in app files uses laptop LAN IP (from Step 7).
+3. Confirm `OnlyYoursExpo/.env` uses laptop LAN IP (from Step 7).
 
 Optional validation:
 
@@ -461,13 +565,13 @@ curl http://<your-laptop-lan-ip>:8080/actuator/health
 From `OnlyYoursExpo` directory:
 
 ```bash
-npx expo start
+npx expo start --dev-client -c
 ```
 
 Then:
 
-1. Scan QR using Expo Go on Device A.
-2. Scan QR using Expo Go on Device B.
+1. Open installed dev client on Device A and connect to Metro.
+2. Open installed dev client on Device B and connect to Metro.
 3. Wait for bundle load on both devices.
 
 ## Step 11 - First-time smoke verification
@@ -487,8 +591,8 @@ For each new testing session:
 
 1. Start DB
 2. Start backend
-3. Start Expo (`npx expo start`)
-4. Open app on both phones via Expo Go
+3. Start Expo (`npx expo start --dev-client -c`)
+4. Open app on both phones via installed dev client
 5. Execute manual test cases
 
 ---
@@ -499,8 +603,7 @@ For each new testing session:
 
 Check:
 
-- `API_URL` is `http://<your-laptop-lan-ip>:8080/api` (not localhost)
-- `API_BASE` is `http://<your-laptop-lan-ip>:8080`
+- `EXPO_PUBLIC_API_URL` in `OnlyYoursExpo/.env` is `http://<your-laptop-lan-ip>:8080` (not localhost)
 - backend actually running on port 8080
 - phone and laptop are on same Wi-Fi network
 - no VPN/firewall is blocking LAN traffic
@@ -511,8 +614,7 @@ Check:
 
 - Backend is reachable from device (`/api/auth/register` and `/api/auth/login` should respond)
 - App host config is correct:
-  - `OnlyYoursExpo/src/services/api.js` -> `API_URL`
-  - `OnlyYoursExpo/src/state/AuthContext.js` -> `API_BASE`
+  - `OnlyYoursExpo/.env` -> `EXPO_PUBLIC_API_URL`
 - DB migration `V5__Email_Auth_Foundation.sql` applied
   - `users` table includes `username`, `password_hash`, `auth_provider`
 - Password entered is at least 8 characters (minimum policy)
@@ -543,10 +645,32 @@ Special case: if backend logs show `io.jsonwebtoken.io.DecodingException: Illega
 Check:
 
 - Backend log contains the dev token line:
-  - `DEV ONLY - Password reset token for email <email>: <token>`
+  - `DEV ONLY — reset code for <email>: <token>`
 - Token copy is exact (no leading/trailing spaces)
 - Token is still within expiry window (1 hour)
 - Token has not already been used once
+
+### Problem: backend logs show `RESEND_API_KEY not configured`
+
+This is backend configuration, not frontend/mobile configuration.
+
+Check:
+
+1. Root `.env` contains:
+   - `RESEND_API_KEY=<your_resend_key>`
+   - `RESEND_FROM_EMAIL=onboarding@resend.dev` (or your verified sender)
+2. Backend loads `.env` through Spring config import (already configured)
+3. Backend process restarted after env changes:
+
+```bash
+cd backend
+./gradlew bootRun
+```
+
+Important concept:
+
+- `EXPO_PUBLIC_*` affects the mobile app only.
+- `RESEND_API_KEY` must be visible to backend process.
 
 ### Problem: backend fails at startup with DB errors
 
@@ -562,13 +686,13 @@ For Docker DB:
 docker ps | grep onlyyours-pg
 ```
 
-### Problem: app fails to load in Expo Go
+### Problem: app fails to load in dev client / Expo Go
 
 Try clean restart:
 
 ```bash
 cd OnlyYoursExpo
-npx expo start --clear
+npx expo start --dev-client -c
 ```
 
 If you see `configs.toReversed is not a function`:
@@ -579,12 +703,12 @@ If you see `configs.toReversed is not a function`:
 ```bash
 nvm use 24
 cd OnlyYoursExpo
-npx expo start --clear
+npx expo start --dev-client -c
 ```
 
 If you see `Network Error` after app loads:
 
-- Verify LAN IP in `API_URL` / `API_BASE`
+- Verify LAN IP in `OnlyYoursExpo/.env` (`EXPO_PUBLIC_API_URL`)
 - Verify backend health from laptop:
 
 ```bash
@@ -598,7 +722,7 @@ cd OnlyYoursExpo
 npx expo start --tunnel
 ```
 
-If Expo Go only shows infinite loader and Metro looks idle:
+If dev client/Expo Go only shows infinite loader and Metro looks idle:
 
 - Confirm Node runtime and modern JS APIs are available:
 
@@ -617,6 +741,88 @@ curl -I "http://localhost:8081/index.bundle?platform=android&dev=true&minify=fal
 ```
 
 - Expected: both return HTTP 200. If 200 locally but phone still spins, it is almost always LAN/VPN/firewall/QR-session mismatch, so use `--tunnel` and rescan.
+
+### Problem: `[AuthContext] WebSocket connection error: WebSocket connection timed out`
+
+Most common causes and fixes:
+
+1. Backend security not permitting native endpoint path
+   - Ensure `/ws-native` and `/ws-native/**` are permitted in `SecurityConfig` (already fixed in latest code).
+1. Backend restarted is stale / old process still running
+   - Restart backend with latest code:
+
+```bash
+cd backend
+./gradlew bootRun
+```
+
+1. Frontend still running stale bundle
+   - Restart Metro and reload dev client:
+
+```bash
+cd OnlyYoursExpo
+npx expo start --dev-client -c
+```
+
+1. React Native STOMP frame parsing edge case on Android dev client
+   - Symptom: socket opens but STOMP `CONNECTED` never arrives, then timeout.
+   - Fix already applied in app code:
+     - `forceBinaryWSFrames: true`
+     - `appendMissingNULLonIncoming: true`
+   - After pulling latest code, **fully close and reopen app** on each device.
+
+1. Quick realtime verification after restart
+   - In Expo logs, confirm you see:
+     - `[WebSocket] Socket opened: ws://<LAN_IP>:8080/ws-native`
+     - `[WebSocket] STOMP connected`
+   - If `Socket opened` appears without `STOMP connected`, share those logs; it means handshake reached backend but STOMP negotiation is not completing.
+
+### Problem: Push registration fails with `Default FirebaseApp is not initialized`
+
+This means Android Firebase config is missing from the dev client build, so Expo cannot fetch a push token.
+
+Fix:
+
+1. In Firebase Console (same project as your FCM setup), download Android config file:
+   - `google-services.json`
+2. Place file at:
+   - `OnlyYoursExpo/google-services.json`
+3. Rebuild the local dev client with native config resync:
+
+```bash
+cd OnlyYoursExpo
+EXPO_FORCE_PREBUILD=1 npm run android:local-build
+adb install -r android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+4. Restart Metro and reopen app on both phones:
+
+```bash
+cd OnlyYoursExpo
+npx expo start --dev-client -c
+```
+
+Expected logs after fix:
+
+- `[Notifications] Push token registered with backend`
+- No FirebaseApp initialization warning
+
+### Problem: Sender still sees "Waiting for partner..." after invite is accepted
+
+This can happen if one app is still running an old JS bundle with a blocking invitation alert flow.
+
+Fix checklist:
+
+1. Ensure latest JS is loaded on both phones:
+   - Fully close app on both devices
+   - Restart Metro with cache clear (`npx expo start --dev-client -c`)
+2. Re-test invite flow:
+   - Sender should not get a blocking modal after invite
+   - Both users should transition to `Game` screen once invitation is accepted
+3. If asymmetry persists, capture logs around:
+   - `[AuthContext] Game status: INVITATION_SENT`
+   - `[AuthContext] Game status: INVITATION_ACCEPTED`
+   - `[GameContext] Starting game: <sessionId>`
 
 ### Problem: Expo requests fail with `401/403` and Profile shows "Couldn't Load Profile"
 
@@ -643,7 +849,7 @@ cd backend
 
 # Restart Expo with clean cache
 cd ../OnlyYoursExpo
-npx expo start --clear
+npx expo start --dev-client -c
 ```
 
 If issue persists:
@@ -665,13 +871,11 @@ For physical phones, `localhost` means “the phone itself,” not your laptop.
 
 Use laptop LAN IP in app config:
 
-- API base: `http://<LAPTOP_LAN_IP>:8080/api`
-- WebSocket base: `http://<LAPTOP_LAN_IP>:8080`
+- Frontend env base: `http://<LAPTOP_LAN_IP>:8080`
 
 Where to update:
 
-- `OnlyYoursExpo/src/services/api.js` -> `API_URL`
-- `OnlyYoursExpo/src/state/AuthContext.js` -> `API_BASE`
+- `OnlyYoursExpo/.env` -> `EXPO_PUBLIC_API_URL`
 
 Requirements:
 
@@ -703,11 +907,11 @@ Follow this exact order each test session:
 2. **Start backend**
    - `cd backend && ./gradlew bootRun`
 3. **Start Expo**
-   - `cd OnlyYoursExpo && npx expo start --clear`
+   - `cd OnlyYoursExpo && npx expo start --dev-client -c`
 4. **Open app on Device A**
-   - Scan Expo QR in Expo Go (or open installed EAS APK)
+   - Open installed local dev client
 5. **Open app on Device B**
-   - Scan Expo QR in Expo Go (or open installed EAS APK)
+   - Open installed local dev client
 6. **If using USB reverse fallback, run `adb reverse` for port `8080`**
 7. **Run manual test matrix**
 
@@ -721,19 +925,18 @@ Why this order:
 
 ## 4.1) Can We Use Expo Go Instead?
 
-Short answer: **Yes, and this guide assumes Expo Go as default for local testing**.
+Short answer: **Yes for quick UI/API checks, but not as primary path now**.
 
-Why:
+Why not primary:
 
-- The frontend is now `OnlyYoursExpo` (Expo managed workflow).
-- Current dependency set works in Expo Go.
-- Fastest dev loop: scan QR and reload instantly on physical devices.
+- Push-notification and native-runtime verification require dev client builds.
+- Local build + dev client is the default workflow for this project.
 
-Better path:
+Recommended split:
 
-- Use Expo Go for day-to-day manual testing.
-- Use EAS preview/development APKs for production-like validation.
-- Add Maestro for automated UI smoke checks.
+- Primary: local Android build + dev client
+- Secondary: Expo Go for quick JS-only checks
+- Fallback: EAS cloud only if local build environment is blocked
 
 ---
 

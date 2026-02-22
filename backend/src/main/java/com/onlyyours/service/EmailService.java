@@ -1,5 +1,6 @@
 package com.onlyyours.service;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -21,19 +22,28 @@ public class EmailService {
 
     public EmailService(
             @Value("${resend.api-key:}") String apiKey,
-            @Value("${resend.from-email:noreply@onlyyours.app}") String fromEmail) {
-        this.apiKey = apiKey;
-        this.fromEmail = fromEmail;
+            @Value("${resend.from-email:onboarding@resend.dev}") String fromEmail) {
+        this.apiKey = apiKey == null ? "" : apiKey.trim();
+        this.fromEmail = fromEmail == null || fromEmail.isBlank()
+                ? "onboarding@resend.dev"
+                : fromEmail.trim();
         this.restClient = RestClient.builder()
                 .baseUrl(RESEND_API_URL)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .build();
     }
 
+    @PostConstruct
+    public void logEmailMode() {
+        if (apiKey.isBlank()) {
+            log.warn("RESEND_API_KEY is empty. Password reset emails will use DEV fallback logging.");
+        } else {
+            log.info("Resend email delivery enabled. sender={}", fromEmail);
+        }
+    }
+
     public void sendPasswordResetEmail(String toEmail, String resetToken) {
-        if (apiKey == null || apiKey.isBlank()) {
-            log.warn("RESEND_API_KEY not configured — logging reset token for dev. "
-                    + "In production, set the RESEND_API_KEY environment variable.");
+        if (apiKey.isBlank()) {
             log.info("DEV ONLY — reset code for {}: {}", toEmail, resetToken);
             return;
         }

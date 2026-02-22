@@ -40,19 +40,32 @@ async function registerForPushNotifications() {
     });
   }
 
-  const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+  const projectId =
+    Constants.expoConfig?.extra?.eas?.projectId || Constants.easConfig?.projectId;
   if (!projectId) {
     console.error('[Notifications] EAS projectId not found in app.json');
     return null;
   }
 
-  const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
-  return tokenData.data;
+  try {
+    const tokenData = await Notifications.getExpoPushTokenAsync({ projectId });
+    return tokenData.data;
+  } catch (error) {
+    const message = error?.message || String(error);
+    if (message.includes('Default FirebaseApp is not initialized')) {
+      console.warn(
+        '[Notifications] Android push is not configured yet. Add Firebase android config (google-services.json), rebuild the dev client, and retry.'
+      );
+      return null;
+    }
+    throw error;
+  }
 }
 
 async function sendTokenToBackend(token) {
   try {
-    await api.post('/push/register', { token });
+    const deviceId = Device.osBuildId || Device.modelId || null;
+    await api.post('/push/register', { token, deviceId });
     console.log('[Notifications] Push token registered with backend');
   } catch (error) {
     console.error('[Notifications] Failed to register push token:', error?.message);

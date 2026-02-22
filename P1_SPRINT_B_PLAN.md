@@ -267,6 +267,44 @@ push/PR to main
 | `OnlyYoursExpo/src/state/AuthContext.js` | Push registration after login |
 | `OnlyYoursExpo/app.json` | expo-notifications plugin + Android config |
 
+### Local Build Priority Updates
+
+| File | Change |
+|------|--------|
+| `.cursor/rules/local-build-priority.mdc` | Added always-on rule to prefer local mobile builds over cloud builds by default |
+| `OnlyYoursExpo/.npmrc` | Added `legacy-peer-deps=true` to prevent Expo/EAS npm peer resolution failures |
+| `OnlyYoursExpo/scripts/local-android-build.sh` | Added deterministic local Android build script (Node 24 check + Java 17 + SDK env setup + prebuild + assembleDebug) |
+| `OnlyYoursExpo/package.json` | Added `android:local-build` npm script |
+| `backend/src/main/resources/application.properties` | `RESEND_FROM_EMAIL` now env-driven with default `onboarding@resend.dev` for no-domain mode |
+| `docker-compose.yml` | Added `RESEND_FROM_EMAIL` passthrough |
+| `.env.example` | Added `RESEND_FROM_EMAIL` guidance for no-domain and verified-domain modes |
+
+### Local Device Networking Update
+
+| File | Change |
+|------|--------|
+| `OnlyYoursExpo/.env` | Set `EXPO_PUBLIC_API_URL` to LAN endpoint `http://192.168.1.101:8080` so a phone on the same Wi-Fi can reach local backend |
+| `OnlyYoursExpo/.env.example` | Added guidance for LAN-IP based backend URL for physical device testing |
+
+### Post-Implementation Stabilization Fixes (Local Runtime)
+
+| File | Fix | Why |
+|------|-----|-----|
+| `backend/src/main/java/com/onlyyours/security/SecurityConfig.java` | Permitted `/ws-native` and `/ws-native/**` | Native mobile STOMP connects to `/ws-native`; it was blocked by Spring Security causing WebSocket timeouts |
+| `backend/src/main/resources/application.properties` | Added `spring.config.import=optional:file:.env[.properties],optional:file:../.env[.properties]` | Ensures local backend picks up root `.env` values (including `RESEND_API_KEY`) even when launched from backend module/IDE |
+| `OnlyYoursExpo/src/services/WebSocketService.js` | Added robust connect lifecycle (in-flight guard, close/error rejection, richer timeout context) | Prevents silent timeout paths and gives explicit failure reasons for mobile WebSocket issues |
+| `OnlyYoursExpo/src/services/WebSocketService.js` | Enabled React Native STOMP compatibility (`forceBinaryWSFrames`, `appendMissingNULLonIncoming`, explicit subprotocols) | Fixes Android dev-client scenario where socket opens but STOMP `CONNECTED` is never parsed due NULL frame terminator truncation |
+| `OnlyYoursExpo/src/state/AuthContext.js` | Added retry/backoff connect flow + background reconnect attempts | Improves realtime reliability if first connect happens before backend/network are fully ready |
+| `OnlyYoursExpo/src/screens/CategorySelectionScreen.js` | Added `isConnected()` guard before sending invites | Prevents false “Invitation Sent” UI when realtime connection is actually down |
+| `backend/src/main/java/com/onlyyours/service/EmailService.java` | Added startup diagnostics + sanitized key/from-email normalization | Makes `RESEND_API_KEY` status explicit at startup and avoids repeated per-request warning noise |
+| `OnlyYoursExpo/src/state/AuthContext.js` | Replaced broad destination unsubscribe with owned-subscription cleanup + handled `INVITATION_ACCEPTED` status | Prevents AuthContext reconnect logic from accidentally removing GameContext listeners and improves sender/receiver game synchronization |
+| `OnlyYoursExpo/src/state/GameContext.js` | Added explicit teardown of previous topic/private subscriptions before each `startGame()` | Fixes stale multi-session listeners that could cause duplicate or mismatched game events across repeated invitations |
+| `OnlyYoursExpo/src/screens/CategorySelectionScreen.js` | Replaced blocking "Invitation Sent" alert with non-blocking Android toast | Eliminates sender-side stuck "Waiting for partner..." modal while game state transitions in background |
+| `backend/src/main/java/com/onlyyours/controller/GameController.java` | Reordered invitation event sequence and added `INVITATION_ACCEPTED` status emission | Reduces race window where inviter could miss early game setup events if invitee accepts quickly |
+| `OnlyYoursExpo/src/services/NotificationService.js` | Added Firebase-init specific diagnostics + projectId fallback + deviceId registration | Makes push failures actionable and improves backend token metadata for multi-device testing |
+| `OnlyYoursExpo/app.config.js` | Added dynamic Expo config to wire `googleServicesFile` only when file exists | Keeps local builds stable without Firebase file while enabling push setup as soon as config file is added |
+| `OnlyYoursExpo/scripts/local-android-build.sh` | Added `EXPO_FORCE_PREBUILD=1` path + Firebase config copy step | Ensures native config/plugins can be resynced deterministically and reduces local push setup drift |
+
 ### User Action Required
 
 **Create `.env` file** at the repository root with your secrets:
@@ -277,6 +315,7 @@ cp .env.example .env
 # - DATABASE_PASSWORD
 # - JWT_SECRET
 # - RESEND_API_KEY (your actual key)
+# - RESEND_FROM_EMAIL (use onboarding@resend.dev until domain is verified)
 ```
 
 **Important:** The Resend `from` email (`noreply@onlyyours.app`) requires a verified domain in Resend. During development, Resend allows sending from `onboarding@resend.dev` to your own email. To send to any address, you'll need to verify your domain in Resend's dashboard.

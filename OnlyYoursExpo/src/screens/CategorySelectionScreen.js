@@ -6,6 +6,8 @@ import {
   FlatList,
   TouchableOpacity,
   Alert,
+  Platform,
+  ToastAndroid,
 } from 'react-native';
 import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
@@ -80,25 +82,25 @@ const CategorySelectionScreen = ({ navigation }) => {
     console.log('[CategorySelection] Sending invitation for:', category.name);
 
     try {
+      if (!WebSocketService.isConnected()) {
+        Alert.alert(
+          'Realtime Disconnected',
+          'Cannot send invitation right now because realtime connection is not ready. Please wait a few seconds and try again.'
+        );
+        return;
+      }
+
       // Send invitation via WebSocket
-      WebSocketService.sendMessage('/app/game.invite', {
+      const sent = WebSocketService.sendMessage('/app/game.invite', {
         categoryId: category.id.toString(),
       });
+      if (!sent) {
+        throw new Error('WebSocket not connected');
+      }
 
-      // Show waiting state
-      Alert.alert(
-        'Invitation Sent',
-        `Waiting for your partner to accept...`,
-        [
-          { 
-            text: 'Cancel', 
-            onPress: () => {
-              // User can go back to dashboard
-              navigation.goBack();
-            }
-          }
-        ]
-      );
+      if (Platform.OS === 'android') {
+        ToastAndroid.show('Invitation sent. Waiting for your partner...', ToastAndroid.SHORT);
+      }
     } catch (error) {
       console.error('[CategorySelection] Error sending invitation:', error);
       Alert.alert('Error', 'Failed to send invitation. Please try again.');

@@ -1,0 +1,12 @@
+---
+description: Prefer local mobile builds over cloud builds by default
+alwaysApply: true
+---
+
+# Local Build Priority
+
+- For Android/iOS development, default to local builds on the developer machine.
+- Use cloud builds only when explicitly requested or when local signing/tooling constraints block progress.
+- Prefer `expo run:android` / local dev-client workflows for iteration speed.
+- Before suggesting cloud builds, first check and configure local prerequisites (Node, Java, Android SDK, adb, Expo tooling).
+- Keep fallback cloud instructions available, but treat them as secondary.

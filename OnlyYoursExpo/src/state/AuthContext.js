@@ -41,6 +41,8 @@ export const AuthProvider = ({ children }) => {
   // Store navigation ref for invitation handling
   const navigationRef = useRef(null);
   const gameContextRef = useRef(null);
+  const connectingRef = useRef(false);
+  const gameEventsSubRef = useRef(null);
 
   /**
    * Set navigation ref from AppNavigator.
@@ -119,19 +121,29 @@ export const AuthProvider = ({ children }) => {
    */
   const handleGameStatus = (status) => {
     console.log('[AuthContext] Game status:', status.status);
-    
-    if (status.status === 'INVITATION_DECLINED') {
-      Alert.alert('Invitation Declined', status.message);
-    } else if (status.status === 'INVITATION_SENT') {
-      const sessionId = status.sessionId;
-      if (sessionId) {
-        if (gameContextRef.current) {
-          gameContextRef.current.startGame(sessionId);
-        }
-        if (navigationRef.current) {
-          navigationRef.current.navigate('Game', { sessionId });
-        }
+
+    const openGameSession = (sessionId) => {
+      if (!sessionId) {
+        return;
       }
+      if (gameContextRef.current) {
+        gameContextRef.current.startGame(sessionId);
+      }
+      if (navigationRef.current) {
+        navigationRef.current.navigate('Game', { sessionId });
+      }
+    };
+
+    switch (status.status) {
+      case 'INVITATION_DECLINED':
+        Alert.alert('Invitation Declined', status.message);
+        break;
+      case 'INVITATION_SENT':
+      case 'INVITATION_ACCEPTED':
+        openGameSession(status.sessionId);
+        break;
+      default:
+        break;
     }
   };
 
@@ -142,7 +154,15 @@ export const AuthProvider = ({ children }) => {
     console.log('[AuthContext] Subscribing to game events');
     
     try {
-      WebSocketService.subscribe('/user/queue/game-events', (payload) => {
+      if (gameEventsSubRef.current) {
+        try {
+          gameEventsSubRef.current.unsubscribe();
+        } catch (error) {
+          console.warn('[AuthContext] Failed to unsubscribe previous game-events listener');
+        }
+      }
+
+      gameEventsSubRef.current = WebSocketService.subscribe('/user/queue/game-events', (payload) => {
         console.log('[AuthContext] Game event received:', payload.type);
         
         if (payload.type === 'INVITATION') {
@@ -191,11 +211,40 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
   const connectRealtime = async () => {
+    if (connectingRef.current || WebSocketService.isConnected()) {
+      return;
+    }
+    connectingRef.current = true;
     WebSocketService.setConnectionStateListener(setWsConnectionState);
-    await WebSocketService.connect(API_BASE_URL);
-    subscribeToGameEvents();
-    registerPushNotifications();
+    try {
+      let lastError = null;
+      const maxAttempts = 3;
+
+      for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+        try {
+          await WebSocketService.connect(API_BASE_URL);
+          subscribeToGameEvents();
+          registerPushNotifications();
+          return;
+        } catch (error) {
+          lastError = error;
+          console.warn(
+            `[AuthContext] WebSocket connect attempt ${attempt}/${maxAttempts} failed:`,
+            error?.message || error
+          );
+          if (attempt < maxAttempts) {
+            await wait(1500 * attempt);
+          }
+        }
+      }
+
+      throw lastError || new Error('WebSocket connection failed');
+    } finally {
+      connectingRef.current = false;
+    }
   };
 
   /**
@@ -241,6 +290,15 @@ export const AuthProvider = ({ children }) => {
     }
 
     await clearAuthStorage();
+    if (gameEventsSubRef.current) {
+      try {
+        gameEventsSubRef.current.unsubscribe();
+      } catch (error) {
+        console.warn('[AuthContext] Failed to unsubscribe game-events listener during logout');
+      } finally {
+        gameEventsSubRef.current = null;
+      }
+    }
     setIsLoggedIn(false);
     setUser(null);
     setWsConnectionState('disconnected');
@@ -299,6 +357,21 @@ export const AuthProvider = ({ children }) => {
       isMounted = false;
     };
   }, []);
+
+  // Keep trying to recover realtime connection while user is logged in.
+  useEffect(() => {
+    if (!isLoggedIn || isAuthLoading || wsConnectionState === 'connected') {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      connectRealtime().catch((error) => {
+        console.warn('[AuthContext] Background reconnect attempt failed:', error?.message || error);
+      });
+    }, 5000);
+
+    return () => clearTimeout(timer);
+  }, [isLoggedIn, isAuthLoading, wsConnectionState]);
 
   return (
     <AuthContext.Provider value={{ 

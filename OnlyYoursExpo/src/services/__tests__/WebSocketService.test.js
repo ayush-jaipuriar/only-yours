@@ -1,4 +1,3 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Client } from '@stomp/stompjs';
 
 jest.mock('@stomp/stompjs', () => {
@@ -85,7 +84,7 @@ describe('WebSocketService', () => {
       const connectPromise = svc.connect('http://localhost:8080');
 
       await expect(connectPromise).rejects.toThrow('WebSocket connection timed out');
-    }, 15000);
+    }, 22000);
 
     it('should build correct broker URL from http base', async () => {
       await service.connect('http://192.168.1.101:8080');
@@ -102,6 +101,13 @@ describe('WebSocketService', () => {
       service.setConnectionStateListener(listener);
       await service.connect('http://localhost:8080');
       expect(listener).toHaveBeenCalledWith('connected');
+    });
+
+    it('should enable React Native STOMP frame compatibility flags', async () => {
+      await service.connect('http://localhost:8080');
+      const config = Client.mock.calls[0][0];
+      expect(config.forceBinaryWSFrames).toBe(true);
+      expect(config.appendMissingNULLonIncoming).toBe(true);
     });
   });
 

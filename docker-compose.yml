@@ -58,6 +58,7 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET env var is required}
       GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-disabled}
       RESEND_API_KEY: ${RESEND_API_KEY:-}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-onboarding@resend.dev}
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
     depends_on:
       postgres:
