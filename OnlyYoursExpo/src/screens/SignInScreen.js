@@ -1,6 +1,5 @@
 import React, { useContext, useState } from 'react';
 import {
-    View,
     Text,
     TextInput,
     TouchableOpacity,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { AuthContext } from '../state/AuthContext';
+import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 
 const SignInScreen = ({ navigation }) => {
     const { login } = useContext(AuthContext);
@@ -40,7 +40,7 @@ const SignInScreen = ({ navigation }) => {
     };
 
     return (
-        <View style={styles.container}>
+        <AuthFormScreenLayout>
             <Text style={styles.title}>Only Yours</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
 
@@ -51,6 +51,7 @@ const SignInScreen = ({ navigation }) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 style={styles.input}
+                placeholderTextColor="#9C94C9"
             />
             <TextInput
                 value={password}
@@ -58,6 +59,7 @@ const SignInScreen = ({ navigation }) => {
                 placeholder="Password"
                 secureTextEntry
                 style={styles.input}
+                placeholderTextColor="#9C94C9"
             />
 
             {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -81,17 +83,11 @@ const SignInScreen = ({ navigation }) => {
             <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
                 <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
             </TouchableOpacity>
-        </View>
+        </AuthFormScreenLayout>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        paddingHorizontal: 24,
-        backgroundColor: '#F6F5FF',
-    },
     title: {
         fontSize: 32,
         fontWeight: '700',
@@ -114,6 +110,7 @@ const styles = StyleSheet.create({
         paddingVertical: 12,
         fontSize: 16,
         marginBottom: 12,
+        color: '#2D225A',
     },
     primaryButton: {
         backgroundColor: '#6A4CFF',

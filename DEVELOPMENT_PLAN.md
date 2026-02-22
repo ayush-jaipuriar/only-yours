@@ -694,3 +694,33 @@ The React Native upgrade has been successfully completed:
 - Sprint 4 core implementation is complete; testing and polish pending.
 - All foundational infrastructure (auth, WebSocket, database) is complete and stable.
 - Phase 2 Expo migration is complete at the code level. Local emulator is no longer required. Use `eas build` + physical device for all future mobile testing.
+
+---
+
+## Post-Sprint Stabilization Hotfixes (Feb 22, 2026)
+
+**Goal:** Fix critical usability issues found during two-device Android testing before wider P2 feature implementation.
+
+- [x] **Keyboard-safe auth forms on Android (login/signup/forgot/reset):**
+    - [x] Added a reusable auth-screen wrapper: `OnlyYoursExpo/src/components/AuthFormScreenLayout.js`.
+    - [x] Implemented `SafeAreaView` + `KeyboardAvoidingView` + `ScrollView` combination to prevent keyboard overlap on smaller heights.
+    - [x] Applied the wrapper to these screens:
+        - [x] `OnlyYoursExpo/src/screens/SignInScreen.js`
+        - [x] `OnlyYoursExpo/src/screens/SignUpScreen.js`
+        - [x] `OnlyYoursExpo/src/screens/ForgotPasswordScreen.js`
+        - [x] `OnlyYoursExpo/src/screens/ResetPasswordScreen.js`
+    - [x] **Why this change:** keyboard handling behavior differs between iOS and Android; using this layered layout pattern gives predictable form movement and preserves tap handling while the keyboard is open.
+
+- [x] **Fix password/input illegibility under dark-mode system settings:**
+    - [x] Added explicit input `color` on auth form text inputs to avoid platform-default dark text behavior mismatch.
+    - [x] Added explicit `placeholderTextColor` for consistent contrast and readability.
+    - [x] **Why this change:** relying on implicit platform defaults can produce low-contrast text when device theme and screen background are mismatched.
+
+- [x] **Enable tablet + landscape responsiveness baseline (including gameplay screen):**
+    - [x] Updated `OnlyYoursExpo/app.json` to support multi-orientation and tablet layouts (`orientation: "default"`, `ios.supportsTablet: true`).
+    - [x] Updated `OnlyYoursExpo/src/screens/GameScreen.js` to use a scrollable, max-width-centered content layout for better behavior in compact landscape heights and large tablet widths.
+    - [x] **Why this change:** portrait lock and fixed single-column assumptions break usability on tablets and landscape; this baseline removes hard lock-in and keeps gameplay accessible across form factors.
+
+- [x] **Validation executed for this hotfix set:**
+    - [x] Ran focused frontend tests: `AuthContext` + `GameContext` suites pass (`16/16`).
+    - [x] Reviewed IDE diagnostics for changed files (existing historical warnings remain; no blocking compile/test regressions introduced by this hotfix).

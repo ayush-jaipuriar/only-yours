@@ -1,6 +1,5 @@
 import React, { useContext, useState } from 'react';
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import { AuthContext } from '../state/AuthContext';
+import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 
 const SignUpScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
@@ -58,7 +58,7 @@ const SignUpScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AuthFormScreenLayout>
       <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Join Only Yours</Text>
 
@@ -68,6 +68,7 @@ const SignUpScreen = ({ navigation }) => {
         placeholder="Username"
         autoCapitalize="none"
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
       <TextInput
         value={email}
@@ -76,6 +77,7 @@ const SignUpScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
       <TextInput
         value={password}
@@ -83,6 +85,7 @@ const SignUpScreen = ({ navigation }) => {
         placeholder="Password"
         secureTextEntry
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
       <TextInput
         value={confirmPassword}
@@ -90,6 +93,7 @@ const SignUpScreen = ({ navigation }) => {
         placeholder="Confirm Password"
         secureTextEntry
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -109,17 +113,11 @@ const SignUpScreen = ({ navigation }) => {
       <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
         <Text style={styles.linkText}>Already have an account? Sign In</Text>
       </TouchableOpacity>
-    </View>
+    </AuthFormScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#F6F5FF',
-  },
   title: {
     fontSize: 30,
     fontWeight: '700',
@@ -142,6 +140,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 12,
+    color: '#2D225A',
   },
   primaryButton: {
     backgroundColor: '#6A4CFF',

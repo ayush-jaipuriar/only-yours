@@ -1463,3 +1463,34 @@ Example use:
 - [x] Pass evidence policy finalized: failures + critical-path pass proof
 - [x] Emulator in release gate: optional
 - [ ] Do you want a printable checklist sheet format (Yes/No boxes) for each run?
+
+---
+
+## 12) UI Hotfix Verification (Auth + Landscape)
+
+Use this focused checklist after pulling the Feb 22 stabilization patch.
+
+### Keyboard overlap regression check (Android)
+
+- Open `Sign In`, `Sign Up`, `Forgot Password`, and `Reset Password`.
+- Tap into the lowest input field on each screen (for example, `Confirm Password`).
+- Confirm the form scrolls/moves so the field stays visible above the keyboard.
+- Keep keyboard open and tap buttons/links (for example, "Back to Sign In") to verify taps are still handled.
+
+### Dark-mode input readability check
+
+- Set both phones to system dark mode.
+- Open all auth screens and type in email/password fields.
+- Confirm typed text is readable and high-contrast.
+- Confirm placeholder text is visible but clearly lower emphasis than typed text.
+
+### Tablet + landscape check (all screens baseline)
+
+- Rotate phone and tablet to landscape across these critical flows:
+  - auth screens
+  - dashboard
+  - category selection
+  - game screen
+  - results screen
+- Confirm no clipped controls and no unreachable actions.
+- In `GameScreen`, verify question/options/footer remain accessible (scroll if needed in compact heights).

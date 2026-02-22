@@ -720,23 +720,25 @@ Multiple files have comments like "Sprint 4 Update:", "Sprint 6: Added...", "@au
 | 22 | Profile editing and stats (UX-9) | UX | 1 day |
 | 23 | Add password requirements on backend (SEC-5) | Security | 1 hour |
 | 24 | Add daily prompts / async questions (PRODUCT-7) | Feature | 3 days |
+| 25 | Complete Android Firebase config for push notifications (PRODUCT-1 follow-up) | DevOps | 2-4 hours |
+| 26 | Extend CI to include staging deploy pipeline (DEVOPS-1 follow-up) | DevOps | 1 day |
 
 ### P3 — Nice to Have
 
 | # | Item | Type | Effort |
 |---|------|------|--------|
-| 25 | Migrate to TypeScript (FE-3) | Quality | 3 days |
-| 26 | Add dark mode (UX-11) | UX | 2 days |
-| 27 | Add haptic feedback and sounds (UX-7) | UX | 1 day |
-| 28 | Custom questions (PRODUCT-3) | Feature | 2 days |
-| 29 | Social sharing (PRODUCT-4) | Feature | 1 day |
-| 30 | Gamification (streaks, badges) (PRODUCT-5) | Feature | 3 days |
-| 31 | Replace Simple Broker with RabbitMQ (BE-4) | Arch | 2 days |
-| 32 | Add accessibility labels (FE-8) | Quality | 1 day |
-| 33 | API versioning (ARCH-6) | Arch | 4 hours |
-| 34 | Delete legacy OnlyYoursApp codebase (ARCH-2) | Cleanup | 1 hour |
-| 35 | Token cleanup scheduled job (BE-8) | Quality | 2 hours |
-| 36 | i18n infrastructure (PRODUCT-10) | Feature | 2 days |
+| 27 | Migrate to TypeScript (FE-3) | Quality | 3 days |
+| 28 | Add dark mode (UX-11) | UX | 2 days |
+| 29 | Add haptic feedback and sounds (UX-7) | UX | 1 day |
+| 30 | Custom questions (PRODUCT-3) | Feature | 2 days |
+| 31 | Social sharing (PRODUCT-4) | Feature | 1 day |
+| 32 | Gamification (streaks, badges) (PRODUCT-5) | Feature | 3 days |
+| 33 | Replace Simple Broker with RabbitMQ (BE-4) | Arch | 2 days |
+| 34 | Add accessibility labels (FE-8) | Quality | 1 day |
+| 35 | API versioning (ARCH-6) | Arch | 4 hours |
+| 36 | Delete legacy OnlyYoursApp codebase (ARCH-2) | Cleanup | 1 hour |
+| 37 | Token cleanup scheduled job (BE-8) | Quality | 2 hours |
+| 38 | i18n infrastructure (PRODUCT-10) | Feature | 2 days |
 
 ---
 

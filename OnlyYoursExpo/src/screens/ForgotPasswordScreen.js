@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -8,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import api from '../services/api';
+import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -41,7 +41,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AuthFormScreenLayout>
       <Text style={styles.title}>Forgot Password</Text>
       <Text style={styles.subtitle}>Enter your email to request a reset code.</Text>
 
@@ -52,6 +52,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -76,17 +77,11 @@ const ForgotPasswordScreen = ({ navigation }) => {
       <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
         <Text style={styles.linkText}>Back to Sign In</Text>
       </TouchableOpacity>
-    </View>
+    </AuthFormScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#F6F5FF',
-  },
   title: {
     fontSize: 30,
     fontWeight: '700',
@@ -109,6 +104,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 12,
+    color: '#2D225A',
   },
   primaryButton: {
     backgroundColor: '#6A4CFF',

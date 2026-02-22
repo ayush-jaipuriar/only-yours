@@ -5,13 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
+  ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useGame } from '../state/GameContext';
 
 const GUESS_RESULT_DISPLAY_MS = 2500;
 
-const GameScreen = ({ route, navigation }) => {
-  const { sessionId } = route.params;
+const GameScreen = ({ navigation }) => {
   const {
     currentQuestion,
     myAnswer,
@@ -19,7 +20,6 @@ const GameScreen = ({ route, navigation }) => {
     submitAnswer,
     submitGuess,
     gameStatus,
-    endGame,
     round,
     guessResult,
     scores,
@@ -30,6 +30,7 @@ const GameScreen = ({ route, navigation }) => {
 
   const [selectedOption, setSelectedOption] = useState(null);
   const [showingResult, setShowingResult] = useState(false);
+  const { width, height } = useWindowDimensions();
 
   useEffect(() => {
     if (gameStatus === 'completed' && scores) {
@@ -159,86 +160,95 @@ const GameScreen = ({ route, navigation }) => {
   const primaryColor = isRound2 ? '#03dac6' : '#6200ea';
   const progressPercent =
     (currentQuestion.questionNumber / currentQuestion.totalQuestions) * 100;
+  const isCompactLandscape = width > height && height < 520;
 
   return (
-    <View style={styles.container}>
-      {/* Round Badge */}
-      <View style={[styles.roundBadge, isRound2 && styles.roundBadgeR2]}>
-        <Text style={[styles.roundBadgeText, isRound2 && styles.roundBadgeTextR2]}>
-          {isRound2 ? 'Round 2: Guess' : 'Round 1: Answer'}
-        </Text>
-        {isRound2 && (
-          <Text style={styles.runningScore}>
-            {correctCount}/{currentQuestion.questionNumber - 1} correct
-          </Text>
-        )}
-      </View>
-
-      {/* Progress */}
-      <View style={styles.header}>
-        <Text style={[styles.questionNumber, { color: primaryColor }]}>
-          Question {currentQuestion.questionNumber} of{' '}
-          {currentQuestion.totalQuestions}
-        </Text>
-        <View style={styles.progressBar}>
-          <View
-            style={[
-              styles.progressFill,
-              { width: `${progressPercent}%`, backgroundColor: primaryColor },
-            ]}
-          />
-        </View>
-      </View>
-
-      {/* Round 2 Prompt */}
-      {isRound2 && (
-        <View style={styles.guessPrompt}>
-          <Text style={styles.guessPromptText}>
-            How did your partner answer this?
-          </Text>
-        </View>
-      )}
-
-      {/* Question */}
-      <View style={styles.questionContainer}>
-        <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
-      </View>
-
-      {/* Options */}
-      <View style={styles.optionsContainer}>
-        {renderOption('A', currentQuestion.optionA)}
-        {renderOption('B', currentQuestion.optionB)}
-        {renderOption('C', currentQuestion.optionC)}
-        {renderOption('D', currentQuestion.optionD)}
-      </View>
-
-      {/* Footer */}
-      <View style={styles.footer}>
-        {waitingForPartner ? (
-          <View style={styles.waitingContainer}>
-            <ActivityIndicator size="small" color={primaryColor} />
-            <Text style={styles.waitingText}>Waiting for partner...</Text>
-          </View>
-        ) : myAnswer ? (
-          <Text style={styles.waitingText}>
-            {isRound2 ? 'Guess submitted!' : 'Answer submitted!'}
-          </Text>
-        ) : (
-          <TouchableOpacity
-            style={[
-              styles.submitButton,
-              { backgroundColor: primaryColor },
-              !selectedOption && styles.submitButtonDisabled,
-            ]}
-            onPress={handleSubmit}
-            disabled={!selectedOption}
-            activeOpacity={0.8}>
-            <Text style={styles.submitButtonText}>
-              {isRound2 ? 'Submit Guess' : 'Submit Answer'}
+    <View style={[styles.container, isCompactLandscape && styles.containerCompact]}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.contentWrapper}>
+          {/* Round Badge */}
+          <View style={[styles.roundBadge, isRound2 && styles.roundBadgeR2]}>
+            <Text style={[styles.roundBadgeText, isRound2 && styles.roundBadgeTextR2]}>
+              {isRound2 ? 'Round 2: Guess' : 'Round 1: Answer'}
             </Text>
-          </TouchableOpacity>
-        )}
-      </View>
+            {isRound2 && (
+              <Text style={styles.runningScore}>
+                {correctCount}/{currentQuestion.questionNumber - 1} correct
+              </Text>
+            )}
+          </View>
+
+          {/* Progress */}
+          <View style={styles.header}>
+            <Text style={[styles.questionNumber, { color: primaryColor }]}>
+              Question {currentQuestion.questionNumber} of{' '}
+              {currentQuestion.totalQuestions}
+            </Text>
+            <View style={styles.progressBar}>
+              <View
+                style={[
+                  styles.progressFill,
+                  { width: `${progressPercent}%`, backgroundColor: primaryColor },
+                ]}
+              />
+            </View>
+          </View>
+
+          {/* Round 2 Prompt */}
+          {isRound2 && (
+            <View style={styles.guessPrompt}>
+              <Text style={styles.guessPromptText}>
+                How did your partner answer this?
+              </Text>
+            </View>
+          )}
+
+          {/* Question */}
+          <View style={styles.questionContainer}>
+            <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
+          </View>
+
+          {/* Options */}
+          <View style={styles.optionsContainer}>
+            {renderOption('A', currentQuestion.optionA)}
+            {renderOption('B', currentQuestion.optionB)}
+            {renderOption('C', currentQuestion.optionC)}
+            {renderOption('D', currentQuestion.optionD)}
+          </View>
+
+          {/* Footer */}
+          <View style={styles.footer}>
+            {waitingForPartner ? (
+              <View style={styles.waitingContainer}>
+                <ActivityIndicator size="small" color={primaryColor} />
+                <Text style={styles.waitingText}>Waiting for partner...</Text>
+              </View>
+            ) : myAnswer ? (
+              <Text style={styles.waitingText}>
+                {isRound2 ? 'Guess submitted!' : 'Answer submitted!'}
+              </Text>
+            ) : (
+              <TouchableOpacity
+                style={[
+                  styles.submitButton,
+                  { backgroundColor: primaryColor },
+                  !selectedOption && styles.submitButtonDisabled,
+                ]}
+                onPress={handleSubmit}
+                disabled={!selectedOption}
+                activeOpacity={0.8}>
+                <Text style={styles.submitButtonText}>
+                  {isRound2 ? 'Submit Guess' : 'Submit Answer'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+      </ScrollView>
     </View>
   );
 };
@@ -248,6 +258,18 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f5f5f5',
     padding: 20,
+  },
+  containerCompact: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  contentWrapper: {
+    width: '100%',
+    maxWidth: 960,
+    alignSelf: 'center',
   },
   centered: {
     flex: 1,
@@ -348,7 +370,7 @@ const styles = StyleSheet.create({
 
   // Options
   optionsContainer: {
-    flex: 1,
+    width: '100%',
   },
   optionCard: {
     flexDirection: 'row',

@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import {
-  View,
   Text,
   TextInput,
   TouchableOpacity,
@@ -8,6 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import api from '../services/api';
+import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 
 const ResetPasswordScreen = ({ navigation }) => {
   const [token, setToken] = useState('');
@@ -59,7 +59,7 @@ const ResetPasswordScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <AuthFormScreenLayout>
       <Text style={styles.title}>Reset Password</Text>
       <Text style={styles.subtitle}>Enter your reset token and choose a new password.</Text>
 
@@ -69,6 +69,7 @@ const ResetPasswordScreen = ({ navigation }) => {
         placeholder="Reset Token"
         autoCapitalize="none"
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
       <TextInput
         value={newPassword}
@@ -76,6 +77,7 @@ const ResetPasswordScreen = ({ navigation }) => {
         placeholder="New Password"
         secureTextEntry
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
       <TextInput
         value={confirmPassword}
@@ -83,6 +85,7 @@ const ResetPasswordScreen = ({ navigation }) => {
         placeholder="Confirm New Password"
         secureTextEntry
         style={styles.input}
+        placeholderTextColor="#9C94C9"
       />
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -103,17 +106,11 @@ const ResetPasswordScreen = ({ navigation }) => {
       <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
         <Text style={styles.linkText}>Back to Sign In</Text>
       </TouchableOpacity>
-    </View>
+    </AuthFormScreenLayout>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    paddingHorizontal: 24,
-    backgroundColor: '#F6F5FF',
-  },
   title: {
     fontSize: 30,
     fontWeight: '700',
@@ -136,6 +133,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 16,
     marginBottom: 12,
+    color: '#2D225A',
   },
   primaryButton: {
     backgroundColor: '#6A4CFF',
