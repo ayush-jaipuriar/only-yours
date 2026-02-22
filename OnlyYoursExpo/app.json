@@ -20,15 +20,26 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.onlyyoursapp"
+      "package": "com.onlyyoursapp",
+      "useNextNotificationsApi": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "color": "#6A4CFF",
+          "defaultChannel": "default"
+        }
+      ]
+    ],
     "extra": {
       "eas": {
-        "projectId": ""
+        "projectId": "8047b007-9f02-42b3-96ec-21057b6ed95c"
       }
-    }
+    },
+    "owner": "ayush_jaipuriar"
   }
 }

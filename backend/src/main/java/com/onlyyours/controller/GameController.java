@@ -7,6 +7,7 @@ import com.onlyyours.model.User;
 import com.onlyyours.repository.CoupleRepository;
 import com.onlyyours.repository.UserRepository;
 import com.onlyyours.service.GameService;
+import com.onlyyours.service.PushNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -40,6 +41,7 @@ public class GameController {
     private final SimpMessagingTemplate messagingTemplate;
     private final UserRepository userRepository;
     private final CoupleRepository coupleRepository;
+    private final PushNotificationService pushNotificationService;
 
     /**
      * Handles game invitation requests.
@@ -83,6 +85,13 @@ public class GameController {
                     partner.getEmail(),
                     "/queue/game-events",
                     invitation
+            );
+
+            pushNotificationService.sendToUser(
+                    partner.getId(),
+                    "Game Invitation",
+                    inviter.getName() + " wants to play with you!",
+                    Map.of("type", "INVITATION", "sessionId", invitation.getSessionId().toString())
             );
 
             // Send confirmation to inviter
@@ -189,6 +198,12 @@ public class GameController {
                             .status("INVITATION_DECLINED")
                             .message(decliner.getName() + " declined the invitation")
                             .build()
+            );
+
+            pushNotificationService.sendToUser(
+                    partner.getId(),
+                    "Invitation Declined",
+                    decliner.getName() + " declined the game invitation"
             );
 
             log.info("Game declined: session={}, decliner={}", sessionId, declinerEmail);

@@ -41,6 +41,7 @@ public class AuthService implements UserDetailsService {
     private final PasswordResetTokenRepository passwordResetTokenRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Value("${google.client.id:}")
     private String googleClientId;
@@ -50,13 +51,15 @@ public class AuthService implements UserDetailsService {
             RefreshTokenRepository refreshTokenRepository,
             PasswordResetTokenRepository passwordResetTokenRepository,
             JwtService jwtService,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            EmailService emailService
     ) {
         this.userRepository = userRepository;
         this.refreshTokenRepository = refreshTokenRepository;
         this.passwordResetTokenRepository = passwordResetTokenRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.emailService = emailService;
     }
 
     /**
@@ -165,8 +168,8 @@ public class AuthService implements UserDetailsService {
         resetToken.setExpiresAt(now.plus(1, ChronoUnit.HOURS));
         passwordResetTokenRepository.save(resetToken);
 
-        // Dev-only token delivery path. Production should integrate an email provider.
-        log.info("DEV ONLY - Password reset token for email {}: {}", email, rawResetToken);
+        emailService.sendPasswordResetEmail(email, rawResetToken);
+        log.info("Password reset requested for email: {}", email);
         return GENERIC_FORGOT_PASSWORD_MESSAGE;
     }
 

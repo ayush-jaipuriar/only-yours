@@ -6,6 +6,7 @@ import com.onlyyours.model.Couple;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.UserRepository;
 import com.onlyyours.service.CoupleService;
+import com.onlyyours.service.PushNotificationService;
 import java.security.Principal;
 import java.util.Map;
 import java.util.UUID;
@@ -23,10 +24,13 @@ public class CoupleController {
 
     private final CoupleService coupleService;
     private final UserRepository userRepository;
+    private final PushNotificationService pushNotificationService;
 
-    public CoupleController(CoupleService coupleService, UserRepository userRepository) {
+    public CoupleController(CoupleService coupleService, UserRepository userRepository,
+                            PushNotificationService pushNotificationService) {
         this.coupleService = coupleService;
         this.userRepository = userRepository;
+        this.pushNotificationService = pushNotificationService;
     }
 
     @PostMapping("/generate-code")
@@ -45,6 +49,17 @@ public class CoupleController {
         UUID userId = getCurrentUserId(principal);
         try {
             Couple couple = coupleService.redeemLinkCode(userId, code.trim());
+
+            User partner = couple.getUser1().getId().equals(userId)
+                    ? couple.getUser2() : couple.getUser1();
+            User linker = couple.getUser1().getId().equals(userId)
+                    ? couple.getUser1() : couple.getUser2();
+            pushNotificationService.sendToUser(
+                    partner.getId(),
+                    "Partner Linked!",
+                    linker.getName() + " just linked with you on Only Yours"
+            );
+
             return ResponseEntity.ok(toDto(couple));
         } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

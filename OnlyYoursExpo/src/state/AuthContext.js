@@ -2,6 +2,7 @@ import React, { createContext, useEffect, useState, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import WebSocketService from '../services/WebSocketService';
+import NotificationService from '../services/NotificationService';
 import api, { setLogoutHandler } from '../services/api';
 import { API_BASE_URL } from '../config';
 
@@ -33,6 +34,7 @@ export const useAuth = () => {
  */
 export const AuthProvider = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [wsConnectionState, setWsConnectionState] = useState('disconnected');
 
@@ -178,10 +180,22 @@ export const AuthProvider = ({ children }) => {
     ]);
   };
 
+  const registerPushNotifications = async () => {
+    try {
+      const pushToken = await NotificationService.registerForPushNotifications();
+      if (pushToken) {
+        await NotificationService.sendTokenToBackend(pushToken);
+      }
+    } catch (error) {
+      console.warn('[AuthContext] Push notification registration failed:', error?.message);
+    }
+  };
+
   const connectRealtime = async () => {
     WebSocketService.setConnectionStateListener(setWsConnectionState);
     await WebSocketService.connect(API_BASE_URL);
     subscribeToGameEvents();
+    registerPushNotifications();
   };
 
   /**
@@ -242,22 +256,22 @@ export const AuthProvider = ({ children }) => {
     setLogoutHandler(() => logout({ skipServerLogout: true }));
 
     (async () => {
-      const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.refreshToken);
-      const storedUserJson = await AsyncStorage.getItem(STORAGE_KEYS.userData);
-
-      if (storedUserJson) {
-        try {
-          setUser(JSON.parse(storedUserJson));
-        } catch (error) {
-          console.warn('[AuthContext] Failed to parse stored user data');
-        }
-      }
-
-      if (!refreshToken) {
-        return;
-      }
-
       try {
+        const refreshToken = await AsyncStorage.getItem(STORAGE_KEYS.refreshToken);
+        const storedUserJson = await AsyncStorage.getItem(STORAGE_KEYS.userData);
+
+        if (storedUserJson) {
+          try {
+            setUser(JSON.parse(storedUserJson));
+          } catch (error) {
+            console.warn('[AuthContext] Failed to parse stored user data');
+          }
+        }
+
+        if (!refreshToken) {
+          return;
+        }
+
         const response = await api.post('/auth/refresh', { refreshToken });
         if (!isMounted) {
           return;
@@ -274,6 +288,10 @@ export const AuthProvider = ({ children }) => {
         if (isMounted) {
           await logout({ skipServerLogout: true });
         }
+      } finally {
+        if (isMounted) {
+          setIsAuthLoading(false);
+        }
       }
     })();
 
@@ -284,7 +302,8 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ 
-      isLoggedIn, 
+      isLoggedIn,
+      isAuthLoading,
       user, 
       login, 
       logout,
