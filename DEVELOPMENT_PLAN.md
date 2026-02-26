@@ -724,3 +724,183 @@ The React Native upgrade has been successfully completed:
 - [x] **Validation executed for this hotfix set:**
     - [x] Ran focused frontend tests: `AuthContext` + `GameContext` suites pass (`16/16`).
     - [x] Reviewed IDE diagnostics for changed files (existing historical warnings remain; no blocking compile/test regressions introduced by this hotfix).
+
+---
+
+## P2 Planning Workflow Kickoff (Feb 22, 2026)
+
+**Goal:** Begin P2 execution under the user-approved gated workflow (plan -> approval -> implementation -> full testing -> completion report).
+
+- [x] **Created in-depth Phase A sprint planning document:**
+    - [x] Added new file: `P2_PHASE_A_SPRINT_PLAN.md`.
+    - [x] Included detailed work breakdown for `A1` to `A6` with task IDs (`PA-A*`), file-level targets, and implementation checklists.
+    - [x] Included explicit automated validation command matrix for backend and frontend (focused + full regression suites).
+    - [x] Included definition-of-done checklist, risk register, and approval gate checklist.
+    - [x] **Why this change:** this creates an implementation-safe blueprint so coding starts only after explicit plan approval and can be tracked with objective completion criteria.
+
+---
+
+## P2 Phase A Core Implementation (Feb 22-23, 2026)
+
+**Goal:** Deliver the continuation-safe gameplay core: one active session per couple, 7-day expiry, resume-safe question bootstrap, and dashboard Continue Game experience.
+
+- [x] **Backend schema + lifecycle enforcement (`A1`):**
+    - [x] Added migration: `backend/src/main/resources/db/migration/V7__PhaseA_Game_Session_Continuation.sql`.
+    - [x] Added `expires_at` and `last_activity_at` fields and comments.
+    - [x] Added partial unique index enforcing one active session (`INVITED`, `ROUND1`, `ROUND2`) per couple.
+    - [x] Extended `GameSession` model with lifecycle fields + `EXPIRED` status.
+    - [x] Extended repository methods for active-session and expiry-aware queries.
+    - [x] **Why this change:** service-level checks alone are insufficient under race conditions; DB constraints provide the final correctness barrier.
+
+- [x] **State machine hardening + resume API (`A2` + `A3`):**
+    - [x] Added duplicate-active invite guard and deterministic response path (`ActiveGameSessionExistsException`).
+    - [x] Added expiry guard (`SessionExpiredException`) to transition/read paths.
+    - [x] Added active session summary DTO: `ActiveGameSessionDto`.
+    - [x] Added resume REST endpoints in `GameQueryController`:
+        - [x] `GET /api/game/active`
+        - [x] `GET /api/game/{sessionId}/current-question`
+    - [x] Added normalized status metadata (`eventType`, `timestamp`) in `GameStatusDto` and status emission paths.
+    - [x] Added partner presence event listener (`PARTNER_LEFT` / `PARTNER_RETURNED`) via `GamePresenceEventListener`.
+    - [x] **Why this change:** resume UX requires a canonical persisted-state API, not only live websocket timing.
+
+- [x] **Frontend continuation UX (`A4`):**
+    - [x] Updated `OnlyYoursExpo/src/screens/DashboardScreen.js` to fetch `/game/active` and render Continue Game CTA.
+    - [x] Extracted continuation/load/start logic into `OnlyYoursExpo/src/screens/useDashboardGameFlow.js` to enable stable automated validation.
+    - [x] Blocked accidental parallel game starts when an active session exists.
+    - [x] Updated `OnlyYoursExpo/src/state/GameContext.js` with resume bootstrap to fetch current question snapshot.
+    - [x] Updated `OnlyYoursExpo/src/state/AuthContext.js` to handle:
+        - [x] `ACTIVE_SESSION_EXISTS`
+        - [x] `SESSION_EXPIRED`
+        - [x] `PARTNER_LEFT`
+        - [x] `PARTNER_RETURNED`
+    - [x] **Why this change:** users need deterministic recovery from disconnect/background scenarios without breaking sequential gameplay.
+
+- [x] **Automated validation (`A5`):**
+    - [x] Backend focused tests passed:
+        - [x] `./gradlew test --tests "*GameServiceTest" --tests "*RestControllerTest" --tests "*GameControllerWebSocketTest"`
+    - [x] Backend full regression passed:
+        - [x] `./gradlew clean test`
+    - [x] Frontend focused tests passed:
+        - [x] `npm test -- --runInBand src/state/__tests__/useDashboardGameFlow.test.js src/state/__tests__/AuthContext.test.js src/state/__tests__/GameContext.test.js`
+    - [x] Frontend full regression passed:
+        - [x] `npm test -- --runInBand`
+    - [x] Added/updated tests for continuation flows:
+        - [x] `backend/src/test/java/com/onlyyours/service/GameServiceTest.java`
+        - [x] `backend/src/test/java/com/onlyyours/controller/RestControllerTest.java`
+        - [x] `backend/src/test/java/com/onlyyours/controller/GameControllerWebSocketTest.java`
+        - [x] `backend/src/test/java/com/onlyyours/controller/WebSocketPerformanceTest.java`
+        - [x] `OnlyYoursExpo/src/state/__tests__/AuthContext.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/GameContext.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/useDashboardGameFlow.test.js`
+
+- [x] **Documentation updates (`A6`):**
+    - [x] Updated `P2_PHASE_A_SPRINT_PLAN.md` with completed checklist + implementation summary.
+    - [x] Updated `P2_IMPLEMENTATION_PLAN.md` Phase A checklist and weekly gates.
+    - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` with continuation validation scenarios.
+
+- [ ] **Pending for closure outside this coding iteration:**
+    - [ ] Two-device manual continuation/expiry matrix execution and evidence capture.
+    - [ ] User sign-off on Phase A outcomes after manual validation.
+
+---
+
+## P2 Phase B Planning Kickoff (Feb 23, 2026)
+
+**Goal:** Start Phase B under the same gated workflow (plan -> approval -> implementation -> full testing -> completion report).
+
+- [x] **Created in-depth Phase B sprint planning document:**
+    - [x] Added new file: `P2_PHASE_B_SPRINT_PLAN.md`.
+    - [x] Broke work into detailed tracks `PB-B1` to `PB-B6` with file-level target paths.
+    - [x] Added API contract draft for:
+        - [x] `GET /api/game/history`
+        - [x] `GET /api/game/stats`
+        - [x] `GET /api/game/badges`
+    - [x] Added metric formula definitions, badge-rule proposals, and index strategy notes.
+    - [x] Added exact command matrix for backend/frontend focused + full regression runs.
+    - [x] Added risk register, definition of done, and approval checklist.
+    - [x] **Why this change:** this ensures Phase B implementation starts from explicit contracts and measurable completion gates rather than ad-hoc coding.
+
+- [x] **Phase boundary note captured:**
+    - [x] Phase A manual two-device verification is intentionally deferred by user and will be executed later.
+    - [x] Phase B implementation was blocked until explicit approval of `P2_PHASE_B_SPRINT_PLAN.md` (workflow Step 2); approval is now received and implementation is complete.
+
+---
+
+## P2 Phase B Core Implementation (Feb 26, 2026)
+
+**Goal:** Deliver the first retention/insight surfaces: paginated game history, dashboard stats cards, and badge MVP with deterministic backend contracts and regression-safe frontend integration.
+
+- [x] **Historical games backend (`PB-B1`):**
+    - [x] Added DTOs:
+        - [x] `backend/src/main/java/com/onlyyours/dto/GameHistoryItemDto.java`
+        - [x] `backend/src/main/java/com/onlyyours/dto/GameHistoryPageDto.java`
+    - [x] Extended repository query support in `backend/src/main/java/com/onlyyours/repository/GameSessionRepository.java` for user-scoped completed and all-status timelines.
+    - [x] Implemented history query service path in `backend/src/main/java/com/onlyyours/service/GameService.java` with:
+        - [x] bounded pagination (`size` clamp),
+        - [x] deterministic sort (`recent` / `oldest`),
+        - [x] winner filter (`all` / `self` / `partner`) and tie-safe handling.
+    - [x] Exposed `GET /api/game/history` in `backend/src/main/java/com/onlyyours/controller/GameQueryController.java`.
+    - [x] Added migration `backend/src/main/resources/db/migration/V8__PhaseB_History_Stats_Indexes.sql` for history/stats query performance.
+    - [x] **Why this change:** history must remain stable as game volume grows; bounded API contracts + indexes avoid unbounded client-side or DB scans.
+
+- [x] **Dashboard stats backend (`PB-B3`):**
+    - [x] Added `backend/src/main/java/com/onlyyours/dto/DashboardStatsDto.java`.
+    - [x] Implemented aggregation logic in `GameService` for:
+        - [x] games played,
+        - [x] average score,
+        - [x] best score,
+        - [x] streak days,
+        - [x] invitation acceptance rate,
+        - [x] average invite response seconds.
+    - [x] Exposed `GET /api/game/stats` in `GameQueryController`.
+    - [x] Added no-history safe defaults for deterministic client rendering.
+    - [x] **Why this change:** users need quick, interpretable progress signals; deterministic aggregates reduce UI ambiguity and edge-case drift.
+
+- [x] **Badge MVP backend + frontend surface (`PB-B5`):**
+    - [x] Added `backend/src/main/java/com/onlyyours/dto/BadgeDto.java`.
+    - [x] Implemented server-side badge evaluator in `GameService` with deterministic earned badge output:
+        - [x] `FIRST_GAME`, `FIVE_GAMES`, `TEN_GAMES`,
+        - [x] `SHARP_GUESSER`, `STREAK_3`, `RESPONSIVE_COUPLE`.
+    - [x] Exposed `GET /api/game/badges` in `GameQueryController`.
+    - [x] Added reusable `OnlyYoursExpo/src/components/BadgeChip.js` with token-based color mapping and fallback styling.
+    - [x] Rendered badges on:
+        - [x] `OnlyYoursExpo/src/screens/DashboardScreen.js`
+        - [x] `OnlyYoursExpo/src/screens/ProfileScreen.js`
+    - [x] **Why this change:** server-authoritative badge derivation avoids frontend rule duplication and keeps future badge evolution backward compatible.
+
+- [x] **Historical + stats frontend integration (`PB-B2` + `PB-B4`):**
+    - [x] Added history route in `OnlyYoursExpo/src/navigation/AppNavigator.js`.
+    - [x] Added `OnlyYoursExpo/src/screens/GameHistoryScreen.js` with:
+        - [x] sort/winner controls,
+        - [x] paginated load-more behavior,
+        - [x] loading/empty/error states.
+    - [x] Added `OnlyYoursExpo/src/screens/useGameHistoryFlow.js` to isolate query-state and retry logic for testability.
+    - [x] Extended `OnlyYoursExpo/src/screens/useDashboardGameFlow.js` to fetch stats and badges on focus.
+    - [x] Refactored `OnlyYoursExpo/src/screens/DashboardScreen.js` to render metric cards while preserving primary continuation/start actions.
+    - [x] **Why this change:** separating data-flow logic from screen rendering keeps UI deterministic and makes query-state regressions testable without brittle screen-level mocks.
+
+- [x] **Automated validation and regression (`PB-B6`):**
+    - [x] Backend focused tests passed:
+        - [x] `./gradlew test --tests com.onlyyours.service.GameServiceTest --tests com.onlyyours.controller.RestControllerTest`
+    - [x] Backend full regression passed:
+        - [x] `./gradlew test`
+    - [x] Frontend focused tests passed:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watchAll=false src/state/__tests__/useDashboardGameFlow.test.js src/state/__tests__/useGameHistoryFlow.test.js`
+    - [x] Frontend full regression passed:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watchAll=false`
+    - [x] Added/updated tests:
+        - [x] `backend/src/test/java/com/onlyyours/service/GameServiceTest.java`
+        - [x] `backend/src/test/java/com/onlyyours/controller/RestControllerTest.java`
+        - [x] `OnlyYoursExpo/src/state/__tests__/useDashboardGameFlow.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/useGameHistoryFlow.test.js`
+    - [x] Ran lint diagnostics on newly modified frontend files.
+    - [ ] Residual non-blocking Sonar prop-validation warnings remain in `BadgeChip.js` style pattern (no runtime/test failures).
+
+- [x] **Documentation synchronization:**
+    - [x] Updated `P2_PHASE_B_SPRINT_PLAN.md` checklists and execution journal with implementation outcomes.
+    - [x] Updated `P2_IMPLEMENTATION_PLAN.md` Phase B checklists.
+    - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` with Phase B manual matrix.
+
+- [ ] **Pending for closure outside this coding iteration:**
+    - [ ] Manual multi-device verification for Phase B history/stats/badges matrix.
+    - [ ] User sign-off after manual validation evidence is captured.

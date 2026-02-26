@@ -40,7 +40,11 @@ public class GameStatusDto {
     /**
      * Status code:
      * - "INVITATION_SENT": Invitation successfully sent to partner
+     * - "ACTIVE_SESSION_EXISTS": Another active session already exists; continue that one
      * - "INVITATION_DECLINED": Partner declined the invitation
+     * - "PARTNER_LEFT": Partner disconnected while session is active
+     * - "PARTNER_RETURNED": Partner reconnected while session is active
+     * - "SESSION_EXPIRED": Session can no longer continue
      * - "ANSWER_RECORDED": Answer successfully saved
      * - "WAITING": Waiting for partner to answer
      * - "BOTH_ANSWERED": Both players have answered
@@ -53,4 +57,15 @@ public class GameStatusDto {
      * User-friendly message to display
      */
     private String message;
+
+    /**
+     * Stable machine-readable event type. Defaults to status code when omitted.
+     */
+    private String eventType;
+
+    /**
+     * Event creation timestamp (epoch milliseconds).
+     */
+    @Builder.Default
+    private Long timestamp = System.currentTimeMillis();
 }

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import WebSocketService from '../services/WebSocketService';
+import api from '../services/api';
 import { Alert } from 'react-native';
 import { AuthContext } from './AuthContext';
 
@@ -121,6 +122,26 @@ export const GameProvider = ({ children }) => {
     privateSubRef.current = privateSub;
 
     console.log('[GameContext] Subscribed to:', gameTopic);
+
+    // Resume-safe hydration: fetch the current question snapshot in case
+    // the client reconnects after missing prior real-time messages.
+    const hydrateCurrentQuestion = async () => {
+      try {
+        const response = await api.get(`/game/${sessionId}/current-question`);
+        const payload = response?.data;
+        if (payload?.type === 'QUESTION') {
+          applyGamePayload(payload);
+        }
+      } catch (error) {
+        const status = error?.response?.status;
+        if (status === 404 || status === 409 || status === 410) {
+          return;
+        }
+        console.warn('[GameContext] Failed to hydrate current question:', error?.message || error);
+      }
+    };
+
+    hydrateCurrentQuestion();
   };
 
   const submitAnswer = (answer) => {

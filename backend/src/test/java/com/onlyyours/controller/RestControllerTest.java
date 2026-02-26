@@ -2,11 +2,16 @@ package com.onlyyours.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.onlyyours.model.Couple;
+import com.onlyyours.model.GameSession;
 import com.onlyyours.model.QuestionCategory;
+import com.onlyyours.model.Question;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.CoupleRepository;
+import com.onlyyours.repository.GameSessionRepository;
 import com.onlyyours.repository.QuestionCategoryRepository;
+import com.onlyyours.repository.QuestionRepository;
 import com.onlyyours.repository.UserRepository;
+import com.onlyyours.service.GameService;
 import com.onlyyours.service.JwtService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -20,6 +25,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Date;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
@@ -34,9 +40,12 @@ class RestControllerTest {
     @Autowired private MockMvc mockMvc;
     @Autowired private ObjectMapper objectMapper;
     @Autowired private JwtService jwtService;
+    @Autowired private GameService gameService;
     @Autowired private UserRepository userRepo;
     @Autowired private CoupleRepository coupleRepo;
+    @Autowired private GameSessionRepository gameSessionRepo;
     @Autowired private QuestionCategoryRepository categoryRepo;
+    @Autowired private QuestionRepository questionRepo;
 
     private User testUser;
     private String validToken;
@@ -52,6 +61,61 @@ class RestControllerTest {
         UserDetails userDetails = new org.springframework.security.core.userdetails.User(
                 testUser.getEmail(), "", Collections.emptyList());
         validToken = jwtService.generateToken(userDetails);
+    }
+
+    private User createPartner(String email, String name, String googleId) {
+        User partner = new User();
+        partner.setEmail(email);
+        partner.setName(name);
+        partner.setGoogleUserId(googleId);
+        return userRepo.save(partner);
+    }
+
+    private QuestionCategory createCategoryWithQuestions(String namePrefix) {
+        QuestionCategory category = new QuestionCategory();
+        category.setName(namePrefix + " Category");
+        category.setDescription("Test category for game query endpoints");
+        category.setSensitive(false);
+        category = categoryRepo.save(category);
+
+        for (int i = 1; i <= 10; i++) {
+            Question q = new Question();
+            q.setCategory(category);
+            q.setText(namePrefix + " Question " + i);
+            q.setOptionA("A" + i);
+            q.setOptionB("B" + i);
+            q.setOptionC("C" + i);
+            q.setOptionD("D" + i);
+            questionRepo.save(q);
+        }
+
+        return category;
+    }
+
+    private GameSession createCompletedSessionForCouple(
+            Couple couple,
+            Integer categoryId,
+            int player1Score,
+            int player2Score,
+            int daysAgo
+    ) {
+        long now = System.currentTimeMillis();
+        Date createdAt = new Date(now - (daysAgo * 24L * 60L * 60L * 1000L) - (2L * 60L * 60L * 1000L));
+        Date startedAt = new Date(createdAt.getTime() + (90L * 1000L));
+        Date completedAt = new Date(createdAt.getTime() + (3L * 60L * 60L * 1000L));
+
+        GameSession session = new GameSession();
+        session.setCouple(couple);
+        session.setStatus(GameSession.GameStatus.COMPLETED);
+        session.setCategoryId(categoryId);
+        session.setPlayer1Score(player1Score);
+        session.setPlayer2Score(player2Score);
+        session.setCreatedAt(createdAt);
+        session.setStartedAt(startedAt);
+        session.setCompletedAt(completedAt);
+        session.setLastActivityAt(completedAt);
+        session.setExpiresAt(completedAt);
+        return gameSessionRepo.save(session);
     }
 
     // ============ Security Tests ============
@@ -175,6 +239,182 @@ class RestControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"code\": \"\"}"))
                     .andExpect(status().isBadRequest());
+        }
+    }
+
+    // ============ GameQueryController Tests ============
+
+    @Nested
+    class GameQueryControllerTests {
+        @Test
+        void getActive_WhenNoActiveSession_Returns404() throws Exception {
+            mockMvc.perform(get("/api/game/active")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("No active game session"));
+        }
+
+        @Test
+        void getActive_WhenActiveSessionExists_ReturnsSummary() throws Exception {
+            User partner = createPartner("active-partner@example.com", "Active Partner", "google-active-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("Active");
+            var invitation = gameService.createInvitation(testUser.getId(), category.getId());
+
+            mockMvc.perform(get("/api/game/active")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sessionId").value(invitation.getSessionId().toString()))
+                    .andExpect(jsonPath("$.status").value("INVITED"))
+                    .andExpect(jsonPath("$.partnerName").value("Active Partner"))
+                    .andExpect(jsonPath("$.canContinue").value(true));
+        }
+
+        @Test
+        void getHistory_ReturnsPaginatedItemsAndWinnerFilter() throws Exception {
+            User partner = createPartner("history-partner@example.com", "History Partner", "google-history-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            couple = coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("History");
+            createCompletedSessionForCouple(couple, category.getId(), 7, 3, 0); // self win
+            createCompletedSessionForCouple(couple, category.getId(), 4, 6, 1); // partner win
+            createCompletedSessionForCouple(couple, category.getId(), 5, 5, 2); // draw
+
+            mockMvc.perform(get("/api/game/history")
+                            .param("page", "0")
+                            .param("size", "2")
+                            .param("sort", "recent")
+                            .param("winner", "all")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.items", hasSize(2)))
+                    .andExpect(jsonPath("$.totalElements").value(3))
+                    .andExpect(jsonPath("$.hasNext").value(true));
+
+            mockMvc.perform(get("/api/game/history")
+                            .param("page", "0")
+                            .param("size", "10")
+                            .param("sort", "recent")
+                            .param("winner", "self")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.totalElements").value(1))
+                    .andExpect(jsonPath("$.items[0].result").value("WIN"));
+        }
+
+        @Test
+        void getStats_ReturnsDashboardMetrics() throws Exception {
+            User partner = createPartner("stats-partner@example.com", "Stats Partner", "google-stats-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            couple = coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("Stats");
+            createCompletedSessionForCouple(couple, category.getId(), 6, 4, 0);
+            createCompletedSessionForCouple(couple, category.getId(), 4, 7, 1);
+
+            GameSession declinedSession = new GameSession();
+            declinedSession.setCouple(couple);
+            declinedSession.setStatus(GameSession.GameStatus.DECLINED);
+            declinedSession.setCategoryId(category.getId());
+            Date declinedCreatedAt = new Date(System.currentTimeMillis() - (2L * 24L * 60L * 60L * 1000L));
+            declinedSession.setCreatedAt(declinedCreatedAt);
+            declinedSession.setCompletedAt(new Date(declinedCreatedAt.getTime() + (60L * 60L * 1000L)));
+            declinedSession.setLastActivityAt(declinedSession.getCompletedAt());
+            declinedSession.setExpiresAt(declinedSession.getCompletedAt());
+            gameSessionRepo.save(declinedSession);
+
+            GameSession pendingInvitation = new GameSession();
+            pendingInvitation.setCouple(couple);
+            pendingInvitation.setStatus(GameSession.GameStatus.INVITED);
+            pendingInvitation.setCategoryId(category.getId());
+            pendingInvitation.setCreatedAt(new Date(System.currentTimeMillis() - (3L * 24L * 60L * 60L * 1000L)));
+            pendingInvitation.setLastActivityAt(pendingInvitation.getCreatedAt());
+            pendingInvitation.setExpiresAt(new Date(pendingInvitation.getCreatedAt().getTime() + (7L * 24L * 60L * 60L * 1000L)));
+            gameSessionRepo.save(pendingInvitation);
+
+            mockMvc.perform(get("/api/game/stats")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.gamesPlayed").value(2))
+                    .andExpect(jsonPath("$.averageScore").value(5.0))
+                    .andExpect(jsonPath("$.bestScore").value(6))
+                    .andExpect(jsonPath("$.streakDays").value(2))
+                    .andExpect(jsonPath("$.invitationAcceptanceRate").value(66.67))
+                    .andExpect(jsonPath("$.avgInvitationResponseSeconds").value(90.0));
+        }
+
+        @Test
+        void getBadges_ReturnsEarnedBadgeList() throws Exception {
+            User partner = createPartner("badges-partner@example.com", "Badges Partner", "google-badges-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            couple = coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("Badges");
+            createCompletedSessionForCouple(couple, category.getId(), 8, 3, 0);
+            createCompletedSessionForCouple(couple, category.getId(), 7, 4, 1);
+            createCompletedSessionForCouple(couple, category.getId(), 6, 4, 2);
+            createCompletedSessionForCouple(couple, category.getId(), 5, 4, 3);
+            createCompletedSessionForCouple(couple, category.getId(), 4, 4, 4);
+
+            mockMvc.perform(get("/api/game/badges")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.badges", not(empty())))
+                    .andExpect(jsonPath("$.badges[?(@.code == 'FIRST_GAME')]", not(empty())))
+                    .andExpect(jsonPath("$.badges[?(@.code == 'FIVE_GAMES')]", not(empty())));
+        }
+
+        @Test
+        void getCurrentQuestion_WhenRound1Session_ReturnsQuestionPayload() throws Exception {
+            User partner = createPartner("round1-partner@example.com", "Round1 Partner", "google-round1-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("Round1");
+            var invitation = gameService.createInvitation(testUser.getId(), category.getId());
+            gameService.acceptInvitation(invitation.getSessionId(), partner.getId());
+
+            mockMvc.perform(get("/api/game/" + invitation.getSessionId() + "/current-question")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.type").value("QUESTION"))
+                    .andExpect(jsonPath("$.round").value("ROUND1"))
+                    .andExpect(jsonPath("$.questionNumber").value(1));
+        }
+
+        @Test
+        void getCurrentQuestion_WhenSessionExpired_Returns410() throws Exception {
+            User partner = createPartner("expired-partner@example.com", "Expired Partner", "google-expired-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("Expired");
+            var invitation = gameService.createInvitation(testUser.getId(), category.getId());
+            gameService.acceptInvitation(invitation.getSessionId(), partner.getId());
+
+            GameSession session = gameSessionRepo.findById(invitation.getSessionId()).orElseThrow();
+            session.setExpiresAt(new Date(System.currentTimeMillis() - 60_000));
+            gameSessionRepo.save(session);
+
+            mockMvc.perform(get("/api/game/" + invitation.getSessionId() + "/current-question")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isGone())
+                    .andExpect(jsonPath("$.error").value("Game session expired"));
         }
     }
 

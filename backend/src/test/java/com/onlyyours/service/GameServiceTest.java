@@ -3,6 +3,10 @@ package com.onlyyours.service;
 import com.onlyyours.dto.GameInvitationDto;
 import com.onlyyours.dto.GameResultsDto;
 import com.onlyyours.dto.GuessResultDto;
+import com.onlyyours.dto.ActiveGameSessionDto;
+import com.onlyyours.dto.BadgeDto;
+import com.onlyyours.dto.DashboardStatsDto;
+import com.onlyyours.dto.GameHistoryPageDto;
 import com.onlyyours.dto.QuestionPayloadDto;
 import com.onlyyours.model.*;
 import com.onlyyours.repository.*;
@@ -13,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -74,6 +79,53 @@ class GameServiceTest {
         }
     }
 
+    private GameSession createCompletedHistoricalSession(
+            int player1Score,
+            int player2Score,
+            int daysAgo,
+            long inviteResponseSeconds
+    ) {
+        long now = System.currentTimeMillis();
+        Date createdAt = new Date(now - (daysAgo * 24L * 60L * 60L * 1000L) - (2L * 60L * 60L * 1000L));
+        Date startedAt = new Date(createdAt.getTime() + (inviteResponseSeconds * 1000L));
+        Date completedAt = new Date(createdAt.getTime() + (3L * 60L * 60L * 1000L));
+
+        GameSession session = new GameSession();
+        session.setCouple(couple);
+        session.setStatus(GameSession.GameStatus.COMPLETED);
+        session.setCategoryId(category.getId());
+        session.setPlayer1Score(player1Score);
+        session.setPlayer2Score(player2Score);
+        session.setCreatedAt(createdAt);
+        session.setStartedAt(startedAt);
+        session.setCompletedAt(completedAt);
+        session.setLastActivityAt(completedAt);
+        session.setExpiresAt(completedAt);
+        session.setCurrentQuestionIndex(0);
+        return sessionRepo.save(session);
+    }
+
+    private GameSession createNonCompletedSession(GameSession.GameStatus status, int daysAgo) {
+        long now = System.currentTimeMillis();
+        Date createdAt = new Date(now - (daysAgo * 24L * 60L * 60L * 1000L) - (4L * 60L * 60L * 1000L));
+
+        GameSession session = new GameSession();
+        session.setCouple(couple);
+        session.setStatus(status);
+        session.setCategoryId(category.getId());
+        session.setCreatedAt(createdAt);
+        session.setLastActivityAt(createdAt);
+        session.setExpiresAt(new Date(createdAt.getTime() + (7L * 24L * 60L * 60L * 1000L)));
+
+        if (status == GameSession.GameStatus.DECLINED) {
+            Date completedAt = new Date(createdAt.getTime() + (60L * 60L * 1000L));
+            session.setCompletedAt(completedAt);
+            session.setLastActivityAt(completedAt);
+        }
+
+        return sessionRepo.save(session);
+    }
+
     @Test
     void testCreateInvitation_Success() {
         GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
@@ -102,6 +154,29 @@ class GameServiceTest {
         assertThrows(IllegalStateException.class, () ->
             gameService.createInvitation(savedSoloUser.getId(), category.getId())
         );
+    }
+
+    @Test
+    void testCreateInvitation_WhenActiveSessionExists_ThrowsActiveGameSessionExistsException() {
+        GameInvitationDto first = gameService.createInvitation(user1.getId(), category.getId());
+
+        ActiveGameSessionExistsException exception = assertThrows(
+                ActiveGameSessionExistsException.class,
+                () -> gameService.createInvitation(user1.getId(), category.getId())
+        );
+
+        assertEquals(first.getSessionId(), exception.getSessionId());
+    }
+
+    @Test
+    void testCreateInvitation_WhenExistingActiveSessionExpired_AllowsNewSession() {
+        GameInvitationDto first = gameService.createInvitation(user1.getId(), category.getId());
+        GameSession firstSession = sessionRepo.findById(first.getSessionId()).orElseThrow();
+        firstSession.setExpiresAt(new Date(System.currentTimeMillis() - 60_000));
+        sessionRepo.save(firstSession);
+
+        GameInvitationDto second = gameService.createInvitation(user1.getId(), category.getId());
+        assertNotEquals(first.getSessionId(), second.getSessionId());
     }
 
     @Test
@@ -283,6 +358,106 @@ class GameServiceTest {
     void testGetGameSession_NotFound() {
         assertThrows(IllegalArgumentException.class, () ->
             gameService.getGameSession(UUID.randomUUID()));
+    }
+
+    @Test
+    void testGetActiveSessionSummary_ReturnsSessionForCoupledUser() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+
+        Optional<ActiveGameSessionDto> summary = gameService.getActiveSessionSummary(user1.getId());
+
+        assertTrue(summary.isPresent());
+        assertEquals(invitation.getSessionId(), summary.get().getSessionId());
+        assertEquals("INVITED", summary.get().getStatus());
+        assertEquals(true, summary.get().getCanContinue());
+    }
+
+    @Test
+    void testGetCurrentQuestionForUser_ReturnsCurrentRound1Question() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        QuestionPayloadDto first = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+
+        Optional<QuestionPayloadDto> currentQuestion =
+                gameService.getCurrentQuestionForUser(invitation.getSessionId(), user1.getId());
+
+        assertTrue(currentQuestion.isPresent());
+        assertEquals(first.getQuestionId(), currentQuestion.get().getQuestionId());
+        assertEquals("ROUND1", currentQuestion.get().getRound());
+        assertEquals(1, currentQuestion.get().getQuestionNumber());
+    }
+
+    @Test
+    void testSubmitAnswer_WhenSessionExpired_ThrowsSessionExpiredException() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        QuestionPayloadDto first = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        session.setExpiresAt(new Date(System.currentTimeMillis() - 60_000));
+        sessionRepo.save(session);
+
+        assertThrows(
+                SessionExpiredException.class,
+                () -> gameService.submitAnswer(invitation.getSessionId(), user1.getId(), first.getQuestionId(), "A")
+        );
+
+        GameSession updated = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.EXPIRED, updated.getStatus());
+    }
+
+    @Test
+    void testGetGameHistory_PaginatesAndAppliesWinnerFilter() {
+        createCompletedHistoricalSession(7, 4, 0, 120);
+        createCompletedHistoricalSession(3, 6, 1, 90);
+        createCompletedHistoricalSession(5, 5, 2, 60);
+
+        GameHistoryPageDto historyPage = gameService.getGameHistory(user1.getId(), 0, 2, "recent", "all");
+        assertEquals(3L, historyPage.getTotalElements());
+        assertEquals(2, historyPage.getItems().size());
+        assertTrue(historyPage.getHasNext());
+        assertEquals("WIN", historyPage.getItems().get(0).getResult());
+
+        GameHistoryPageDto selfWins = gameService.getGameHistory(user1.getId(), 0, 10, "recent", "self");
+        assertEquals(1L, selfWins.getTotalElements());
+        assertEquals("WIN", selfWins.getItems().get(0).getResult());
+
+        GameHistoryPageDto partnerWins = gameService.getGameHistory(user1.getId(), 0, 10, "recent", "partner");
+        assertEquals(1L, partnerWins.getTotalElements());
+        assertEquals("LOSS", partnerWins.getItems().get(0).getResult());
+    }
+
+    @Test
+    void testGetDashboardStats_ComputesAggregateMetrics() {
+        createCompletedHistoricalSession(6, 4, 0, 120);
+        createCompletedHistoricalSession(4, 7, 1, 60);
+        createNonCompletedSession(GameSession.GameStatus.DECLINED, 2);
+        createNonCompletedSession(GameSession.GameStatus.INVITED, 3);
+
+        DashboardStatsDto stats = gameService.getDashboardStats(user1.getId());
+        assertEquals(2, stats.getGamesPlayed());
+        assertEquals(5.0, stats.getAverageScore());
+        assertEquals(6, stats.getBestScore());
+        assertEquals(2, stats.getStreakDays());
+        assertEquals(66.67, stats.getInvitationAcceptanceRate());
+        assertEquals(90.0, stats.getAvgInvitationResponseSeconds());
+    }
+
+    @Test
+    void testGetBadges_ReturnsEligibleMilestones() {
+        createCompletedHistoricalSession(8, 3, 0, 60);
+        createCompletedHistoricalSession(7, 5, 1, 60);
+        createCompletedHistoricalSession(6, 4, 2, 60);
+        createCompletedHistoricalSession(5, 4, 3, 60);
+        createCompletedHistoricalSession(4, 2, 4, 60);
+
+        List<BadgeDto> badges = gameService.getBadges(user1.getId());
+        List<String> badgeCodes = badges.stream().map(BadgeDto::getCode).toList();
+
+        assertTrue(badgeCodes.contains("FIRST_GAME"));
+        assertTrue(badgeCodes.contains("FIVE_GAMES"));
+        assertTrue(badgeCodes.contains("SHARP_GUESSER"));
+        assertTrue(badgeCodes.contains("STREAK_3"));
+        assertTrue(badgeCodes.contains("RESPONSIVE_COUPLE"));
+        assertFalse(badgeCodes.contains("TEN_GAMES"));
+        assertTrue(badges.stream().allMatch(badge -> badge.getEarnedAt() != null));
     }
 
     // ============================================================

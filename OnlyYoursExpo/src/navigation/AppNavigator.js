@@ -8,6 +8,7 @@ import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import GameHistoryScreen from '../screens/GameHistoryScreen';
 import PartnerLinkScreen from '../screens/PartnerLinkScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import GameScreen from '../screens/GameScreen';
@@ -50,6 +51,11 @@ const AppNavigator = () => {
               name="Profile" 
               component={ProfileScreen}
               options={{ title: 'My Profile' }}
+            />
+            <Stack.Screen
+              name="GameHistory"
+              component={GameHistoryScreen}
+              options={{ title: 'Game History' }}
             />
             <Stack.Screen 
               name="PartnerLink" 

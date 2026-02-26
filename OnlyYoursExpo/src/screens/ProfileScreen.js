@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { ScrollView, View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import api from '../services/api';
 import { AuthContext } from '../state/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
+import BadgeChip from '../components/BadgeChip';
 
 /**
  * ProfileScreen — displays the current user's profile and logout option.
@@ -14,6 +15,7 @@ import EmptyState from '../components/EmptyState';
 const ProfileScreen = () => {
   const { logout } = useContext(AuthContext);
   const [profile, setProfile] = useState(null);
+  const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
 
@@ -25,8 +27,12 @@ const ProfileScreen = () => {
     setLoading(true);
     setLoadError(false);
     try {
-      const res = await api.get('/user/me');
-      setProfile(res.data);
+      const [profileResponse, badgeResponse] = await Promise.all([
+        api.get('/user/me'),
+        api.get('/game/badges').catch(() => ({ data: { badges: [] } })),
+      ]);
+      setProfile(profileResponse.data);
+      setBadges(badgeResponse?.data?.badges || []);
     } catch (e) {
       console.error('Error loading profile:', e);
       setLoadError(true);
@@ -52,32 +58,52 @@ const ProfileScreen = () => {
   }
 
   return (
-    <View style={styles.container}>
-      <View style={styles.avatarContainer}>
-        <Text style={styles.avatarInitial}>
-          {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
-        </Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <View style={styles.card}>
+        <View style={styles.avatarContainer}>
+          <Text style={styles.avatarInitial}>
+            {profile.name ? profile.name.charAt(0).toUpperCase() : '?'}
+          </Text>
+        </View>
+
+        <Text style={styles.name}>{profile.name}</Text>
+        <Text style={styles.email}>{profile.email}</Text>
+
+        <View style={styles.divider} />
+
+        <View style={styles.badgesSection}>
+          <Text style={styles.badgesTitle}>Your Badges</Text>
+          {badges.length ? (
+            badges.map((badge) => <BadgeChip key={badge.code} badge={badge} />)
+          ) : (
+            <Text style={styles.emptyBadgesText}>No badges yet. Keep playing to unlock milestones.</Text>
+          )}
+        </View>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={logout} activeOpacity={0.8}>
+          <Text style={styles.logoutText}>Sign Out</Text>
+        </TouchableOpacity>
       </View>
-
-      <Text style={styles.name}>{profile.name}</Text>
-      <Text style={styles.email}>{profile.email}</Text>
-
-      <View style={styles.divider} />
-
-      <TouchableOpacity style={styles.logoutButton} onPress={logout} activeOpacity={0.8}>
-        <Text style={styles.logoutText}>Sign Out</Text>
-      </TouchableOpacity>
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: 'center',
     alignItems: 'center',
     padding: 24,
     backgroundColor: '#f5f5f5',
+    paddingBottom: 28,
+  },
+  card: {
+    width: '100%',
+    maxWidth: 380,
+    backgroundColor: '#fff',
+    borderRadius: 18,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#e6e3f8',
+    alignItems: 'center',
   },
   avatarContainer: {
     width: 80,
@@ -107,13 +133,27 @@ const styles = StyleSheet.create({
   email: {
     fontSize: 15,
     color: '#888',
-    marginBottom: 32,
+    marginBottom: 24,
   },
   divider: {
-    width: '60%',
+    width: '100%',
     height: 1,
     backgroundColor: '#e0e0e0',
-    marginBottom: 32,
+    marginBottom: 20,
+  },
+  badgesSection: {
+    width: '100%',
+    marginBottom: 26,
+  },
+  badgesTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#2D225A',
+    marginBottom: 10,
+  },
+  emptyBadgesText: {
+    fontSize: 13,
+    color: '#6B6296',
   },
   logoutButton: {
     borderWidth: 1.5,

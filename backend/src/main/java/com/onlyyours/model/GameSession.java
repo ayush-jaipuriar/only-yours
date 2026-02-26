@@ -80,6 +80,20 @@ public class GameSession {
     private Date completedAt;
 
     /**
+     * Timestamp when this session automatically expires for continuation.
+     */
+    @Column(name = "expires_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date expiresAt;
+
+    /**
+     * Timestamp of last meaningful activity in this session.
+     */
+    @Column(name = "last_activity_at")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date lastActivityAt;
+
+    /**
      * Game session lifecycle states
      */
     public enum GameStatus {
@@ -91,6 +105,8 @@ public class GameSession {
         ROUND1,
         /** Round 2: Both players guessing partner's answers */
         ROUND2,
+        /** Session auto-expired after continuation TTL */
+        EXPIRED,
         /** Game finished, scores calculated */
         COMPLETED
     }

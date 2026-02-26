@@ -146,7 +146,25 @@ export const AuthProvider = ({ children }) => {
         break;
       case 'INVITATION_SENT':
       case 'INVITATION_ACCEPTED':
+      case 'ACTIVE_SESSION_EXISTS':
+      case 'CONTINUE_GAME_AVAILABLE':
         openGameSession(status.sessionId);
+        break;
+      case 'SESSION_EXPIRED':
+        if (gameContextRef.current) {
+          gameContextRef.current.endGame();
+        }
+        Alert.alert(
+          'Session Expired',
+          status.message || 'This game session has expired. Please start a new game.'
+        );
+        if (navigationRef.current) {
+          navigationRef.current.navigate('Dashboard');
+        }
+        break;
+      case 'PARTNER_LEFT':
+      case 'PARTNER_RETURNED':
+        Alert.alert('Game Update', status.message || 'Game status updated.');
         break;
       default:
         break;

@@ -132,50 +132,50 @@ Cross-phase dependencies:
 
 #### A1) Data model and lifecycle hardening checklist
 
-- [ ] Add `expiresAt` to active game session data model (7-day TTL from session creation or last activity, as finalized in implementation).
-- [ ] Add session lifecycle metadata needed for async resume (for example: `lastActivityAt`, round completion counters/flags).
-- [ ] Add migration script(s) for new fields with safe defaults for existing rows.
-- [ ] Add repository query helpers for:
+- [x] Add `expiresAt` to active game session data model (7-day TTL from session creation or last activity, as finalized in implementation).
+- [x] Add session lifecycle metadata needed for async resume (for example: `lastActivityAt`, round completion counters/flags).
+- [x] Add migration script(s) for new fields with safe defaults for existing rows.
+- [x] Add repository query helpers for:
   - active session by couple
   - resumable session by user
   - expired-but-not-finalized sessions
-- [ ] Add expiry transition handling to move stale active sessions into terminal-expired state.
+- [x] Add expiry transition handling to move stale active sessions into terminal-expired state.
 
 #### A2) Backend game-state enforcement checklist
 
-- [ ] Enforce one active session per couple at invitation/session creation.
-- [ ] Keep sequential question progression contract:
+- [x] Enforce one active session per couple at invitation/session creation.
+- [x] Keep sequential question progression contract:
   - return only the current pending question
   - unlock next question only after current question is answered by both required participants in that round logic
-- [ ] Implement Round 2 unlock guard: only when both users complete all Round 1 answers.
-- [ ] Implement final result unlock guard: only when both users complete Round 2.
-- [ ] Add idempotency guards for repeated accept/answer/guess submissions.
-- [ ] Add explicit server errors/messages for invalid transitions (for example, guessing before Round 2).
+- [x] Implement Round 2 unlock guard: only when both users complete all Round 1 answers.
+- [x] Implement final result unlock guard: only when both users complete Round 2.
+- [x] Add idempotency guards for repeated accept/answer/guess submissions.
+- [x] Add explicit server errors/messages for invalid transitions (for example, guessing before Round 2).
 
 #### A3) Realtime event contract checklist
 
-- [ ] Define/normalize server event payloads for:
+- [x] Define/normalize server event payloads for:
   - active session resumed
   - partner left / partner returned
   - continue-game available
   - session expired
-- [ ] Ensure each event includes stable identifiers (`sessionId`, `eventType`, `timestamp`).
-- [ ] Ensure WebSocket + REST fallbacks produce consistent state for both users.
+- [x] Ensure each event includes stable identifiers (`sessionId`, `eventType`, `timestamp`).
+- [x] Ensure WebSocket + REST fallbacks produce consistent state for both users.
 
 #### A4) Frontend experience checklist
 
-- [ ] Add "Continue Game" CTA card on dashboard/home when a resumable session exists.
-- [ ] Keep GameScreen in current sequential mode (single active question visible at a time).
-- [ ] Add resume navigation logic from CTA to current game state.
-- [ ] Add UX prompt when partner leaves mid-session.
-- [ ] Add reconnect prompt and retry CTA if realtime drops.
-- [ ] Handle session-expired terminal state with actionable UI.
+- [x] Add "Continue Game" CTA card on dashboard/home when a resumable session exists.
+- [x] Keep GameScreen in current sequential mode (single active question visible at a time).
+- [x] Add resume navigation logic from CTA to current game state.
+- [x] Add UX prompt when partner leaves mid-session.
+- [x] Add reconnect prompt and retry CTA if realtime drops.
+- [x] Handle session-expired terminal state with actionable UI.
 
 #### A5) Testing and validation checklist
 
-- [ ] Backend unit tests for state machine transitions (invite/accept/answer/guess/complete/expire).
-- [ ] Backend integration tests for two-user async continuation scenarios.
-- [ ] Frontend tests for resume CTA rendering and navigation.
+- [x] Backend unit tests for state machine transitions (invite/accept/answer/guess/complete/expire).
+- [x] Backend integration tests for two-user async continuation scenarios.
+- [x] Frontend tests for resume CTA rendering and navigation.
 - [ ] Manual 2-device Android test matrix:
   - user A answers and leaves; user B continues later
   - both complete Round 1 before Round 2 unlocks
@@ -184,9 +184,9 @@ Cross-phase dependencies:
 
 #### A6) Documentation checklist
 
-- [ ] Update `MANUAL_TESTING_GUIDE_SPRINT6.md` with async continuation test steps.
-- [ ] Update API contract docs for new/changed resume and expiry responses/events.
-- [ ] Add troubleshooting notes for invalid transition and expiry edge cases.
+- [x] Update `MANUAL_TESTING_GUIDE_SPRINT6.md` with async continuation test steps.
+- [x] Update API contract docs for new/changed resume and expiry responses/events.
+- [x] Add troubleshooting notes for invalid transition and expiry edge cases.
 
 Definition of done:
 - Two users can complete game either synchronously or asynchronously with no dead-end states.
@@ -208,51 +208,66 @@ Definition of done:
 
 #### B1) Historical Games backend checklist
 
-- [ ] Add history query endpoint(s) with pagination.
-- [ ] Add sorting support: recent-first / oldest-first.
-- [ ] Add winner filter support (won-by-self / won-by-partner / all).
-- [ ] Add DB indexes required for performant pagination/filtering.
+- [x] Add history query endpoint(s) with pagination.
+- [x] Add sorting support: recent-first / oldest-first.
+- [x] Add winner filter support (won-by-self / won-by-partner / all).
+- [x] Add DB indexes required for performant pagination/filtering.
 
 #### B2) Historical Games frontend checklist
 
-- [ ] Create history list screen and route wiring.
-- [ ] Add pagination controls / infinite loading behavior.
-- [ ] Add sort selector and winner filter controls.
-- [ ] Add empty/loading/error UI states.
+- [x] Create history list screen and route wiring.
+- [x] Add pagination controls / infinite loading behavior.
+- [x] Add sort selector and winner filter controls.
+- [x] Add empty/loading/error UI states.
 
 #### B3) Dashboard stats backend checklist
 
-- [ ] Add aggregation logic for:
+- [x] Add aggregation logic for:
   - games played
   - average score
   - streak
   - invitation acceptance rate
   - response time
-- [ ] Add endpoint for dashboard stats snapshot.
-- [ ] Add guardrails for null/no-history users (safe defaults).
+- [x] Add endpoint for dashboard stats snapshot.
+- [x] Add guardrails for null/no-history users (safe defaults).
 
 #### B4) Dashboard stats frontend checklist
 
-- [ ] Add dashboard metric cards.
-- [ ] Add loading skeleton/placeholder behavior.
-- [ ] Add fallback display for unavailable metrics.
+- [x] Add dashboard metric cards.
+- [x] Add loading skeleton/placeholder behavior.
+- [x] Add fallback display for unavailable metrics.
 
 #### B5) Badge MVP checklist
 
-- [ ] Define initial badge rules and trigger conditions.
-- [ ] Implement badge computation logic.
-- [ ] Create badge UI with generated gradient backgrounds.
-- [ ] Add badge visibility surface (profile/dashboard).
+- [x] Define initial badge rules and trigger conditions.
+- [x] Implement badge computation logic.
+- [x] Create badge UI with generated gradient backgrounds.
+- [x] Add badge visibility surface (profile/dashboard).
 
 #### B6) Testing and docs checklist
 
-- [ ] Add backend tests for pagination/sorting/filtering correctness.
-- [ ] Add backend tests for metric aggregation correctness.
-- [ ] Add frontend tests for filter/sort interactions.
-- [ ] Update manual guide with history + metrics verification steps.
+- [x] Add backend tests for pagination/sorting/filtering correctness.
+- [x] Add backend tests for metric aggregation correctness.
+- [x] Add frontend tests for filter/sort interactions.
+- [x] Update manual guide with history + metrics verification steps.
 
 Definition of done:
 - Users can review outcomes and progress over time without performance degradation.
+
+Phase B completion notes (implementation references):
+- Backend:
+  - Added `GET /api/game/history`, `GET /api/game/stats`, `GET /api/game/badges` in `backend/src/main/java/com/onlyyours/controller/GameQueryController.java`.
+  - Added analytics/badge logic in `backend/src/main/java/com/onlyyours/service/GameService.java`.
+  - Added DTOs: `GameHistoryItemDto`, `GameHistoryPageDto`, `DashboardStatsDto`, `BadgeDto`.
+  - Added migration `backend/src/main/resources/db/migration/V8__PhaseB_History_Stats_Indexes.sql`.
+- Frontend:
+  - Added `OnlyYoursExpo/src/screens/GameHistoryScreen.js` and `OnlyYoursExpo/src/screens/useGameHistoryFlow.js`.
+  - Added dashboard stats + badge rendering in `OnlyYoursExpo/src/screens/DashboardScreen.js`.
+  - Added profile badge rendering in `OnlyYoursExpo/src/screens/ProfileScreen.js`.
+  - Added route registration in `OnlyYoursExpo/src/navigation/AppNavigator.js`.
+- Tests:
+  - Backend: `GameServiceTest`, `RestControllerTest` extended.
+  - Frontend: `useDashboardGameFlow.test.js` extended, `useGameHistoryFlow.test.js` added.
 
 ### Phase C - Onboarding + Theme + Responsive Expansion
 
@@ -451,16 +466,16 @@ Definition of done:
 
 ## 8) Immediate Next Implementation Slice
 
-- [ ] Start `A1 + A2` core path: server-side single-active-session enforcement + 7-day expiry model.  
+- [x] Start `A1 + A2` core path: server-side single-active-session enforcement + 7-day expiry model.  
   `Priority: Critical | Estimate: 2.5-3.5 days | Depends on: none`
-- [ ] Add active-session fetch endpoint consumed by dashboard for Continue Game CTA.  
+- [x] Add active-session fetch endpoint consumed by dashboard for Continue Game CTA.  
   `Priority: High | Estimate: 4-6 hours | Depends on: A2`
-- [ ] Add round unlock/result unlock guards to eliminate ambiguous states.  
+- [x] Add round unlock/result unlock guards to eliminate ambiguous states.  
   `Priority: Critical | Estimate: 6-8 hours | Depends on: A2`
-- [ ] Add current-question progression contract (one-question-at-a-time resume-safe flow).  
+- [x] Add current-question progression contract (one-question-at-a-time resume-safe flow).  
   `Priority: Critical | Estimate: 4-6 hours | Depends on: A2`
 
-Once this slice is merged and manually validated on two phones, move to Phase B history/metrics.
+This slice is complete and automatedly validated; Phase B history/metrics implementation is now complete and waiting on manual validation/sign-off.
 
 ---
 
@@ -475,13 +490,14 @@ Focus:
 - Lock scope, dependencies, and test strategy for first implementation slice.
 
 Checklist:
-- [ ] Create `P2_PHASE_A_SPRINT_PLAN.md` (in-depth, task-by-task, backend/frontend/testing/docs sections).
-- [ ] Confirm acceptance criteria for `A1` + `A2` in writing.
-- [ ] Confirm test matrix to be run after each implementation slice.
-- [ ] Confirm rollback impact notes for new schema/events introduced in Phase A.
+- [x] Create `P2_PHASE_A_SPRINT_PLAN.md` (in-depth, task-by-task, backend/frontend/testing/docs sections).  
+  Completed on Feb 22, 2026.
+- [x] Confirm acceptance criteria for `A1` + `A2` in writing.
+- [x] Confirm test matrix to be run after each implementation slice.
+- [x] Confirm rollback impact notes for new schema/events introduced in Phase A.
 
 Gate to exit Week 0:
-- [ ] User approves phase plan document explicitly.
+- [x] User approves phase plan document explicitly.
 
 ### Week 1 - Phase A Core State Integrity (A1 + A2)
 
@@ -489,16 +505,16 @@ Focus:
 - Build the core correctness layer for single active session, expiry, and round/result unlock guards.
 
 Checklist:
-- [ ] Complete `A1` data model + migration + repository work.
-- [ ] Complete `A2` state machine guard enforcement and idempotency safeguards.
-- [ ] Add/update backend unit tests for transition validity and invalid transition rejection.
-- [ ] Run backend integration tests for multi-user continuation and lock/unlock correctness.
-- [ ] Update docs for new/changed contracts and failure semantics.
+- [x] Complete `A1` data model + migration + repository work.
+- [x] Complete `A2` state machine guard enforcement and idempotency safeguards.
+- [x] Add/update backend unit tests for transition validity and invalid transition rejection.
+- [x] Run backend integration tests for multi-user continuation and lock/unlock correctness.
+- [x] Update docs for new/changed contracts and failure semantics.
 
 Gate to exit Week 1:
-- [ ] No state divergence in integration tests.
-- [ ] Round/result unlock rules verified in automated tests.
-- [ ] One-question-at-a-time progression contract preserved.
+- [x] No state divergence in integration tests.
+- [x] Round/result unlock rules verified in automated tests.
+- [x] One-question-at-a-time progression contract preserved.
 
 ### Week 2 - Phase A Experience + Stability (A3 + A4 + A5 + A6)
 
@@ -506,14 +522,14 @@ Focus:
 - Complete realtime contract, frontend resume UX, and full validation closure.
 
 Checklist:
-- [ ] Complete `A3` normalized realtime event payloads.
-- [ ] Complete `A4` Continue Game CTA + resume/reconnect/expired-state UX.
+- [x] Complete `A3` normalized realtime event payloads.
+- [x] Complete `A4` Continue Game CTA + resume/reconnect/expired-state UX.
 - [ ] Execute `A5` full test suite (backend + frontend + multi-device manual matrix).
-- [ ] Complete `A6` documentation updates (manual testing guide + troubleshooting + API notes).
+- [x] Complete `A6` documentation updates (manual testing guide + troubleshooting + API notes).
 
 Gate to exit Week 2:
 - [ ] Two-device continuation flow passes end-to-end.
-- [ ] No duplicate active sessions or dead-end game states.
+- [x] No duplicate active sessions or dead-end game states.
 - [ ] User sign-off on Phase A outcomes.
 
 ### Week 3 - Phase B Insights and Retention Surfaces
@@ -522,14 +538,15 @@ Focus:
 - Deliver history, stats, and badge MVP foundations.
 
 Checklist:
-- [ ] Complete `B1` + `B2` history API + UI with pagination/sort/filter.
-- [ ] Complete `B3` + `B4` dashboard metrics backend + frontend cards.
-- [ ] Complete `B5` badge MVP (rules + gradients + surface).
-- [ ] Complete `B6` test/docs coverage.
+- [x] Create and review detailed Phase B sprint plan document (`P2_PHASE_B_SPRINT_PLAN.md`) before coding starts.
+- [x] Complete `B1` + `B2` history API + UI with pagination/sort/filter.
+- [x] Complete `B3` + `B4` dashboard metrics backend + frontend cards.
+- [x] Complete `B5` badge MVP (rules + gradients + surface).
+- [x] Complete `B6` test/docs coverage.
 
 Gate to exit Week 3:
-- [ ] History queries perform correctly and predictably under pagination.
-- [ ] Dashboard metrics validated for empty + non-empty datasets.
+- [x] History queries perform correctly and predictably under pagination.
+- [x] Dashboard metrics validated for empty + non-empty datasets.
 - [ ] User sign-off on history/stats usability.
 
 ### Week 4 - Phase C Visual System and Responsive Expansion

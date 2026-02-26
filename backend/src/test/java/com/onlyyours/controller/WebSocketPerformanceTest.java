@@ -32,6 +32,8 @@ class WebSocketPerformanceTest {
     @Autowired private CoupleRepository coupleRepo;
     @Autowired private QuestionCategoryRepository categoryRepo;
     @Autowired private QuestionRepository questionRepo;
+    @Autowired private GameSessionRepository gameSessionRepo;
+    @Autowired private GameAnswerRepository gameAnswerRepo;
 
     private User player1, player2;
     private QuestionCategory category;
@@ -83,6 +85,12 @@ class WebSocketPerformanceTest {
         UserDetails ud2 = new org.springframework.security.core.userdetails.User(
                 player2.getEmail(), "", Collections.emptyList());
         token2 = jwtService.generateToken(ud2);
+    }
+
+    @BeforeEach
+    void resetGameState() {
+        gameAnswerRepo.deleteAll();
+        gameSessionRepo.deleteAll();
     }
 
     private StompSession connect(String token) throws Exception {

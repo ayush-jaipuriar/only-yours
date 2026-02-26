@@ -4,8 +4,15 @@ import { Alert } from 'react-native';
 import { GameProvider, useGame } from '../GameContext';
 import { AuthContext } from '../AuthContext';
 import WebSocketService from '../../services/WebSocketService';
+import api from '../../services/api';
 
 jest.mock('../../services/WebSocketService');
+jest.mock('../../services/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() => Promise.reject({ response: { status: 404 } })),
+  },
+}));
 jest.mock('react-native', () => {
   const rn = jest.requireActual('react-native');
   return Object.defineProperty(rn, 'Alert', {
@@ -31,6 +38,7 @@ describe('GameContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     WebSocketService.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
+    api.get.mockResolvedValue({ data: null });
   });
 
   it('should throw error when useGame used outside GameProvider', () => {
@@ -59,6 +67,7 @@ describe('GameContext', () => {
       '/topic/game/test-session-id',
       expect.any(Function),
     );
+    expect(api.get).toHaveBeenCalledWith('/game/test-session-id/current-question');
   });
 
   it('should submit answer and set waiting state', () => {

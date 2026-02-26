@@ -6,8 +6,10 @@ import com.onlyyours.model.GameSession;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.CoupleRepository;
 import com.onlyyours.repository.UserRepository;
+import com.onlyyours.service.ActiveGameSessionExistsException;
 import com.onlyyours.service.GameService;
 import com.onlyyours.service.PushNotificationService;
+import com.onlyyours.service.SessionExpiredException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -88,6 +90,8 @@ public class GameController {
                             .sessionId(invitation.getSessionId())
                             .status("INVITATION_SENT")
                             .message("Invitation sent to " + partner.getName())
+                            .eventType("INVITATION_SENT")
+                            .timestamp(System.currentTimeMillis())
                             .build()
             );
 
@@ -108,6 +112,14 @@ public class GameController {
             log.info("Invitation sent: session={}, inviter={}, invitee={}", 
                     invitation.getSessionId(), inviterEmail, partner.getEmail());
 
+        } catch (ActiveGameSessionExistsException e) {
+            sendStatusToUser(
+                    principal.getName(),
+                    "ACTIVE_SESSION_EXISTS",
+                    e.getSessionId(),
+                    "A game is already active. Continue your existing session."
+            );
+            log.info("Blocked duplicate invitation; active session already exists: session={}", e.getSessionId());
         } catch (Exception e) {
             log.error("Error handling invitation from {}: {}", principal.getName(), e.getMessage(), e);
             sendErrorToUser(principal.getName(), "Failed to send invitation: " + e.getMessage());
@@ -155,6 +167,8 @@ public class GameController {
                             .sessionId(sessionId)
                             .status("INVITATION_ACCEPTED")
                             .message(accepter.getName() + " accepted your invitation")
+                            .eventType("INVITATION_ACCEPTED")
+                            .timestamp(System.currentTimeMillis())
                             .build()
             );
 
@@ -178,6 +192,13 @@ public class GameController {
             log.info("Game started: session={}, accepter={}, question={}", 
                     sessionId, accepterEmail, firstQuestion.getQuestionNumber());
 
+        } catch (SessionExpiredException e) {
+            sendStatusToUser(
+                    principal.getName(),
+                    "SESSION_EXPIRED",
+                    e.getSessionId(),
+                    "This game session expired. Start a new game to continue."
+            );
         } catch (Exception e) {
             log.error("Error accepting invitation by {}: {}", principal.getName(), e.getMessage(), e);
             sendErrorToUser(principal.getName(), "Failed to accept game: " + e.getMessage());
@@ -226,6 +247,8 @@ public class GameController {
                             .sessionId(sessionId)
                             .status("INVITATION_DECLINED")
                             .message(decliner.getName() + " declined the invitation")
+                            .eventType("INVITATION_DECLINED")
+                            .timestamp(System.currentTimeMillis())
                             .build()
             );
 
@@ -237,6 +260,13 @@ public class GameController {
 
             log.info("Game declined: session={}, decliner={}", sessionId, declinerEmail);
 
+        } catch (SessionExpiredException e) {
+            sendStatusToUser(
+                    principal.getName(),
+                    "SESSION_EXPIRED",
+                    e.getSessionId(),
+                    "This game session already expired."
+            );
         } catch (Exception e) {
             log.error("Error declining invitation by {}: {}", principal.getName(), e.getMessage(), e);
             sendErrorToUser(principal.getName(), "Failed to decline: " + e.getMessage());
@@ -283,6 +313,8 @@ public class GameController {
                             .sessionId(request.getSessionId())
                             .status("ANSWER_RECORDED")
                             .message("Waiting for partner...")
+                            .eventType("ANSWER_RECORDED")
+                            .timestamp(System.currentTimeMillis())
                             .build()
             );
 
@@ -308,6 +340,8 @@ public class GameController {
                                     .sessionId(request.getSessionId())
                                     .status("ROUND1_COMPLETE")
                                     .message("Round 1 complete! Now guess your partner's answers...")
+                                    .eventType("ROUND1_COMPLETE")
+                                    .timestamp(System.currentTimeMillis())
                                     .build()
                     );
                     log.info("Round 1 complete: session={}", request.getSessionId());
@@ -321,6 +355,13 @@ public class GameController {
                 // Else: only one player answered, waiting for partner (already sent confirmation above)
             }
 
+        } catch (SessionExpiredException e) {
+            sendStatusToUser(
+                    principal.getName(),
+                    "SESSION_EXPIRED",
+                    e.getSessionId(),
+                    "This game session expired. Start a new game to continue."
+            );
         } catch (Exception e) {
             log.error("Error handling answer from {}: {}", principal.getName(), e.getMessage(), e);
             sendErrorToUser(principal.getName(), "Failed to submit answer: " + e.getMessage());
@@ -380,6 +421,13 @@ public class GameController {
                 }
             }
 
+        } catch (SessionExpiredException e) {
+            sendStatusToUser(
+                    principal.getName(),
+                    "SESSION_EXPIRED",
+                    e.getSessionId(),
+                    "This game session expired. Start a new game to continue."
+            );
         } catch (Exception e) {
             log.error("Error handling guess from {}: {}", principal.getName(), e.getMessage(), e);
             sendErrorToUser(principal.getName(), "Failed to submit guess: " + e.getMessage());
@@ -395,6 +443,20 @@ public class GameController {
                         "message", errorMessage,
                         "timestamp", System.currentTimeMillis()
                 )
+        );
+    }
+
+    private void sendStatusToUser(String userEmail, String status, UUID sessionId, String message) {
+        messagingTemplate.convertAndSendToUser(
+                userEmail,
+                "/queue/game-events",
+                GameStatusDto.builder()
+                        .sessionId(sessionId)
+                        .status(status)
+                        .message(message)
+                        .eventType(status)
+                        .timestamp(System.currentTimeMillis())
+                        .build()
         );
     }
 }

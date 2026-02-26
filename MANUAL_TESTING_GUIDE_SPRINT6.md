@@ -1494,3 +1494,183 @@ Use this focused checklist after pulling the Feb 22 stabilization patch.
   - results screen
 - Confirm no clipped controls and no unreachable actions.
 - In `GameScreen`, verify question/options/footer remain accessible (scroll if needed in compact heights).
+
+---
+
+## 13) Phase A Continuation Verification (Single Active + Resume + Expiry)
+
+Run this matrix after the Phase A continuation patch.
+
+### Preconditions
+
+- Two linked users (`User A`, `User B`) on separate devices.
+- Backend deployed with migration `V7__PhaseA_Game_Session_Continuation.sql`.
+- Both users logged in and websocket connected.
+
+### C-1301 One-active-session enforcement
+
+- `User A` starts a game invite in any category.
+- Before that game completes, `User A` tries to start another invite.
+- Expected:
+  - second invite is blocked (no new active session created),
+  - user gets continuation guidance instead of a second session,
+  - dashboard continues to show only one active session.
+
+### C-1302 Continue CTA visibility and routing
+
+- With an active session in `INVITED` or `ROUND1`/`ROUND2`, open Dashboard.
+- Expected:
+  - "Continue Game" CTA card is visible,
+  - tapping it opens `GameScreen` for the existing `sessionId`,
+  - app does not create a new game session implicitly.
+
+### C-1303 Resume from middle of round (sequential contract)
+
+- Start round 1 and answer 2-3 questions.
+- Kill app on `User A` device (or logout/login), then return.
+- Tap Continue Game.
+- Expected:
+  - app restores current question from server snapshot,
+  - only one current question is shown (no full question list),
+  - progress continues from persisted index without skipping/repeating incorrectly.
+
+### C-1304 Round unlock guards
+
+- Complete only one player's answer for a question and verify no round transition.
+- Complete both players for all round 1 questions.
+- Expected:
+  - `ROUND2` starts only after both players complete round 1.
+- In round 2, complete guesses with only one player on last question first.
+- Expected:
+  - final result is emitted only after both players complete round 2.
+
+### C-1305 Session expiry behavior
+
+- Using debug/admin DB update, set active session `expires_at` in the past.
+- Attempt action (answer/guess/accept/continue load).
+- Expected:
+  - session transitions to `EXPIRED`,
+  - user sees actionable expired guidance,
+  - user can start a fresh game afterwards.
+
+### C-1306 Partner presence signals
+
+- With active session running, disconnect `User B` network/app.
+- Expected on `User A`:
+  - receives partner-left update.
+- Reconnect `User B`.
+- Expected on `User A`:
+  - receives partner-returned update.
+
+### Evidence capture for Phase A sign-off
+
+- Screenshot/video of:
+  - one-active-session block,
+  - continue CTA + successful resume,
+  - expiry handling,
+  - round unlock correctness,
+  - partner-left/returned notifications.
+- Include relevant backend log timestamps for each scenario.
+
+---
+
+## 14) Phase B Verification (History + Stats + Badges)
+
+Run this matrix after pulling the Phase B patch (history/stats/badges).
+
+### Preconditions
+
+- Two linked users (`User A`, `User B`) with at least 5 completed sessions between them.
+- Backend includes migration `V8__PhaseB_History_Stats_Indexes.sql`.
+- App build includes:
+  - `GameHistory` route,
+  - dashboard stats cards,
+  - dashboard/profile badge surfaces.
+
+### B-1401 History list baseline + pagination
+
+- Open `Dashboard` -> tap `Game History`.
+- Expected:
+  - first page loads with recent sessions,
+  - each card shows date, partner name, result, and score pair,
+  - tapping `Load More` appends older items without replacing prior ones.
+- Continue until no more pages.
+- Expected:
+  - terminal message appears ("caught up" equivalent),
+  - no duplicate cards.
+
+### B-1402 Sort and winner filters
+
+- In `Game History`, switch sort to `Oldest`.
+- Expected:
+  - order reverses deterministically.
+- Apply winner filter `I Won`.
+- Expected:
+  - only sessions where current user score > partner score remain.
+- Apply winner filter `Partner Won`.
+- Expected:
+  - only sessions where partner score > current user score remain.
+- Switch back to `All`.
+- Expected:
+  - full list returns.
+
+### B-1403 Empty/error behavior
+
+- Use a fresh account with zero completed sessions.
+- Open `Game History`.
+- Expected:
+  - empty state is shown with clear guidance, no crash.
+- Simulate transient network loss and retry.
+- Expected:
+  - error state appears with retry action,
+  - retry recovers once network is restored.
+
+### B-1404 Dashboard stats correctness
+
+- Open Dashboard after known completed-session sample set.
+- Validate displayed values against backend truth:
+  - `gamesPlayed`,
+  - `averageScore`,
+  - `bestScore`,
+  - `streakDays`,
+  - `invitationAcceptanceRate`,
+  - `avgInvitationResponseSeconds`.
+- Expected:
+  - values are deterministic across app relaunch,
+  - fallback-safe rendering (zeros/placeholders) for no-history users.
+
+### B-1405 Badge unlock and visibility
+
+- On account with qualifying data, verify badges appear in:
+  - Dashboard badge section,
+  - Profile badge section.
+- Confirm expected unlocked examples:
+  - `FIRST_GAME` after first completion,
+  - `FIVE_GAMES` after 5 completions,
+  - `SHARP_GUESSER` after score >= 7,
+  - `STREAK_3` after 3-day streak,
+  - `RESPONSIVE_COUPLE` when acceptance-rate threshold met.
+- Expected:
+  - badges are consistent across both screens,
+  - badges persist after logout/login.
+
+### B-1406 Navigation and action priority guard
+
+- Ensure primary game actions still work with stats/badge UI present:
+  - Start New Game path (linked and no active game),
+  - Continue Game path (active session exists),
+  - Link with Partner path (unlinked user).
+- Expected:
+  - stats/badges do not block or regress core gameplay entry flows.
+
+### Evidence capture for Phase B sign-off
+
+- Screenshots/video of:
+  - history pagination and filter transitions,
+  - dashboard stats values,
+  - badge visibility on dashboard + profile,
+  - no-history empty state.
+- Optional backend log/API snapshots:
+  - `GET /api/game/history`,
+  - `GET /api/game/stats`,
+  - `GET /api/game/badges`.

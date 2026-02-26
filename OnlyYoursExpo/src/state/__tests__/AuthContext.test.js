@@ -114,7 +114,7 @@ describe('AuthContext — Game Status Handling', () => {
     });
 
     it('should show alert on INVITATION_DECLINED', () => {
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      renderHook(() => useAuth(), { wrapper });
 
       const subscribeCalls = WebSocketService.subscribe.mock.calls;
       const gameEventsCall = subscribeCalls.find(
@@ -135,6 +135,74 @@ describe('AuthContext — Game Status Handling', () => {
           'Invitation Declined',
           'Partner declined the invitation'
         );
+      }
+    });
+
+    it('should handle ACTIVE_SESSION_EXISTS by opening the existing game', () => {
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      const mockNav = { navigate: jest.fn() };
+      const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
+
+      act(() => {
+        result.current.setNavigationRef(mockNav);
+        result.current.setGameContextRef(mockGameCtx);
+      });
+
+      const subscribeCalls = WebSocketService.subscribe.mock.calls;
+      const gameEventsCall = subscribeCalls.find(
+        (call) => call[0] === '/user/queue/game-events'
+      );
+
+      if (gameEventsCall) {
+        const callback = gameEventsCall[1];
+        act(() => {
+          callback({
+            type: 'STATUS',
+            status: 'ACTIVE_SESSION_EXISTS',
+            sessionId: 'session-active-1',
+            message: 'Continue your active game.',
+          });
+        });
+
+        expect(mockGameCtx.startGame).toHaveBeenCalledWith('session-active-1');
+        expect(mockNav.navigate).toHaveBeenCalledWith('Game', { sessionId: 'session-active-1' });
+      }
+    });
+
+    it('should handle SESSION_EXPIRED with recovery UX', () => {
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      const mockNav = { navigate: jest.fn() };
+      const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
+
+      act(() => {
+        result.current.setNavigationRef(mockNav);
+        result.current.setGameContextRef(mockGameCtx);
+      });
+
+      const subscribeCalls = WebSocketService.subscribe.mock.calls;
+      const gameEventsCall = subscribeCalls.find(
+        (call) => call[0] === '/user/queue/game-events'
+      );
+
+      if (gameEventsCall) {
+        const callback = gameEventsCall[1];
+        act(() => {
+          callback({
+            type: 'STATUS',
+            status: 'SESSION_EXPIRED',
+            sessionId: 'session-expired-1',
+            message: 'This game session has expired.',
+          });
+        });
+
+        expect(mockGameCtx.endGame).toHaveBeenCalledTimes(1);
+        expect(Alert.alert).toHaveBeenCalledWith(
+          'Session Expired',
+          'This game session has expired.'
+        );
+        expect(mockNav.navigate).toHaveBeenCalledWith('Dashboard');
       }
     });
   });

@@ -35,6 +35,8 @@ class GameControllerWebSocketTest {
     @Autowired private CoupleRepository coupleRepo;
     @Autowired private QuestionCategoryRepository categoryRepo;
     @Autowired private QuestionRepository questionRepo;
+    @Autowired private GameSessionRepository gameSessionRepo;
+    @Autowired private GameAnswerRepository gameAnswerRepo;
     @Autowired private ObjectMapper objectMapper;
 
     private User inviter, invitee;
@@ -89,6 +91,12 @@ class GameControllerWebSocketTest {
         UserDetails inviteeDetails = new org.springframework.security.core.userdetails.User(
                 invitee.getEmail(), "", Collections.emptyList());
         inviteeToken = jwtService.generateToken(inviteeDetails);
+    }
+
+    @BeforeEach
+    void resetGameState() {
+        gameAnswerRepo.deleteAll();
+        gameSessionRepo.deleteAll();
     }
 
     private StompSession connectWithToken(String token) throws Exception {
