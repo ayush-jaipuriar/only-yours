@@ -50,7 +50,7 @@ public class GameService {
         User inviter = userRepository.findById(inviterId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + inviterId));
         
-        Couple couple = coupleRepository.findByUser1_IdOrUser2_Id(inviterId, inviterId)
+        Couple couple = findActiveCoupleForUser(inviterId)
                 .orElseThrow(() -> new IllegalStateException("User must be in a couple to play"));
 
         QuestionCategory category = categoryRepository.findById(categoryId)
@@ -484,7 +484,7 @@ public class GameService {
         User currentUser = userRepository.findById(userId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + userId));
 
-        Optional<Couple> coupleOptional = coupleRepository.findByUser1_IdOrUser2_Id(userId, userId);
+        Optional<Couple> coupleOptional = findActiveCoupleForUser(userId);
         if (coupleOptional.isEmpty()) {
             return Optional.empty();
         }
@@ -531,7 +531,7 @@ public class GameService {
 
     @Transactional
     public Optional<GameSession> getLatestActiveSessionForUser(UUID userId) {
-        Optional<Couple> coupleOptional = coupleRepository.findByUser1_IdOrUser2_Id(userId, userId);
+        Optional<Couple> coupleOptional = findActiveCoupleForUser(userId);
         if (coupleOptional.isEmpty()) {
             return Optional.empty();
         }
@@ -563,6 +563,33 @@ public class GameService {
 
         String round = session.getStatus() == GameSession.GameStatus.ROUND2 ? "ROUND2" : "ROUND1";
         return Optional.of(buildQuestionPayload(session, question, safeIndex + 1, round));
+    }
+
+    @Transactional(readOnly = true)
+    public GameResultsDto getCompletedResultsForUser(UUID sessionId, UUID userId) {
+        GameSession session = gameSessionRepository.findById(sessionId)
+                .orElseThrow(() -> new IllegalArgumentException("Game session not found: " + sessionId));
+        ensureUserBelongsToSession(userId, session);
+
+        if (session.getStatus() != GameSession.GameStatus.COMPLETED) {
+            throw new IllegalStateException("Game results are not available until the session is completed");
+        }
+
+        Couple couple = session.getCouple();
+        User player1 = couple.getUser1();
+        User player2 = couple.getUser2();
+        int player1Score = session.getPlayer1Score() == null ? 0 : session.getPlayer1Score();
+        int player2Score = session.getPlayer2Score() == null ? 0 : session.getPlayer2Score();
+
+        return GameResultsDto.builder()
+                .sessionId(sessionId)
+                .player1Name(player1.getName())
+                .player1Score(player1Score)
+                .player2Name(player2.getName())
+                .player2Score(player2Score)
+                .totalQuestions(QUESTIONS_PER_GAME)
+                .message(getResultMessage(player1Score + player2Score))
+                .build();
     }
 
     @Transactional(readOnly = true)
@@ -753,6 +780,17 @@ public class GameService {
 
         return activeSessions.stream()
                 .max(Comparator.comparing(GameSession::getCreatedAt, Comparator.nullsLast(Date::compareTo)));
+    }
+
+    private Optional<Couple> findActiveCoupleForUser(UUID userId) {
+        List<Couple> couples = coupleRepository.findByUserIdAndStatusOrderByCreatedAtDesc(
+                userId,
+                Couple.RelationshipStatus.ACTIVE
+        );
+        if (couples.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(couples.get(0));
     }
 
     private boolean expireIfNeeded(GameSession session, Date now) {

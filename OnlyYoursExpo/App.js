@@ -8,20 +8,23 @@ import AppNavigator from './src/navigation/AppNavigator';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import ReconnectionBanner from './src/components/ReconnectionBanner';
 import LoadingScreen from './src/components/LoadingScreen';
+import { ThemeProvider, useTheme } from './src/theme';
 
 const AppShell = () => {
   const { wsConnectionState, isAuthLoading } = useAuth();
+  const { theme, resolvedMode } = useTheme();
 
   if (isAuthLoading) {
     return <LoadingScreen />;
   }
 
   return (
-    <View style={styles.root}>
+    <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
       <ReconnectionBanner connectionState={wsConnectionState} />
       <GameProvider>
         <AppNavigator />
       </GameProvider>
+      <StatusBar style={resolvedMode === 'dark' ? 'light' : 'dark'} />
     </View>
   );
 };
@@ -30,10 +33,11 @@ export default function App() {
   return (
     <AppErrorBoundary>
       <GestureHandlerRootView style={styles.root}>
-        <AuthProvider>
-          <AppShell />
-          <StatusBar style="auto" />
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <AppShell />
+          </AuthProvider>
+        </ThemeProvider>
       </GestureHandlerRootView>
     </AppErrorBoundary>
   );

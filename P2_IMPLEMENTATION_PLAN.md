@@ -250,6 +250,11 @@ Definition of done:
 - [x] Add backend tests for metric aggregation correctness.
 - [x] Add frontend tests for filter/sort interactions.
 - [x] Update manual guide with history + metrics verification steps.
+- [x] Re-run in-depth confidence validation before Part C planning:
+  - backend focused high-risk suites (`GameService`, `RestController`, websocket suites)
+  - backend clean full regression
+  - frontend expanded focused suites (hooks + contexts + websocket service)
+  - frontend full regression
 
 Definition of done:
 - Users can review outcomes and progress over time without performance degradation.
@@ -271,6 +276,9 @@ Phase B completion notes (implementation references):
 
 ### Phase C - Onboarding + Theme + Responsive Expansion
 
+Detailed sprint planning artifact:
+- `P2_PHASE_C_SPRINT_PLAN.md` (implemented; execution journal + validation updated)
+
 #### Phase C priority + estimate + dependency board
 
 | Item | Priority | Estimate | Depends on |
@@ -282,36 +290,57 @@ Phase B completion notes (implementation references):
 
 #### C1) Onboarding flow checklist
 
-- [ ] Add first-time onboarding trigger during signup completion.
-- [ ] Persist onboarding completion state.
-- [ ] Add "reopen onboarding" entry point in settings.
-- [ ] Build illustrated storytelling onboarding screens.
+- [x] Add first-time onboarding trigger during signup completion.
+- [x] Persist onboarding completion state.
+- [x] Add "reopen onboarding" entry point in settings.
+- [x] Build illustrated storytelling onboarding screens.
 
 #### C2) Theme token system checklist
 
-- [ ] Define foundational light/dark design tokens (color, spacing, typography, radius, shadow).
-- [ ] Define romantic-red gradient token set and usage rules.
-- [ ] Add shared animation tokens/presets for motion consistency.
-- [ ] Refactor priority screens to consume tokens instead of hardcoded values.
+- [x] Define foundational light/dark design tokens (color, spacing, typography, radius, shadow).
+- [x] Define romantic-red gradient token set and usage rules.
+- [x] Add shared animation tokens/presets for motion consistency.
+- [x] Refactor priority screens to consume tokens instead of hardcoded values.
 
 #### C3) Responsive rollout checklist (phase-by-screen)
 
-- [ ] Auth screens: tablet + landscape polishing.
-- [ ] Dashboard + PartnerLink + CategorySelection responsive pass.
-- [ ] Game + Results responsive pass (including compact landscape heights).
-- [ ] Profile + Settings responsive pass.
-- [ ] Final cross-screen consistency sweep.
+- [x] Auth screens: tablet + landscape polishing.
+- [x] Dashboard + PartnerLink + CategorySelection responsive pass.
+- [x] Game + Results responsive pass (including compact landscape heights).
+- [x] Profile + Settings responsive pass.
+- [x] Final cross-screen consistency sweep.
 
 #### C4) Validation and docs checklist
 
-- [ ] Manual responsive checks on phone + tablet (portrait + landscape).
-- [ ] Dark mode + light mode visual QA for token compliance.
-- [ ] Update manual guide with responsive acceptance checklist.
+- [x] Focused + full automated validation completed for Phase C logic paths.
+- [ ] Manual responsive checks on phone + tablet (portrait + landscape). (deferred by user)
+- [ ] Dark mode + light mode visual QA for token compliance. (deferred by user)
+- [x] Update manual guide with responsive acceptance checklist.
 
 Definition of done:
 - The same account flow is usable and visually coherent across phone/tablet portrait+landscape.
 
+Phase C completion notes (implementation references):
+- Theme foundation:
+  - Added `OnlyYoursExpo/src/theme/tokens.js`, `OnlyYoursExpo/src/theme/gradients.js`, `OnlyYoursExpo/src/theme/motion.js`, `OnlyYoursExpo/src/theme/ThemeProvider.js`, `OnlyYoursExpo/src/theme/useTheme.js`.
+  - Wrapped app tree with `ThemeProvider` in `OnlyYoursExpo/App.js`.
+- Onboarding + settings:
+  - Added `OnlyYoursExpo/src/state/onboardingStorage.js` and integrated onboarding status into `OnlyYoursExpo/src/state/AuthContext.js`.
+  - Added `OnlyYoursExpo/src/screens/OnboardingScreen.js` and `OnlyYoursExpo/src/screens/SettingsScreen.js`.
+  - Added onboarding gate + settings route in `OnlyYoursExpo/src/navigation/AppNavigator.js`.
+  - Added settings entry in `OnlyYoursExpo/src/screens/ProfileScreen.js`.
+- Screen/system migration:
+  - Tokenized/refined shared components (`AuthFormScreenLayout`, `LoadingSpinner`, `EmptyState`, `BadgeChip`) and priority screen surfaces (`SignIn`, `SignUp`, `ForgotPassword`, `ResetPassword`, `Dashboard`, `GameHistory`, `CategorySelection`, `PartnerLink`, `GameScreen`, `ResultsScreen`, `Profile`, `Onboarding`, `Settings`).
+- Tests:
+  - Added `OnlyYoursExpo/src/state/__tests__/onboardingStorage.test.js`.
+  - Added `OnlyYoursExpo/src/theme/__tests__/ThemeProvider.test.js`.
+  - Added onboarding/settings flow tests in `OnlyYoursExpo/src/state/__tests__/OnboardingScreenFlow.test.js` and `OnlyYoursExpo/src/state/__tests__/SettingsScreenFlow.test.js`.
+  - Ran focused frontend validation, full frontend suite, and backend full-suite safety regression.
+
 ### Phase D - Settings, Couple Controls, and Reliability Finishing
+
+Detailed sprint planning artifact:
+- `P2_PHASE_D_SPRINT_PLAN.md` (implemented; execution journal completed in section 13)
 
 #### Phase D priority + estimate + dependency board
 
@@ -324,34 +353,48 @@ Definition of done:
 
 #### D1) Unlink flow checklist
 
-- [ ] Implement 2-step unlink confirmation UX.
-- [ ] Implement 24-hour unlink cooldown rules.
-- [ ] Implement recoverable relink/recovery entry point in settings.
-- [ ] Add backend guardrails and clear API error semantics.
+- [x] Implement 2-step unlink confirmation UX.
+- [x] Implement 24-hour unlink cooldown rules.
+- [x] Implement recoverable relink/recovery entry point in settings.
+- [x] Add backend guardrails and clear API error semantics.
 
 #### D2) Profile/settings checklist
 
-- [ ] Add editable username + bio.
-- [ ] Add stylized initials avatar fallback.
-- [ ] Add reminder-time configuration UI.
-- [ ] Add quiet-hours configuration UI.
+- [x] Add editable username + bio.
+- [x] Add stylized initials avatar fallback.
+- [x] Add reminder-time configuration UI.
+- [x] Add quiet-hours configuration UI.
 
 #### D3) Notification behavior checklist
 
-- [ ] Add deep-link handling for continue-game notification.
-- [ ] Add deep-link handling for partner-completed-answering notification.
-- [ ] Add deep-link handling for results-ready notification.
-- [ ] Ensure no duplicate notification fan-out per user/event.
+- [x] Add deep-link handling for continue-game notification.
+- [x] Add deep-link handling for partner-completed-answering notification.
+- [x] Add deep-link handling for results-ready notification.
+- [x] Ensure no duplicate notification fan-out per user/event.
 
 #### D4) Testing and docs checklist
 
-- [ ] Add backend tests for cooldown and recoverability rules.
-- [ ] Add frontend tests for unlink flow and settings toggles.
+- [x] Add backend tests for cooldown and recoverability rules.
+- [x] Add frontend tests for unlink flow and settings toggles.
 - [ ] Manual 2-device test for all deep-link notification paths.
-- [ ] Update user-facing settings/recovery guidance docs.
+- [x] Update user-facing settings/recovery guidance docs.
 
 Definition of done:
 - Relationship controls are safe, reversible, and clearly communicated in-app.
+
+Phase D completion notes (implementation references):
+- Backend lifecycle + contracts:
+  - Added migrations `V9__PhaseD_Couple_Unlink_Cooldown.sql`, `V10__PhaseD_User_Profile_Fields.sql`, and `V11__PhaseD_User_Notification_Preferences.sql`.
+  - Added couple status/unlink/recover APIs and structured error semantics in `CoupleService`, `CoupleController`, and `GlobalExceptionHandler`.
+  - Added user profile/preferences contracts in `UserController` and related DTO/model updates.
+- Frontend flows:
+  - Added unlink/recovery + cooldown UX and preferences controls in `OnlyYoursExpo/src/screens/SettingsScreen.js`.
+  - Added profile edit UX for username/bio in `OnlyYoursExpo/src/screens/ProfileScreen.js`.
+  - Added push-intent mapping + cold-start/auth-safe replay in `OnlyYoursExpo/src/services/NotificationService.js` and `OnlyYoursExpo/src/state/AuthContext.js`.
+  - Added deep-link session/result hydration paths in `OnlyYoursExpo/src/screens/GameScreen.js` and `OnlyYoursExpo/src/screens/ResultsScreen.js`.
+- Validation:
+  - Added/updated backend and frontend tests for cooldown/recovery/profile/preferences/deep-link/dedupe paths.
+  - Focused + full backend/frontend automated suites passed; manual Phase D device validation remains pending by deferral.
 
 ### Phase E - DevOps, Secrets, Rollback, and Release Safety
 
@@ -555,10 +598,11 @@ Focus:
 - Establish tokenized design system and complete responsive rollout by screen priority.
 
 Checklist:
-- [ ] Complete `C2` theme token foundation first (light/dark + gradients + motion tokens).
-- [ ] Complete `C1` onboarding flow on top of tokenized primitives.
-- [ ] Complete `C3` responsive pass across all target screens.
-- [ ] Complete `C4` visual QA + responsive QA + docs.
+- [x] Create and review detailed Phase C sprint plan document (`P2_PHASE_C_SPRINT_PLAN.md`) before coding starts.
+- [x] Complete `C2` theme token foundation first (light/dark + gradients + motion tokens).
+- [x] Complete `C1` onboarding flow on top of tokenized primitives.
+- [x] Complete `C3` responsive pass across all target screens.
+- [x] Complete `C4` automated validation + docs (`visual/responsive manual QA` remains tracked in Week 4 gate).
 
 Gate to exit Week 4:
 - [ ] Phone/tablet portrait + landscape pass on prioritized screens.
@@ -571,10 +615,11 @@ Focus:
 - Finalize settings/control flows and release safety infrastructure.
 
 Checklist:
-- [ ] Complete `D1` unlink + cooldown + recoverability.
-- [ ] Complete `D2` profile/settings edits and reminder controls.
-- [ ] Complete `D3` notification deep-link paths and fan-out correctness.
-- [ ] Complete `D4` validation + docs.
+- [x] Create and review detailed Phase D sprint plan document (`P2_PHASE_D_SPRINT_PLAN.md`) before coding starts.
+- [x] Complete `D1` unlink + cooldown + recoverability.
+- [x] Complete `D2` profile/settings edits and reminder controls.
+- [x] Complete `D3` notification deep-link paths and fan-out correctness.
+- [x] Complete `D4` validation + docs.
 - [ ] Complete `E1` secret manager integration.
 - [ ] Complete `E2` release-branch deploy gating.
 - [ ] Complete `E3` rollback strategy runbook + rollback drill.

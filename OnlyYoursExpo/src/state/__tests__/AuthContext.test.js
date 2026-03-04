@@ -11,6 +11,15 @@ jest.mock('../../services/WebSocketService', () => ({
   sendMessage: jest.fn(),
   setConnectionStateListener: jest.fn(),
   getConnectionState: jest.fn(() => 'disconnected'),
+  isConnected: jest.fn(() => false),
+}));
+
+jest.mock('../../services/NotificationService', () => ({
+  registerForPushNotifications: jest.fn(() => Promise.resolve(null)),
+  sendTokenToBackend: jest.fn(() => Promise.resolve()),
+  addNotificationResponseListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponse: jest.fn(() => Promise.resolve(null)),
+  mapNotificationResponseToIntent: jest.fn(() => null),
 }));
 
 jest.mock('../../services/api', () => {
@@ -25,6 +34,7 @@ jest.mock('../../config', () => ({
 }));
 
 const WebSocketService = require('../../services/WebSocketService');
+const NotificationService = require('../../services/NotificationService');
 
 const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>;
 
@@ -38,8 +48,12 @@ describe('AuthContext — Game Status Handling', () => {
 
     expect(result.current.isLoggedIn).toBe(false);
     expect(result.current.user).toBeNull();
+    expect(result.current.shouldShowOnboarding).toBe(false);
     expect(typeof result.current.login).toBe('function');
     expect(typeof result.current.logout).toBe('function');
+    expect(typeof result.current.startOnboarding).toBe('function');
+    expect(typeof result.current.completeOnboarding).toBe('function');
+    expect(typeof result.current.replayOnboarding).toBe('function');
   });
 
   it('should expose setNavigationRef and setGameContextRef', () => {
@@ -204,6 +218,39 @@ describe('AuthContext — Game Status Handling', () => {
         );
         expect(mockNav.navigate).toHaveBeenCalledWith('Dashboard');
       }
+    });
+
+    it('routes notification deep-link intents when response listener fires', async () => {
+      const { result } = renderHook(() => useAuth(), { wrapper });
+
+      const mockNav = { navigate: jest.fn(), getCurrentRoute: jest.fn(() => ({ name: 'Dashboard' })) };
+      const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
+
+      act(() => {
+        result.current.setNavigationRef(mockNav);
+        result.current.setGameContextRef(mockGameCtx);
+      });
+
+      await act(async () => {
+        await result.current.login({
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          user: { id: 'user-1', name: 'User One', email: 'user@test.com' },
+        });
+      });
+
+      NotificationService.mapNotificationResponseToIntent.mockReturnValue({
+        targetRoute: 'Game',
+        params: { sessionId: 'notif-session-1' },
+      });
+
+      const callback = NotificationService.addNotificationResponseListener.mock.calls[0][0];
+      act(() => {
+        callback({ any: 'payload' });
+      });
+
+      expect(mockGameCtx.startGame).toHaveBeenCalledWith('notif-session-1');
+      expect(mockNav.navigate).toHaveBeenCalledWith('Game', { sessionId: 'notif-session-1' });
     });
   });
 });

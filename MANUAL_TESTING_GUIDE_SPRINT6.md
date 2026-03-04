@@ -1501,7 +1501,7 @@ Use this focused checklist after pulling the Feb 22 stabilization patch.
 
 Run this matrix after the Phase A continuation patch.
 
-### Preconditions
+### Phase A Preconditions
 
 - Two linked users (`User A`, `User B`) on separate devices.
 - Backend deployed with migration `V7__PhaseA_Game_Session_Continuation.sql`.
@@ -1578,7 +1578,7 @@ Run this matrix after the Phase A continuation patch.
 
 Run this matrix after pulling the Phase B patch (history/stats/badges).
 
-### Preconditions
+### Phase B Preconditions
 
 - Two linked users (`User A`, `User B`) with at least 5 completed sessions between them.
 - Backend includes migration `V8__PhaseB_History_Stats_Indexes.sql`.
@@ -1674,3 +1674,351 @@ Run this matrix after pulling the Phase B patch (history/stats/badges).
   - `GET /api/game/history`,
   - `GET /api/game/stats`,
   - `GET /api/game/badges`.
+
+---
+
+## 15) Phase C Verification (Onboarding + Theme + Responsive)
+
+Run this matrix after pulling the Phase C patch (onboarding, settings replay, tokens/theme provider, responsive pass).
+
+### Preconditions
+
+- Latest app build includes:
+  - `Onboarding` + `Settings` routes,
+  - theme preference controls (`system`/`light`/`dark`),
+  - responsive updates across auth/dashboard/game/results/profile.
+- Test on at least:
+  - one phone device (portrait + landscape),
+  - one tablet or large-screen emulator/device (portrait + landscape).
+
+### C-1501 First-run onboarding gate
+
+- Use a fresh account (or reset onboarding state from settings replay path and relaunch).
+- Login and observe initial post-auth route.
+- Expected:
+  - onboarding is shown before dashboard,
+  - onboarding displays sequential narrative steps,
+  - `Next` advances step-by-step and `Get Started` lands on dashboard.
+
+### C-1502 Onboarding replay from settings
+
+- From `Profile`, open `Settings`.
+- Tap `Replay Onboarding`.
+- Expected:
+  - app navigates to onboarding,
+  - onboarding progresses normally and completion returns user to dashboard,
+  - auth session remains intact (no forced logout, no token reset).
+
+### C-1503 Theme preference persistence
+
+- In `Settings`, set theme to:
+  - `Light`, verify immediate UI update.
+  - `Dark`, verify immediate UI update.
+  - `System`, verify app follows device theme.
+- Fully close and reopen app after each mode.
+- Expected:
+  - selected preference persists,
+  - key screens retain readability and contrast.
+
+### C-1504 Auth stack responsive + keyboard safety
+
+- Open: `Sign In`, `Sign Up`, `Forgot Password`, `Reset Password`.
+- Rotate between portrait and landscape on phone and tablet.
+- Trigger keyboard on lower input fields.
+- Expected:
+  - no input is hidden by keyboard,
+  - form remains scrollable/tappable,
+  - tablet layouts preserve centered/max-width form readability.
+
+### C-1505 Dashboard ecosystem responsive pass
+
+- Validate `Dashboard`, `CategorySelection`, `PartnerLink`, `GameHistory` on phone/tablet in both orientations.
+- Expected:
+  - no clipped primary actions,
+  - card widths and grid rows adapt without overlap,
+  - filters/actions remain reachable in compact heights.
+
+### C-1506 Gameplay + results responsive pass
+
+- Start/continue a game and validate `GameScreen` in compact landscape and tablet widths.
+- Complete game and validate `ResultsScreen`.
+- Expected:
+  - question/options/submit CTA remain reachable,
+  - progress and status text remain legible,
+  - results cards/buttons remain fully visible without clipping.
+
+### C-1507 Profile/settings contrast consistency
+
+- Validate `Profile` and `Settings` in both light and dark modes.
+- Expected:
+  - text contrast is readable,
+  - settings option states are visually clear,
+  - action buttons remain distinguishable in both modes.
+
+### Evidence capture for Phase C sign-off
+
+- Capture screenshot/video evidence for:
+  - first-run onboarding gate,
+  - replay onboarding from settings,
+  - theme persistence across relaunch,
+  - responsive behavior on phone + tablet (portrait + landscape),
+  - gameplay/results no-clipping proof.
+
+### Phase C strict execution order (recommended)
+
+Use this exact order so failures are isolated to one layer at a time:
+
+1. Run `C-1501` and `C-1502` first to validate onboarding state transitions before visual/theme checks.
+2. Run `C-1503` second to validate persistence semantics (`system`/`light`/`dark`) before cross-screen sweeps.
+3. Run `C-1504` next because auth keyboard + layout regressions can block all later test accounts.
+4. Run `C-1505`, `C-1506`, and `C-1507` in sequence for full app responsive + contrast validation.
+5. Capture evidence after each case immediately (do not defer captures to the end of the run).
+6. If any case fails, log defect details, keep running remaining cases, then execute a focused retest pass only for failed cases.
+
+### Phase C evidence template (copy for each run)
+
+Use this template as the official pass/fail artifact for sign-off.
+
+```markdown
+## Phase C Manual Validation Run
+
+- Date:
+- Tester:
+- Build/Commit:
+- Environment:
+- Phone Device:
+- Tablet/Large Device:
+
+### Case Results
+
+| Case ID | Status (Pass/Fail/Blocked) | Evidence (Screenshot/Video file) | Observed Behavior | Expected Behavior | Defect ID (if any) |
+| --- | --- | --- | --- | --- | --- |
+| C-1501 |  |  |  |  |  |
+| C-1502 |  |  |  |  |  |
+| C-1503 |  |  |  |  |  |
+| C-1504 |  |  |  |  |  |
+| C-1505 |  |  |  |  |  |
+| C-1506 |  |  |  |  |  |
+| C-1507 |  |  |  |  |  |
+
+### Defect Summary
+
+- Total failures:
+- Total blocked:
+- Critical defects:
+- High defects:
+
+### Retest Summary
+
+- Retest required: Yes/No
+- Retest build/commit:
+- Retest result:
+
+### Final Recommendation
+
+- Ready for Phase C sign-off: Yes/No
+- Notes:
+```
+
+---
+
+## 16) Phase D Verification (Unlink Controls + Profile/Settings + Notification Deep-Links)
+
+Run this matrix after pulling the Phase D patch (soft-unlink lifecycle, cooldown/recovery, profile/preferences persistence, and deep-link reliability updates).
+
+Companion working artifact for real test execution:
+
+- `PHASE_D_MANUAL_VALIDATION_RUN.md`
+
+### Phase D Preconditions
+
+- Latest app/backend build includes:
+  - relationship status/unlink/recover APIs,
+  - profile edit + notification preference APIs,
+  - gameplay push payload routing (`type`, `sessionId`, `targetRoute`) and deep-link listener handling.
+- Prepare two test accounts:
+  - `Account A` and `Account B` linked as an active couple.
+- Ensure both accounts have push token registration on test devices (or test harness capable of firing equivalent notification response payloads).
+- Keep one scenario with an active game session and one scenario with no active game session.
+
+### D-1601 Couple status baseline and settings state surface
+
+- Login as `Account A` and open `Settings`.
+- Verify relationship controls section reflects current relationship state.
+- Expected:
+  - status payload renders correctly (`LINKED`, `COOLDOWN_ACTIVE`, or `READY_TO_LINK`),
+  - partner identity and helper messaging are visible when linked/cooldown states apply,
+  - no stale status from prior sessions after app relaunch.
+
+### D-1602 Unlink preview and two-step confirmation safety
+
+- From linked state (`Account A` + `Account B`, no active game), tap unlink action.
+- Verify first call returns preview/confirmation token and UI shows explicit confirmation step.
+- Confirm unlink in second step.
+- Expected:
+  - unlink does not execute on first tap (preview-only step),
+  - unlink executes only after confirmation token path,
+  - status transitions to cooldown state with clear time-bound messaging.
+
+### D-1603 Active-session guard blocks unsafe unlink
+
+- Start a game so couple has an active session.
+- Attempt unlink from settings.
+- Expected:
+  - unlink is blocked,
+  - user sees actionable error guidance (finish/expire active game first),
+  - couple state remains unchanged (no partial unlink side effects).
+
+### D-1604 Recovery during cooldown
+
+- After successful unlink (cooldown active), attempt `Recover Previous Partner`.
+- Expected:
+  - recovery path is available only when server indicates recoverability,
+  - successful recovery restores linked state with original partner,
+  - cooldown/recovery messaging updates immediately after response.
+
+### D-1605 Cooldown behavior and relink restrictions
+
+- During cooldown, attempt relink flows that should be blocked by policy.
+- Expected:
+  - policy-constrained actions are rejected with explicit server-backed reason,
+  - UI remains stable and informative (no broken state or silent failure),
+  - once cooldown expires (or via controlled test override), relink path behaves as expected.
+
+### D-1606 Profile editing (`username`, `bio`) persistence and validation
+
+- Open `Profile`, switch to edit mode, and update username + bio with valid values.
+- Save and relaunch app.
+- Also test invalid values:
+  - username too short/too long/invalid characters,
+  - bio over max length.
+- Expected:
+  - valid updates persist after refresh/relogin,
+  - invalid inputs show user-safe validation feedback,
+  - server validation errors map to clear in-app messaging without UI corruption.
+
+### D-1607 Notification preferences persistence (`timezone`, reminder, quiet hours)
+
+- In `Settings`, change:
+  - `timezone`,
+  - `reminderTimeLocal`,
+  - `quietHoursStart`,
+  - `quietHoursEnd`.
+- Save and relaunch app.
+- Expected:
+  - values persist and rehydrate correctly from backend,
+  - malformed `HH:mm` input is rejected with clear validation feedback,
+  - empty/invalid timezone does not silently break settings surface.
+
+### D-1608 Deep-link: continue game route correctness
+
+- Trigger gameplay notification mapped to continue-game behavior for `Account A`.
+- Tap notification from:
+  - foreground,
+  - background,
+  - cold start.
+- Expected:
+  - app routes to `Game` with correct `sessionId`,
+  - game screen resumes/loads expected session,
+  - no duplicate navigation stack pushes for one user action.
+
+### D-1609 Deep-link: partner-completed-answering route correctness
+
+- Trigger partner-progress notification while session remains active.
+- Tap notification in foreground/background/cold-start states.
+- Expected:
+  - app routes to `Game`,
+  - session context is correct and user can continue without manual re-navigation,
+  - stale/invalid session targets fail gracefully with non-crashing fallback messaging.
+
+### D-1610 Deep-link: results-ready route correctness
+
+- Complete a game and trigger results-ready notification.
+- Tap notification in foreground/background/cold-start states.
+- Expected:
+  - app routes to `Results`,
+  - results load via route payload or backend fetch fallback when needed,
+  - no crash on initial null/late-loading score state.
+
+### D-1611 Duplicate push suppression sanity check
+
+- Trigger equivalent event more than once in quick succession for same user/session/event type.
+- Expected:
+  - user receives at most one push for equivalent event key,
+  - distinct scoped events (for example question-specific progression) still deliver as appropriate.
+
+### Evidence capture for Phase D sign-off
+
+- Screenshots/video of:
+  - unlink preview + confirmation and cooldown status,
+  - active-session unlink block messaging,
+  - recovery success state transition,
+  - profile + settings save/persist flows,
+  - all three deep-link notification routes (`Game`, `Game`, `Results`) from cold start.
+- Optional backend/API snapshots:
+  - `GET /api/couple/status`
+  - `POST /api/couple/unlink` (preview + confirmation)
+  - `POST /api/couple/recover`
+  - `PUT /api/user/profile`
+  - `PUT /api/user/preferences`
+  - `GET /api/game/{sessionId}/results`
+
+### Phase D strict execution order (recommended)
+
+Use this order to isolate state mutation failures first, then routing behavior:
+
+1. Run `D-1601` first to confirm baseline relationship state and settings hydration.
+2. Run `D-1602`, `D-1603`, `D-1604`, and `D-1605` next (all unlink/cooldown/recovery transitions).
+3. Run `D-1606` and `D-1607` for profile/settings persistence + validation.
+4. Run `D-1608`, `D-1609`, and `D-1610` for deep-link routing in foreground/background/cold start.
+5. Run `D-1611` last to verify dedupe under repeated trigger conditions.
+6. Capture evidence during each case immediately; do not postpone screenshots/log snapshots.
+
+### Phase D evidence template (copy for each run)
+
+Use this template as the official pass/fail artifact for sign-off.
+
+```markdown
+## Phase D Manual Validation Run
+
+- Date:
+- Tester:
+- Build/Commit:
+- Environment:
+- Device A (Account A):
+- Device B (Account B):
+
+### Case Results
+
+| Case ID | Status (Pass/Fail/Blocked) | Evidence (Screenshot/Video file) | Observed Behavior | Expected Behavior | Defect ID (if any) |
+| --- | --- | --- | --- | --- | --- |
+| D-1601 |  |  |  |  |  |
+| D-1602 |  |  |  |  |  |
+| D-1603 |  |  |  |  |  |
+| D-1604 |  |  |  |  |  |
+| D-1605 |  |  |  |  |  |
+| D-1606 |  |  |  |  |  |
+| D-1607 |  |  |  |  |  |
+| D-1608 |  |  |  |  |  |
+| D-1609 |  |  |  |  |  |
+| D-1610 |  |  |  |  |  |
+| D-1611 |  |  |  |  |  |
+
+### Defect Summary
+
+- Total failures:
+- Total blocked:
+- Critical defects:
+- High defects:
+
+### Retest Summary
+
+- Retest required: Yes/No
+- Retest build/commit:
+- Retest result:
+
+### Final Recommendation
+
+- Ready for Phase D sign-off: Yes/No
+- Notes:
+```

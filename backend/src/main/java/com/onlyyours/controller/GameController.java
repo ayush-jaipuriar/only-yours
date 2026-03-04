@@ -75,8 +75,7 @@ public class GameController {
             GameInvitationDto invitation = gameService.createInvitation(inviter.getId(), categoryId);
 
             // Get partner
-            Couple couple = coupleRepository.findByUser1_IdOrUser2_Id(inviter.getId(), inviter.getId())
-                    .orElseThrow(() -> new IllegalStateException("User not in a couple"));
+            Couple couple = requireActiveCoupleForUser(inviter.getId());
 
             User partner = couple.getUser1().getId().equals(inviter.getId()) 
                     ? couple.getUser2() 
@@ -106,7 +105,11 @@ public class GameController {
                     partner.getId(),
                     "Game Invitation",
                     inviter.getName() + " wants to play with you!",
-                    Map.of("type", "INVITATION", "sessionId", invitation.getSessionId().toString())
+                    Map.of(
+                            "type", "INVITATION",
+                            "sessionId", invitation.getSessionId().toString(),
+                            "targetRoute", "Game"
+                    )
             );
 
             log.info("Invitation sent: session={}, inviter={}, invitee={}", 
@@ -189,6 +192,14 @@ public class GameController {
             String gameTopic = "/topic/game/" + sessionId;
             messagingTemplate.convertAndSend(gameTopic, firstQuestion);
 
+            pushNotificationService.sendGameplayEventToUser(
+                    inviter.getId(),
+                    PushNotificationService.GameplayEventType.CONTINUE_GAME,
+                    sessionId,
+                    "Game Started",
+                    accepter.getName() + " accepted your invitation. Continue your game now."
+            );
+
             log.info("Game started: session={}, accepter={}, question={}", 
                     sessionId, accepterEmail, firstQuestion.getQuestionNumber());
 
@@ -233,8 +244,7 @@ public class GameController {
             gameService.declineInvitation(sessionId, decliner.getId());
 
             // Notify inviter
-            Couple couple = coupleRepository.findByUser1_IdOrUser2_Id(decliner.getId(), decliner.getId())
-                    .orElseThrow(() -> new IllegalStateException("User not in a couple"));
+            Couple couple = requireActiveCoupleForUser(decliner.getId());
 
             User partner = couple.getUser1().getId().equals(decliner.getId()) 
                     ? couple.getUser2() 
@@ -317,6 +327,23 @@ public class GameController {
                             .timestamp(System.currentTimeMillis())
                             .build()
             );
+
+            GameSession latestSession = gameService.getGameSession(request.getSessionId());
+            Couple latestCouple = latestSession.getCouple();
+            User partner = latestCouple.getUser1().getId().equals(user.getId())
+                    ? latestCouple.getUser2()
+                    : latestCouple.getUser1();
+            boolean bothAnswered = gameService.areBothPlayersAnswered(request.getSessionId(), request.getQuestionId());
+            if (!bothAnswered && partner != null) {
+                pushNotificationService.sendGameplayEventToUser(
+                        partner.getId(),
+                        PushNotificationService.GameplayEventType.PARTNER_COMPLETED_ANSWERING,
+                        request.getSessionId(),
+                        "Your Partner Answered",
+                        user.getName() + " answered the next question. Continue your game.",
+                        Map.of("questionId", request.getQuestionId())
+                );
+            }
 
             // If both answered, broadcast next question or completion status
             if (nextQuestion.isPresent()) {
@@ -415,6 +442,24 @@ public class GameController {
                     GameResultsDto results =
                             gameService.calculateAndCompleteGame(request.getSessionId());
                     messagingTemplate.convertAndSend(gameTopic, results);
+
+                    GameSession completedSession = gameService.getGameSession(request.getSessionId());
+                    Couple completedCouple = completedSession.getCouple();
+                    pushNotificationService.sendGameplayEventToUser(
+                            completedCouple.getUser1().getId(),
+                            PushNotificationService.GameplayEventType.RESULTS_READY,
+                            request.getSessionId(),
+                            "Results Ready",
+                            "Your game results are ready to view."
+                    );
+                    pushNotificationService.sendGameplayEventToUser(
+                            completedCouple.getUser2().getId(),
+                            PushNotificationService.GameplayEventType.RESULTS_READY,
+                            request.getSessionId(),
+                            "Results Ready",
+                            "Your game results are ready to view."
+                    );
+
                     log.info("Game completed: session={}, p1={}, p2={}",
                             request.getSessionId(), results.getPlayer1Score(),
                             results.getPlayer2Score());
@@ -458,5 +503,15 @@ public class GameController {
                         .timestamp(System.currentTimeMillis())
                         .build()
         );
+    }
+
+    private Couple requireActiveCoupleForUser(UUID userId) {
+        return coupleRepository.findByUserIdAndStatusOrderByCreatedAtDesc(
+                        userId,
+                        Couple.RelationshipStatus.ACTIVE
+                )
+                .stream()
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("User not in an active couple"));
     }
 }

@@ -12,8 +12,10 @@ import {
   ScrollView,
   Clipboard,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
 import api from '../services/api';
+import useTheme from '../theme/useTheme';
 
 const HeartIllustration = () => {
   const pulse = useRef(new Animated.Value(1)).current;
@@ -59,6 +61,9 @@ const HeartIllustration = () => {
 };
 
 const PartnerLinkScreen = ({ navigation }) => {
+  const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
   const [code, setCode] = useState('');
   const [generatedCode, setGeneratedCode] = useState('');
   const [loadingGen, setLoadingGen] = useState(false);
@@ -151,20 +156,21 @@ const PartnerLinkScreen = ({ navigation }) => {
 
   return (
     <ScrollView
-      style={styles.screen}
+      style={[styles.screen, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
     >
       <Animated.View
         style={[
           styles.animatedWrapper,
+          { width: '100%', maxWidth: isTablet ? 760 : 520 },
           { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         ]}
       >
         <HeartIllustration />
 
         <Text style={styles.heading}>Link with Partner</Text>
-        <Text style={styles.subheading}>
+        <Text style={[styles.subheading, { color: theme.colors.textSecondary }]}>
           Share your code or enter theirs to connect
         </Text>
 
@@ -234,9 +240,9 @@ const PartnerLinkScreen = ({ navigation }) => {
 
         {/* --- Divider --- */}
         <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
+          <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+          <Text style={[styles.dividerText, { color: theme.colors.textTertiary }]}>or</Text>
+          <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
         </View>
 
         {/* --- Enter Code Section --- */}

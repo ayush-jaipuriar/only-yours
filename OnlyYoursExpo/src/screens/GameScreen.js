@@ -9,14 +9,19 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useGame } from '../state/GameContext';
+import useTheme from '../theme/useTheme';
 
 const GUESS_RESULT_DISPLAY_MS = 2500;
 
-const GameScreen = ({ navigation }) => {
+// eslint-disable-next-line react/prop-types
+const GameScreen = ({ route, navigation }) => {
+  const { theme } = useTheme();
   const {
+    activeSession,
     currentQuestion,
     myAnswer,
     waitingForPartner,
+    startGame,
     submitAnswer,
     submitGuess,
     gameStatus,
@@ -31,6 +36,16 @@ const GameScreen = ({ navigation }) => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [showingResult, setShowingResult] = useState(false);
   const { width, height } = useWindowDimensions();
+  const routeSessionId = route?.params?.sessionId;
+
+  useEffect(() => {
+    if (!routeSessionId) {
+      return;
+    }
+    if (activeSession !== routeSessionId) {
+      startGame(routeSessionId);
+    }
+  }, [routeSessionId, activeSession, startGame]);
 
   useEffect(() => {
     if (gameStatus === 'completed' && scores) {
@@ -84,6 +99,7 @@ const GameScreen = ({ navigation }) => {
         key={letter}
         style={[
           styles.optionCard,
+          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
           isSelected && (round === 'round2' ? styles.selectedOptionR2 : styles.selectedOption),
           isMyAnswer && styles.submittedOption,
           isDisabled && styles.disabledOption,
@@ -94,7 +110,7 @@ const GameScreen = ({ navigation }) => {
         <View style={[styles.optionLetter, optionLetterBg]}>
           <Text style={styles.optionLetterText}>{letter}</Text>
         </View>
-        <Text style={styles.optionText}>{text}</Text>
+        <Text style={[styles.optionText, { color: theme.colors.textPrimary }]}>{text}</Text>
       </TouchableOpacity>
     );
   };
@@ -103,13 +119,13 @@ const GameScreen = ({ navigation }) => {
     return (
       <View style={styles.transitionContainer}>
         <Text style={styles.transitionEmoji}>🎯</Text>
-        <Text style={styles.transitionTitle}>Round 1 Complete!</Text>
-        <Text style={styles.transitionSubtitle}>
+        <Text style={[styles.transitionTitle, { color: theme.colors.textPrimary }]}>Round 1 Complete!</Text>
+        <Text style={[styles.transitionSubtitle, { color: theme.colors.textSecondary }]}>
           Now guess how your partner answered...
         </Text>
         <ActivityIndicator
           size="large"
-          color="#03dac6"
+          color={theme.colors.accent}
           style={styles.transitionSpinner}
         />
       </View>
@@ -149,21 +165,27 @@ const GameScreen = ({ navigation }) => {
 
   if (!currentQuestion) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color="#6200ea" />
-        <Text style={styles.loadingText}>Loading question...</Text>
+      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading question...</Text>
       </View>
     );
   }
 
   const isRound2 = round === 'round2';
-  const primaryColor = isRound2 ? '#03dac6' : '#6200ea';
+  const primaryColor = isRound2 ? theme.colors.accent : theme.colors.primary;
   const progressPercent =
     (currentQuestion.questionNumber / currentQuestion.totalQuestions) * 100;
   const isCompactLandscape = width > height && height < 520;
 
   return (
-    <View style={[styles.container, isCompactLandscape && styles.containerCompact]}>
+    <View
+      style={[
+        styles.container,
+        { backgroundColor: theme.colors.background },
+        isCompactLandscape && styles.containerCompact,
+      ]}
+    >
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
@@ -171,12 +193,24 @@ const GameScreen = ({ navigation }) => {
       >
         <View style={styles.contentWrapper}>
           {/* Round Badge */}
-          <View style={[styles.roundBadge, isRound2 && styles.roundBadgeR2]}>
-            <Text style={[styles.roundBadgeText, isRound2 && styles.roundBadgeTextR2]}>
+          <View
+            style={[
+              styles.roundBadge,
+              { backgroundColor: theme.colors.surfaceMuted },
+              isRound2 && styles.roundBadgeR2,
+            ]}
+          >
+            <Text
+              style={[
+                styles.roundBadgeText,
+                { color: isRound2 ? theme.colors.accentContrast : theme.colors.primary },
+                isRound2 && styles.roundBadgeTextR2,
+              ]}
+            >
               {isRound2 ? 'Round 2: Guess' : 'Round 1: Answer'}
             </Text>
             {isRound2 && (
-              <Text style={styles.runningScore}>
+              <Text style={[styles.runningScore, { color: theme.colors.accentContrast }]}>
                 {correctCount}/{currentQuestion.questionNumber - 1} correct
               </Text>
             )}
@@ -188,7 +222,7 @@ const GameScreen = ({ navigation }) => {
               Question {currentQuestion.questionNumber} of{' '}
               {currentQuestion.totalQuestions}
             </Text>
-            <View style={styles.progressBar}>
+            <View style={[styles.progressBar, { backgroundColor: theme.colors.border }]}>
               <View
                 style={[
                   styles.progressFill,
@@ -200,16 +234,18 @@ const GameScreen = ({ navigation }) => {
 
           {/* Round 2 Prompt */}
           {isRound2 && (
-            <View style={styles.guessPrompt}>
-              <Text style={styles.guessPromptText}>
+            <View style={[styles.guessPrompt, { backgroundColor: theme.colors.surfaceMuted }]}>
+              <Text style={[styles.guessPromptText, { color: theme.colors.accentContrast }]}>
                 How did your partner answer this?
               </Text>
             </View>
           )}
 
           {/* Question */}
-          <View style={styles.questionContainer}>
-            <Text style={styles.questionText}>{currentQuestion.questionText}</Text>
+          <View style={[styles.questionContainer, { backgroundColor: theme.colors.surface }]}>
+            <Text style={[styles.questionText, { color: theme.colors.textPrimary }]}>
+              {currentQuestion.questionText}
+            </Text>
           </View>
 
           {/* Options */}
@@ -225,10 +261,12 @@ const GameScreen = ({ navigation }) => {
             {waitingForPartner ? (
               <View style={styles.waitingContainer}>
                 <ActivityIndicator size="small" color={primaryColor} />
-                <Text style={styles.waitingText}>Waiting for partner...</Text>
+                <Text style={[styles.waitingText, { color: theme.colors.textSecondary }]}>
+                  Waiting for partner...
+                </Text>
               </View>
             ) : myAnswer ? (
-              <Text style={styles.waitingText}>
+              <Text style={[styles.waitingText, { color: theme.colors.textSecondary }]}>
                 {isRound2 ? 'Guess submitted!' : 'Answer submitted!'}
               </Text>
             ) : (
@@ -236,7 +274,7 @@ const GameScreen = ({ navigation }) => {
                 style={[
                   styles.submitButton,
                   { backgroundColor: primaryColor },
-                  !selectedOption && styles.submitButtonDisabled,
+                  !selectedOption && [styles.submitButtonDisabled, { backgroundColor: theme.colors.border }],
                 ]}
                 onPress={handleSubmit}
                 disabled={!selectedOption}

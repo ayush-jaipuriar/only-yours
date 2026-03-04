@@ -1,5 +1,6 @@
 package com.onlyyours.controller;
 
+import com.onlyyours.service.CoupleOperationException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -12,6 +13,15 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @ExceptionHandler(CoupleOperationException.class)
+    public ResponseEntity<Map<String, Object>> handleCoupleOperationException(CoupleOperationException ex) {
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("code", ex.getCode());
+        body.put("message", ex.getMessage());
+        body.putAll(ex.getMetadata());
+        return ResponseEntity.status(ex.getStatus()).body(body);
+    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(
@@ -31,5 +41,11 @@ public class GlobalExceptionHandler {
             HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body(
                 Map.of("error", "Malformed request body"));
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        return ResponseEntity.badRequest().body(
+                Map.of("error", ex.getMessage()));
     }
 }

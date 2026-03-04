@@ -1,8 +1,17 @@
-import React from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import React, { useMemo } from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
 import useGameHistoryFlow from './useGameHistoryFlow';
+import useTheme from '../theme/useTheme';
 
 const SORT_OPTIONS = [
   { key: 'recent', label: 'Recent' },
@@ -14,12 +23,6 @@ const WINNER_OPTIONS = [
   { key: 'self', label: 'I Won' },
   { key: 'partner', label: 'Partner Won' },
 ];
-
-const RESULT_THEME = {
-  WIN: { text: 'You won', color: '#1E7A4E', background: '#E3F7ED' },
-  LOSS: { text: 'Partner won', color: '#A13333', background: '#FDECEC' },
-  DRAW: { text: 'Draw', color: '#5B4CAF', background: '#EEE9FF' },
-};
 
 const renderEmptyHistoryState = (winnerFilter, setWinnerFilter, reload) => {
   const isFiltered = winnerFilter !== 'all';
@@ -40,6 +43,9 @@ const renderEmptyHistoryState = (winnerFilter, setWinnerFilter, reload) => {
 
 // eslint-disable-next-line react/prop-types
 const GameHistoryScreen = ({ navigation }) => {
+  const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
   const {
     historyItems,
     sortOption,
@@ -53,6 +59,141 @@ const GameHistoryScreen = ({ navigation }) => {
     loadMore,
     reload,
   } = useGameHistoryFlow(navigation);
+
+  const resultTheme = {
+    WIN: { text: 'You won', color: theme.colors.success, background: '#E3F7ED' },
+    LOSS: { text: 'Partner won', color: theme.colors.danger, background: '#FDECEC' },
+    DRAW: { text: 'Draw', color: theme.colors.textSecondary, background: '#EEE9FF' },
+  };
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background,
+        },
+        content: {
+          padding: 16,
+          paddingBottom: 28,
+          alignSelf: 'center',
+          width: '100%',
+          maxWidth: isTablet ? 760 : 460,
+        },
+        sectionTitle: {
+          fontSize: 14,
+          fontWeight: '700',
+          color: theme.colors.textPrimary,
+          marginBottom: 8,
+        },
+        filterRow: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          marginBottom: 14,
+        },
+        pill: {
+          paddingVertical: 8,
+          paddingHorizontal: 12,
+          borderRadius: 16,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surface,
+          marginRight: 8,
+          marginBottom: 8,
+        },
+        pillActive: {
+          backgroundColor: theme.colors.primary,
+          borderColor: theme.colors.primary,
+        },
+        pillText: {
+          color: theme.colors.textSecondary,
+          fontSize: 13,
+          fontWeight: '600',
+        },
+        pillTextActive: {
+          color: theme.colors.primaryContrast,
+        },
+        card: {
+          backgroundColor: theme.colors.surface,
+          borderRadius: 14,
+          padding: 14,
+          marginBottom: 12,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+        },
+        cardHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 8,
+        },
+        cardDate: {
+          color: theme.colors.textSecondary,
+          fontSize: 13,
+        },
+        resultBadge: {
+          borderRadius: 12,
+          paddingHorizontal: 10,
+          paddingVertical: 4,
+        },
+        resultText: {
+          fontSize: 12,
+          fontWeight: '700',
+        },
+        partnerText: {
+          fontSize: 14,
+          color: theme.colors.textPrimary,
+          marginBottom: 10,
+        },
+        scoreRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          backgroundColor: theme.colors.surfaceMuted,
+          borderRadius: 12,
+          paddingVertical: 10,
+          paddingHorizontal: 14,
+        },
+        scoreBlock: {
+          alignItems: 'center',
+          minWidth: 80,
+        },
+        scoreLabel: {
+          color: theme.colors.textSecondary,
+          fontSize: 12,
+          marginBottom: 3,
+        },
+        scoreValue: {
+          color: theme.colors.textPrimary,
+          fontSize: 20,
+          fontWeight: '700',
+        },
+        vsText: {
+          fontSize: 18,
+          color: theme.colors.textSecondary,
+          fontWeight: '700',
+        },
+        loadMoreButton: {
+          marginTop: 4,
+          backgroundColor: theme.colors.primary,
+          borderRadius: 22,
+          alignItems: 'center',
+          paddingVertical: 12,
+        },
+        loadMoreText: {
+          color: theme.colors.primaryContrast,
+          fontSize: 14,
+          fontWeight: '700',
+        },
+        endText: {
+          marginTop: 8,
+          textAlign: 'center',
+          color: theme.colors.textSecondary,
+          fontSize: 13,
+        },
+      }),
+    [isTablet, theme]
+  );
 
   const formatPlayedAt = (timestamp) => {
     if (!timestamp) {
@@ -114,13 +255,15 @@ const GameHistoryScreen = ({ navigation }) => {
       </View>
 
       {historyItems.map((item) => {
-        const resultTheme = RESULT_THEME[item.result] || RESULT_THEME.DRAW;
+        const cardResultTheme = resultTheme[item.result] || resultTheme.DRAW;
         return (
           <View key={item.sessionId} style={styles.card}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardDate}>{formatPlayedAt(item.completedAt)}</Text>
-              <View style={[styles.resultBadge, { backgroundColor: resultTheme.background }]}>
-                <Text style={[styles.resultText, { color: resultTheme.color }]}>{resultTheme.text}</Text>
+              <View style={[styles.resultBadge, { backgroundColor: cardResultTheme.background }]}>
+                <Text style={[styles.resultText, { color: cardResultTheme.color }]}>
+                  {cardResultTheme.text}
+                </Text>
               </View>
             </View>
             <Text style={styles.partnerText}>Played with {item.partnerName}</Text>
@@ -142,7 +285,7 @@ const GameHistoryScreen = ({ navigation }) => {
       {hasNext ? (
         <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore} disabled={loadingMore}>
           {loadingMore ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={theme.colors.primaryContrast} />
           ) : (
             <Text style={styles.loadMoreText}>Load More</Text>
           )}
@@ -153,125 +296,5 @@ const GameHistoryScreen = ({ navigation }) => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  content: {
-    padding: 16,
-    paddingBottom: 28,
-  },
-  sectionTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#2D225A',
-    marginBottom: 8,
-  },
-  filterRow: {
-    flexDirection: 'row',
-    marginBottom: 14,
-  },
-  pill: {
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: '#D1CCF1',
-    backgroundColor: '#fff',
-    marginRight: 8,
-  },
-  pillActive: {
-    backgroundColor: '#6200ea',
-    borderColor: '#6200ea',
-  },
-  pillText: {
-    color: '#5B4CAF',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  pillTextActive: {
-    color: '#fff',
-  },
-  card: {
-    backgroundColor: '#fff',
-    borderRadius: 14,
-    padding: 14,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: '#E4E0F7',
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardDate: {
-    color: '#6B6296',
-    fontSize: 13,
-  },
-  resultBadge: {
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-  },
-  resultText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  partnerText: {
-    fontSize: 14,
-    color: '#2D225A',
-    marginBottom: 10,
-  },
-  scoreRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#F7F5FF',
-    borderRadius: 12,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-  },
-  scoreBlock: {
-    alignItems: 'center',
-    minWidth: 80,
-  },
-  scoreLabel: {
-    color: '#6B6296',
-    fontSize: 12,
-    marginBottom: 3,
-  },
-  scoreValue: {
-    color: '#2D225A',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  vsText: {
-    fontSize: 18,
-    color: '#5B4CAF',
-    fontWeight: '700',
-  },
-  loadMoreButton: {
-    marginTop: 4,
-    backgroundColor: '#6200ea',
-    borderRadius: 22,
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  loadMoreText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  endText: {
-    marginTop: 8,
-    textAlign: 'center',
-    color: '#7F78A8',
-    fontSize: 13,
-  },
-});
 
 export default GameHistoryScreen;

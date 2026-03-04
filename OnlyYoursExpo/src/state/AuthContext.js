@@ -1,10 +1,17 @@
-import React, { createContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Alert } from 'react-native';
 import WebSocketService from '../services/WebSocketService';
 import NotificationService from '../services/NotificationService';
 import api, { setLogoutHandler } from '../services/api';
 import { API_BASE_URL } from '../config';
+import {
+  ONBOARDING_STATUS,
+  getOnboardingState,
+  markOnboardingStarted,
+  markOnboardingCompleted,
+  resetOnboardingState,
+} from './onboardingStorage';
 
 export const AuthContext = createContext();
 const STORAGE_KEYS = {
@@ -12,6 +19,7 @@ const STORAGE_KEYS = {
   refreshToken: 'refreshToken',
   userData: 'userData',
 };
+const PENDING_NOTIFICATION_TTL_MS = 5 * 60 * 1000;
 
 /**
  * Custom hook to access auth context.
@@ -37,28 +45,111 @@ export const AuthProvider = ({ children }) => {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [wsConnectionState, setWsConnectionState] = useState('disconnected');
+  const [onboardingStatus, setOnboardingStatus] = useState(ONBOARDING_STATUS.NOT_STARTED);
 
   // Store navigation ref for invitation handling
   const navigationRef = useRef(null);
   const gameContextRef = useRef(null);
   const connectingRef = useRef(false);
   const gameEventsSubRef = useRef(null);
+  const notificationResponseSubRef = useRef(null);
+  const pendingNotificationIntentRef = useRef(null);
+  const authStateRef = useRef({ isLoggedIn: false, isAuthLoading: true });
 
   /**
    * Set navigation ref from AppNavigator.
    * Used to navigate when invitation is accepted.
    */
-  const setNavigationRef = (ref) => {
+  const executeNotificationIntent = useCallback((intent) => {
+    if (!intent?.targetRoute || !navigationRef.current) {
+      return;
+    }
+
+    const routeName = intent.targetRoute;
+    const params = intent.params || {};
+    const sessionId = params.sessionId || null;
+
+    if (routeName === 'Game') {
+      if (!sessionId) {
+        return;
+      }
+      if (gameContextRef.current?.startGame) {
+        gameContextRef.current.startGame(sessionId);
+      }
+      const currentRoute = navigationRef.current.getCurrentRoute?.();
+      const isSameGameRoute =
+        currentRoute?.name === 'Game' &&
+        currentRoute?.params?.sessionId === sessionId;
+      if (!isSameGameRoute) {
+        navigationRef.current.navigate('Game', { sessionId });
+      }
+      return;
+    }
+
+    if (routeName === 'Results') {
+      if (!sessionId) {
+        return;
+      }
+      const currentRoute = navigationRef.current.getCurrentRoute?.();
+      const isSameResultsRoute =
+        currentRoute?.name === 'Results' &&
+        currentRoute?.params?.sessionId === sessionId;
+      if (!isSameResultsRoute) {
+        navigationRef.current.navigate('Results', { sessionId });
+      }
+      return;
+    }
+
+    navigationRef.current.navigate(routeName, params);
+  }, []);
+
+  const handleNotificationIntent = useCallback((intent) => {
+    if (!intent) {
+      return;
+    }
+
+    const { isLoggedIn: loggedIn, isAuthLoading: loading } = authStateRef.current;
+    const hasNavigation = Boolean(navigationRef.current);
+    if (!loggedIn || loading || !hasNavigation) {
+      pendingNotificationIntentRef.current = {
+        intent,
+        createdAt: Date.now(),
+      };
+      return;
+    }
+
+    executeNotificationIntent(intent);
+  }, [executeNotificationIntent]);
+
+  const flushPendingNotificationIntent = useCallback(() => {
+    const pending = pendingNotificationIntentRef.current;
+    if (!pending) {
+      return;
+    }
+
+    const ageMs = Date.now() - pending.createdAt;
+    if (ageMs > PENDING_NOTIFICATION_TTL_MS) {
+      pendingNotificationIntentRef.current = null;
+      return;
+    }
+
+    pendingNotificationIntentRef.current = null;
+    handleNotificationIntent(pending.intent);
+  }, [handleNotificationIntent]);
+
+  const setNavigationRef = useCallback((ref) => {
     navigationRef.current = ref;
-  };
+    flushPendingNotificationIntent();
+  }, [flushPendingNotificationIntent]);
 
   /**
    * Set game context ref from GameProvider.
    * Used to start game session when invitation is accepted.
    */
-  const setGameContextRef = (ref) => {
+  const setGameContextRef = useCallback((ref) => {
     gameContextRef.current = ref;
-  };
+    flushPendingNotificationIntent();
+  }, [flushPendingNotificationIntent]);
 
   /**
    * Handle incoming game invitation.
@@ -237,6 +328,53 @@ export const AuthProvider = ({ children }) => {
 
   const wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+  const hydrateOnboardingStatus = async () => {
+    const onboardingState = await getOnboardingState();
+    setOnboardingStatus(onboardingState.status);
+    return onboardingState.status;
+  };
+
+  useEffect(() => {
+    authStateRef.current = { isLoggedIn, isAuthLoading };
+    if (isLoggedIn && !isAuthLoading) {
+      flushPendingNotificationIntent();
+    }
+  }, [isLoggedIn, isAuthLoading, flushPendingNotificationIntent]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const handleNotificationResponse = (responsePayload) => {
+      const intent = NotificationService.mapNotificationResponseToIntent(responsePayload);
+      handleNotificationIntent(intent);
+    };
+
+    notificationResponseSubRef.current =
+      NotificationService.addNotificationResponseListener(handleNotificationResponse);
+
+    NotificationService.getLastNotificationResponse()
+      .then((lastResponse) => {
+        if (!isMounted || !lastResponse) {
+          return;
+        }
+        const intent = NotificationService.mapNotificationResponseToIntent(lastResponse);
+        handleNotificationIntent(intent);
+      })
+      .catch((error) => {
+        console.warn('[AuthContext] Failed to inspect last notification response:', error?.message || error);
+      });
+
+    return () => {
+      isMounted = false;
+      if (notificationResponseSubRef.current?.remove) {
+        notificationResponseSubRef.current.remove();
+      } else if (notificationResponseSubRef.current?.unsubscribe) {
+        notificationResponseSubRef.current.unsubscribe();
+      }
+      notificationResponseSubRef.current = null;
+    };
+  }, [handleNotificationIntent]);
+
   const connectRealtime = async () => {
     if (connectingRef.current || WebSocketService.isConnected()) {
       return;
@@ -283,6 +421,7 @@ export const AuthProvider = ({ children }) => {
    */
   const login = async (authPayload) => {
     await persistAuthPayload(authPayload);
+    await hydrateOnboardingStatus();
     setIsLoggedIn(true);
     if (authPayload?.user) {
       setUser(authPayload.user);
@@ -314,6 +453,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     await clearAuthStorage();
+    pendingNotificationIntentRef.current = null;
     if (gameEventsSubRef.current) {
       try {
         gameEventsSubRef.current.unsubscribe();
@@ -327,6 +467,21 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setWsConnectionState('disconnected');
     WebSocketService.disconnect();
+  };
+
+  const startOnboarding = async () => {
+    const nextState = await markOnboardingStarted();
+    setOnboardingStatus(nextState.status);
+  };
+
+  const completeOnboarding = async () => {
+    const nextState = await markOnboardingCompleted();
+    setOnboardingStatus(nextState.status);
+  };
+
+  const replayOnboarding = async () => {
+    const nextState = await resetOnboardingState();
+    setOnboardingStatus(nextState.status);
   };
 
   /**
@@ -360,6 +515,7 @@ export const AuthProvider = ({ children }) => {
         }
 
         await persistAuthPayload(response.data);
+        await hydrateOnboardingStatus();
         setIsLoggedIn(true);
         if (response.data?.user) {
           setUser(response.data.user);
@@ -397,17 +553,45 @@ export const AuthProvider = ({ children }) => {
     return () => clearTimeout(timer);
   }, [isLoggedIn, isAuthLoading, wsConnectionState]);
 
-  return (
-    <AuthContext.Provider value={{ 
+  const shouldShowOnboarding =
+    isLoggedIn && onboardingStatus !== ONBOARDING_STATUS.COMPLETED;
+
+  const authContextValue = useMemo(
+    () => ({
       isLoggedIn,
       isAuthLoading,
-      user, 
-      login, 
+      user,
+      login,
       logout,
       wsConnectionState,
       setNavigationRef,
       setGameContextRef,
-    }}>
+      onboardingStatus,
+      onboardingStatuses: ONBOARDING_STATUS,
+      shouldShowOnboarding,
+      startOnboarding,
+      completeOnboarding,
+      replayOnboarding,
+    }),
+    [
+      isLoggedIn,
+      isAuthLoading,
+      user,
+      login,
+      logout,
+      wsConnectionState,
+      setNavigationRef,
+      setGameContextRef,
+      onboardingStatus,
+      shouldShowOnboarding,
+      startOnboarding,
+      completeOnboarding,
+      replayOnboarding,
+    ]
+  );
+
+  return (
+    <AuthContext.Provider value={authContextValue}>
       {children}
     </AuthContext.Provider>
   );

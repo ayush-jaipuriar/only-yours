@@ -1,8 +1,10 @@
 package com.onlyyours.service;
 
 import com.onlyyours.model.Couple;
+import com.onlyyours.model.GameSession;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.CoupleRepository;
+import com.onlyyours.repository.GameSessionRepository;
 import com.onlyyours.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,7 @@ class CoupleServiceTest {
     @Autowired private CoupleService coupleService;
     @Autowired private UserRepository userRepo;
     @Autowired private CoupleRepository coupleRepo;
+    @Autowired private GameSessionRepository gameSessionRepo;
 
     private User userA, userB;
 
@@ -72,16 +75,18 @@ class CoupleServiceTest {
 
     @Test
     void testRedeemLinkCode_InvalidCodeThrows() {
-        assertThrows(IllegalArgumentException.class, () ->
+        CoupleOperationException ex = assertThrows(CoupleOperationException.class, () ->
             coupleService.redeemLinkCode(userB.getId(), "INVALID"));
+        assertEquals("INVALID_CODE", ex.getCode());
     }
 
     @Test
     void testRedeemLinkCode_SelfRedeemThrows() {
         String code = coupleService.generateLinkCode(userA.getId());
 
-        assertThrows(IllegalArgumentException.class, () ->
+        CoupleOperationException ex = assertThrows(CoupleOperationException.class, () ->
             coupleService.redeemLinkCode(userA.getId(), code));
+        assertEquals("SELF_LINK_NOT_ALLOWED", ex.getCode());
     }
 
     @Test
@@ -96,8 +101,9 @@ class CoupleServiceTest {
         userC = userRepo.save(userC);
 
         final User savedC = userC;
-        assertThrows(IllegalArgumentException.class, () ->
+        CoupleOperationException ex = assertThrows(CoupleOperationException.class, () ->
             coupleService.redeemLinkCode(savedC.getId(), code));
+        assertEquals("INVALID_CODE", ex.getCode());
     }
 
     @Test
@@ -127,7 +133,55 @@ class CoupleServiceTest {
 
     @Test
     void testGenerateLinkCode_InvalidUserThrows() {
-        assertThrows(IllegalArgumentException.class, () ->
+        CoupleOperationException ex = assertThrows(CoupleOperationException.class, () ->
             coupleService.generateLinkCode(java.util.UUID.randomUUID()));
+        assertEquals("USER_NOT_FOUND", ex.getCode());
+    }
+
+    @Test
+    void testPrepareUnlink_BlockedWhenActiveGameExists() {
+        String code = coupleService.generateLinkCode(userA.getId());
+        Couple linked = coupleService.redeemLinkCode(userB.getId(), code);
+
+        GameSession activeSession = new GameSession();
+        activeSession.setCouple(linked);
+        activeSession.setStatus(GameSession.GameStatus.INVITED);
+        activeSession.setCreatedAt(new java.util.Date());
+        gameSessionRepo.save(activeSession);
+
+        CoupleOperationException ex = assertThrows(
+                CoupleOperationException.class,
+                () -> coupleService.prepareUnlink(userA.getId())
+        );
+        assertEquals("ACTIVE_SESSION_EXISTS", ex.getCode());
+    }
+
+    @Test
+    void testUnlinkAndRecoverDuringCooldownFlow() {
+        String code = coupleService.generateLinkCode(userA.getId());
+        coupleService.redeemLinkCode(userB.getId(), code);
+
+        var preview = coupleService.prepareUnlink(userA.getId());
+        assertTrue(preview.isRequiresConfirmation());
+        assertEquals(CoupleService.UNLINK_CONFIRMATION_TOKEN, preview.getConfirmationToken());
+
+        var statusAfterUnlink = coupleService.unlinkCouple(
+                userA.getId(),
+                CoupleService.UNLINK_CONFIRMATION_TOKEN,
+                "Test unlink reason"
+        );
+        assertEquals("COOLDOWN_ACTIVE", statusAfterUnlink.getStatus());
+        assertFalse(statusAfterUnlink.isLinked());
+        assertTrue(statusAfterUnlink.isCanRecoverWithPreviousPartner());
+
+        CoupleOperationException cooldownEx = assertThrows(
+                CoupleOperationException.class,
+                () -> coupleService.generateLinkCode(userA.getId())
+        );
+        assertEquals("COOLDOWN_ACTIVE", cooldownEx.getCode());
+
+        Couple recovered = coupleService.recoverCouple(userA.getId());
+        assertEquals(Couple.RelationshipStatus.ACTIVE, recovered.getStatus());
+        assertTrue(coupleService.findCoupleForUser(userA.getId()).isPresent());
     }
 }

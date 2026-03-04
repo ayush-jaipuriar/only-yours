@@ -1,17 +1,29 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
   Animated,
   ScrollView,
+  useWindowDimensions,
 } from 'react-native';
 import { useGame } from '../state/GameContext';
+import useTheme from '../theme/useTheme';
+import api from '../services/api';
 
+// eslint-disable-next-line react/prop-types
 const ResultsScreen = ({ route, navigation }) => {
-  const { scores } = route.params;
+  const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const incomingScores = route?.params?.scores || null;
+  const sessionId = route?.params?.sessionId || null;
   const { endGame } = useGame();
+  const [scores, setScores] = useState(incomingScores);
+  const [isLoadingScores, setIsLoadingScores] = useState(!incomingScores && Boolean(sessionId));
+  const [scoreLoadError, setScoreLoadError] = useState(false);
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -19,6 +31,41 @@ const ResultsScreen = ({ route, navigation }) => {
   const p2ScoreAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
+    let isMounted = true;
+    if (incomingScores || !sessionId) {
+      return undefined;
+    }
+
+    (async () => {
+      try {
+        const response = await api.get(`/game/${sessionId}/results`);
+        if (!isMounted) {
+          return;
+        }
+        setScores(response.data);
+        setScoreLoadError(false);
+      } catch (error) {
+        if (!isMounted) {
+          return;
+        }
+        setScoreLoadError(true);
+      } finally {
+        if (isMounted) {
+          setIsLoadingScores(false);
+        }
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [incomingScores, sessionId]);
+
+  useEffect(() => {
+    if (!scores) {
+      return;
+    }
+
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -46,7 +93,7 @@ const ResultsScreen = ({ route, navigation }) => {
       delay: 400,
       useNativeDriver: false,
     }).start();
-  }, []);
+  }, [scores, fadeAnim, p1ScoreAnim, p2ScoreAnim, scaleAnim]);
 
   const handlePlayAgain = () => {
     endGame();
@@ -58,8 +105,8 @@ const ResultsScreen = ({ route, navigation }) => {
     navigation.replace('Dashboard');
   };
 
-  const combinedScore = scores.player1Score + scores.player2Score;
-  const maxCombined = scores.totalQuestions * 2;
+  const combinedScore = (scores?.player1Score || 0) + (scores?.player2Score || 0);
+  const maxCombined = (scores?.totalQuestions || 0) * 2;
 
   const getHeaderEmoji = () => {
     if (combinedScore >= 14) return '💕';
@@ -68,26 +115,54 @@ const ResultsScreen = ({ route, navigation }) => {
     return '💪';
   };
 
+  if (isLoadingScores) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading results...</Text>
+      </View>
+    );
+  }
+
+  if (scoreLoadError || !scores) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Unavailable</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+          This game result is no longer available.
+        </Text>
+        <TouchableOpacity
+          style={[styles.dashboardButton, { borderColor: theme.colors.primary, marginTop: 12 }]}
+          onPress={handleBackToDashboard}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.dashboardText, { color: theme.colors.primary }]}>Back to Dashboard</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <ScrollView
-      style={styles.scrollContainer}
+      style={[styles.scrollContainer, { backgroundColor: theme.colors.background }]}
       contentContainerStyle={styles.container}>
       <Animated.View
         style={[
           styles.content,
+          { width: '100%', maxWidth: isTablet ? 820 : 560 },
           { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         ]}>
         {/* Header */}
         <Text style={styles.emoji}>{getHeaderEmoji()}</Text>
-        <Text style={styles.title}>Game Complete!</Text>
+        <Text style={[styles.title, { color: theme.colors.textPrimary }]}>Game Complete!</Text>
 
         {/* Score Cards */}
         <View style={styles.scoresRow}>
-          <View style={styles.scoreCard}>
-            <Text style={styles.playerName} numberOfLines={1}>
+          <View style={[styles.scoreCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <Text style={[styles.playerName, { color: theme.colors.textSecondary }]} numberOfLines={1}>
               {scores.player1Name}
             </Text>
-            <View style={styles.scoreCircle}>
+            <View style={[styles.scoreCircle, { backgroundColor: theme.colors.surfaceMuted }]}>
               <AnimatedScore
                 animatedValue={p1ScoreAnim}
                 total={scores.totalQuestions}
@@ -96,14 +171,14 @@ const ResultsScreen = ({ route, navigation }) => {
           </View>
 
           <View style={styles.vsContainer}>
-            <Text style={styles.vsText}>vs</Text>
+            <Text style={[styles.vsText, { color: theme.colors.textTertiary }]}>vs</Text>
           </View>
 
-          <View style={styles.scoreCard}>
-            <Text style={styles.playerName} numberOfLines={1}>
+          <View style={[styles.scoreCard, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+            <Text style={[styles.playerName, { color: theme.colors.textSecondary }]} numberOfLines={1}>
               {scores.player2Name}
             </Text>
-            <View style={styles.scoreCircle}>
+            <View style={[styles.scoreCircle, { backgroundColor: theme.colors.surfaceMuted }]}>
               <AnimatedScore
                 animatedValue={p2ScoreAnim}
                 total={scores.totalQuestions}
@@ -113,26 +188,26 @@ const ResultsScreen = ({ route, navigation }) => {
         </View>
 
         {/* Result Message */}
-        <View style={styles.messageContainer}>
-          <Text style={styles.messageText}>{scores.message}</Text>
-          <Text style={styles.combinedScore}>
+        <View style={[styles.messageContainer, { backgroundColor: theme.colors.surface, borderColor: theme.colors.border }]}>
+          <Text style={[styles.messageText, { color: theme.colors.textPrimary }]}>{scores.message}</Text>
+          <Text style={[styles.combinedScore, { color: theme.colors.textSecondary }]}>
             Combined: {combinedScore}/{maxCombined}
           </Text>
         </View>
 
         {/* Buttons */}
         <TouchableOpacity
-          style={styles.playAgainButton}
+          style={[styles.playAgainButton, { backgroundColor: theme.colors.primary, shadowColor: theme.colors.primary }]}
           onPress={handlePlayAgain}
           activeOpacity={0.8}>
-          <Text style={styles.playAgainText}>Play Again</Text>
+          <Text style={[styles.playAgainText, { color: theme.colors.primaryContrast }]}>Play Again</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.dashboardButton}
+          style={[styles.dashboardButton, { backgroundColor: theme.colors.surface, borderColor: theme.colors.primary }]}
           onPress={handleBackToDashboard}
           activeOpacity={0.8}>
-          <Text style={styles.dashboardText}>Back to Dashboard</Text>
+          <Text style={[styles.dashboardText, { color: theme.colors.primary }]}>Back to Dashboard</Text>
         </TouchableOpacity>
       </Animated.View>
     </ScrollView>
@@ -140,11 +215,6 @@ const ResultsScreen = ({ route, navigation }) => {
 };
 
 const AnimatedScore = ({ animatedValue, total }) => {
-  const scoreText = animatedValue.interpolate({
-    inputRange: [0, total],
-    outputRange: ['0', String(total)],
-  });
-
   return (
     <View style={scoreStyles.container}>
       <AnimatedText animatedValue={animatedValue} />
@@ -185,6 +255,22 @@ const scoreStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 24,
+  },
+  loadingText: {
+    marginTop: 12,
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  errorTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
   scrollContainer: {
     flex: 1,
     backgroundColor: '#f5f5f5',

@@ -164,6 +164,52 @@ class RestControllerTest {
                     .andExpect(jsonPath("$.email").value("test@example.com"))
                     .andExpect(jsonPath("$.id").isNotEmpty());
         }
+
+        @Test
+        void updateProfile_PersistsUsernameAndBio() throws Exception {
+            mockMvc.perform(put("/api/user/profile")
+                            .header("Authorization", "Bearer " + validToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "username", "phase_d_user",
+                                    "bio", "We answer every card honestly."
+                            ))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.username").value("phase_d_user"))
+                    .andExpect(jsonPath("$.bio").value("We answer every card honestly."));
+
+            mockMvc.perform(get("/api/user/me")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.username").value("phase_d_user"))
+                    .andExpect(jsonPath("$.bio").value("We answer every card honestly."));
+        }
+
+        @Test
+        void updateNotificationPreferences_PersistsValues() throws Exception {
+            mockMvc.perform(put("/api/user/preferences")
+                            .header("Authorization", "Bearer " + validToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "timezone", "Asia/Kolkata",
+                                    "reminderTimeLocal", "21:30",
+                                    "quietHoursStart", "23:00",
+                                    "quietHoursEnd", "07:00"
+                            ))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.timezone").value("Asia/Kolkata"))
+                    .andExpect(jsonPath("$.reminderTimeLocal").value("21:30"))
+                    .andExpect(jsonPath("$.quietHoursStart").value("23:00"))
+                    .andExpect(jsonPath("$.quietHoursEnd").value("07:00"));
+
+            mockMvc.perform(get("/api/user/preferences")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.timezone").value("Asia/Kolkata"))
+                    .andExpect(jsonPath("$.reminderTimeLocal").value("21:30"))
+                    .andExpect(jsonPath("$.quietHoursStart").value("23:00"))
+                    .andExpect(jsonPath("$.quietHoursEnd").value("07:00"));
+        }
     }
 
     // ============ CoupleController Tests ============
@@ -239,6 +285,88 @@ class RestControllerTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{\"code\": \"\"}"))
                     .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void getCoupleStatus_WhenNotLinked_ReturnsReadyToLink() throws Exception {
+            mockMvc.perform(get("/api/couple/status")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("READY_TO_LINK"))
+                    .andExpect(jsonPath("$.linked").value(false));
+        }
+
+        @Test
+        void unlinkFlow_ReturnsPreviewThenCooldownStatus() throws Exception {
+            String codeResponse = mockMvc.perform(post("/api/couple/generate-code")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andReturn().getResponse().getContentAsString();
+            String code = objectMapper.readTree(codeResponse).get("code").asText();
+
+            User partner = createPartner("unlink-partner@example.com", "Unlink Partner", "google-unlink-partner");
+            UserDetails partnerDetails = new org.springframework.security.core.userdetails.User(
+                    partner.getEmail(), "", Collections.emptyList());
+            String partnerToken = jwtService.generateToken(partnerDetails);
+
+            mockMvc.perform(post("/api/couple/link")
+                            .header("Authorization", "Bearer " + partnerToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("code", code))))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(post("/api/couple/unlink")
+                            .header("Authorization", "Bearer " + validToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{}"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.requiresConfirmation").value(true))
+                    .andExpect(jsonPath("$.confirmationToken").value("UNLINK_CONFIRM"));
+
+            mockMvc.perform(post("/api/couple/unlink")
+                            .header("Authorization", "Bearer " + validToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "confirmationToken", "UNLINK_CONFIRM",
+                                    "reason", "phase d test"
+                            ))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("COOLDOWN_ACTIVE"))
+                    .andExpect(jsonPath("$.linked").value(false))
+                    .andExpect(jsonPath("$.canRecoverWithPreviousPartner").value(true));
+        }
+
+        @Test
+        void recoverFlow_RelinksDuringCooldown() throws Exception {
+            String codeResponse = mockMvc.perform(post("/api/couple/generate-code")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andReturn().getResponse().getContentAsString();
+            String code = objectMapper.readTree(codeResponse).get("code").asText();
+
+            User partner = createPartner("recover-partner@example.com", "Recover Partner", "google-recover-partner");
+            UserDetails partnerDetails = new org.springframework.security.core.userdetails.User(
+                    partner.getEmail(), "", Collections.emptyList());
+            String partnerToken = jwtService.generateToken(partnerDetails);
+
+            mockMvc.perform(post("/api/couple/link")
+                            .header("Authorization", "Bearer " + partnerToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of("code", code))))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(post("/api/couple/unlink")
+                            .header("Authorization", "Bearer " + validToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Map.of(
+                                    "confirmationToken", "UNLINK_CONFIRM"
+                            ))))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("COOLDOWN_ACTIVE"));
+
+            mockMvc.perform(post("/api/couple/recover")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("LINKED"))
+                    .andExpect(jsonPath("$.linked").value(true));
         }
     }
 
@@ -415,6 +543,26 @@ class RestControllerTest {
                             .header("Authorization", "Bearer " + validToken))
                     .andExpect(status().isGone())
                     .andExpect(jsonPath("$.error").value("Game session expired"));
+        }
+
+        @Test
+        void getResults_WhenSessionCompleted_ReturnsResultsPayload() throws Exception {
+            User partner = createPartner("results-partner@example.com", "Results Partner", "google-results-partner");
+            Couple couple = new Couple();
+            couple.setUser1(testUser);
+            couple.setUser2(partner);
+            couple = coupleRepo.save(couple);
+
+            QuestionCategory category = createCategoryWithQuestions("Results");
+            GameSession completed = createCompletedSessionForCouple(couple, category.getId(), 6, 5, 0);
+
+            mockMvc.perform(get("/api/game/" + completed.getId() + "/results")
+                            .header("Authorization", "Bearer " + validToken))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.sessionId").value(completed.getId().toString()))
+                    .andExpect(jsonPath("$.player1Score").value(6))
+                    .andExpect(jsonPath("$.player2Score").value(5))
+                    .andExpect(jsonPath("$.totalQuestions").value(8));
         }
     }
 

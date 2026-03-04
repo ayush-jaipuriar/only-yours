@@ -11,19 +11,25 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @Slf4j
 public class PushNotificationService {
 
     private static final String EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
+    private static final long DISPATCH_DEDUP_TTL_MILLIS = Duration.ofHours(6).toMillis();
+    private static final int DISPATCH_CACHE_CLEANUP_THRESHOLD = 500;
 
     private final PushTokenRepository pushTokenRepository;
     private final UserRepository userRepository;
     private final RestClient restClient;
+    private final ConcurrentHashMap<String, Instant> dispatchCache = new ConcurrentHashMap<>();
 
     public PushNotificationService(PushTokenRepository pushTokenRepository,
                                    UserRepository userRepository) {
@@ -68,6 +74,40 @@ public class PushNotificationService {
         sendToUser(userId, title, body, null);
     }
 
+    public void sendGameplayEventToUser(
+            UUID userId,
+            GameplayEventType eventType,
+            UUID sessionId,
+            String title,
+            String body
+    ) {
+        sendGameplayEventToUser(userId, eventType, sessionId, title, body, Map.of());
+    }
+
+    public void sendGameplayEventToUser(
+            UUID userId,
+            GameplayEventType eventType,
+            UUID sessionId,
+            String title,
+            String body,
+            Map<String, Object> additionalData
+    ) {
+        String dedupeKey = buildDedupeKey(userId, eventType, sessionId, additionalData);
+        if (!registerDispatch(dedupeKey)) {
+            log.debug("Skipping duplicate gameplay push for key={}", dedupeKey);
+            return;
+        }
+
+        Map<String, Object> payloadData = new java.util.LinkedHashMap<>();
+        payloadData.put("type", eventType.name());
+        payloadData.put("sessionId", sessionId.toString());
+        payloadData.put("targetRoute", resolveTargetRoute(eventType));
+        if (additionalData != null && !additionalData.isEmpty()) {
+            payloadData.putAll(additionalData);
+        }
+        sendToUser(userId, title, body, payloadData);
+    }
+
     public void sendToUser(UUID userId, String title, String body, Map<String, Object> data) {
         User user = userRepository.findById(userId).orElse(null);
         if (user == null) {
@@ -84,6 +124,36 @@ public class PushNotificationService {
         for (PushToken pt : tokens) {
             sendSingle(pt.getToken(), title, body, data);
         }
+    }
+
+    private boolean registerDispatch(String dedupeKey) {
+        Instant now = Instant.now();
+        if (dispatchCache.size() >= DISPATCH_CACHE_CLEANUP_THRESHOLD) {
+            Instant cutoff = now.minusMillis(DISPATCH_DEDUP_TTL_MILLIS);
+            dispatchCache.entrySet().removeIf(entry -> entry.getValue().isBefore(cutoff));
+        }
+        return dispatchCache.putIfAbsent(dedupeKey, now) == null;
+    }
+
+    private String buildDedupeKey(
+            UUID userId,
+            GameplayEventType eventType,
+            UUID sessionId,
+            Map<String, Object> additionalData
+    ) {
+        String suffix = "";
+        if (additionalData != null && additionalData.containsKey("questionId")) {
+            suffix = ":" + additionalData.get("questionId");
+        }
+        return userId + ":" + eventType.name() + ":" + sessionId + suffix;
+    }
+
+    private String resolveTargetRoute(GameplayEventType eventType) {
+        return switch (eventType) {
+            case CONTINUE_GAME, PARTNER_COMPLETED_ANSWERING -> "Game";
+            case RESULTS_READY -> "Results";
+            case SESSION_EXPIRED -> "Dashboard";
+        };
     }
 
     private void sendSingle(String pushToken, String title, String body,
@@ -106,5 +176,12 @@ public class PushNotificationService {
         } catch (Exception e) {
             log.error("Failed to send push notification: {}", e.getMessage());
         }
+    }
+
+    public enum GameplayEventType {
+        CONTINUE_GAME,
+        PARTNER_COMPLETED_ANSWERING,
+        RESULTS_READY,
+        SESSION_EXPIRED
     }
 }

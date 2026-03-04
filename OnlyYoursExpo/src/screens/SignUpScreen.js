@@ -1,23 +1,26 @@
-import React, { useContext, useState } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import api from '../services/api';
 import { AuthContext } from '../state/AuthContext';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
+import useTheme from '../theme/useTheme';
+import createAuthFormStyles from '../theme/createAuthFormStyles';
 
 const SignUpScreen = ({ navigation }) => {
   const { login } = useContext(AuthContext);
+  const { theme } = useTheme();
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const styles = useMemo(() => createAuthFormStyles(theme), [theme]);
 
   const validateForm = () => {
     if (!username.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
@@ -68,7 +71,7 @@ const SignUpScreen = ({ navigation }) => {
         placeholder="Username"
         autoCapitalize="none"
         style={styles.input}
-        placeholderTextColor="#9C94C9"
+        placeholderTextColor={theme.colors.textTertiary}
       />
       <TextInput
         value={email}
@@ -77,7 +80,7 @@ const SignUpScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
-        placeholderTextColor="#9C94C9"
+        placeholderTextColor={theme.colors.textTertiary}
       />
       <TextInput
         value={password}
@@ -85,7 +88,7 @@ const SignUpScreen = ({ navigation }) => {
         placeholder="Password"
         secureTextEntry
         style={styles.input}
-        placeholderTextColor="#9C94C9"
+        placeholderTextColor={theme.colors.textTertiary}
       />
       <TextInput
         value={confirmPassword}
@@ -93,7 +96,7 @@ const SignUpScreen = ({ navigation }) => {
         placeholder="Confirm Password"
         secureTextEntry
         style={styles.input}
-        placeholderTextColor="#9C94C9"
+        placeholderTextColor={theme.colors.textTertiary}
       />
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -104,7 +107,7 @@ const SignUpScreen = ({ navigation }) => {
         disabled={isSubmitting}
       >
         {isSubmitting ? (
-          <ActivityIndicator color="#ffffff" />
+          <ActivityIndicator color={theme.colors.primaryContrast} />
         ) : (
           <Text style={styles.primaryButtonText}>Create Account</Text>
         )}
@@ -116,59 +119,5 @@ const SignUpScreen = ({ navigation }) => {
     </AuthFormScreenLayout>
   );
 };
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#2D225A',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#6B5FA8',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D9D3F3',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 12,
-    color: '#2D225A',
-  },
-  primaryButton: {
-    backgroundColor: '#6A4CFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  linkText: {
-    textAlign: 'center',
-    color: '#5B4CAF',
-    marginBottom: 12,
-    fontSize: 14,
-  },
-  errorText: {
-    color: '#C6354C',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-});
 
 export default SignUpScreen;

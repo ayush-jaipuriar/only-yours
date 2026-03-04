@@ -89,6 +89,23 @@ public class GameQueryController {
         }
     }
 
+    @GetMapping("/{sessionId}/results")
+    public ResponseEntity<?> getCompletedResults(
+            @PathVariable UUID sessionId,
+            Principal principal
+    ) {
+        try {
+            User user = resolveCurrentUser(principal);
+            return ResponseEntity.ok(gameService.getCompletedResultsForUser(sessionId, user.getId()));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("error", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("error", e.getMessage()));
+        }
+    }
+
     private User resolveCurrentUser(Principal principal) {
         return userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + principal.getName()));

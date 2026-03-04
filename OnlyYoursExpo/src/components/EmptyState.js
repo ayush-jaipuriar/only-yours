@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import useTheme from '../theme/useTheme';
 
 /**
  * EmptyState — reusable component for when a list or resource is empty or failed to load.
@@ -20,6 +21,53 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
  *   onAction    {function} — callback for the action button
  */
 const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 40,
+          backgroundColor: theme.colors.background,
+        },
+        icon: {
+          fontSize: 56,
+          marginBottom: 20,
+        },
+        title: {
+          fontSize: 20,
+          fontWeight: '700',
+          color: theme.colors.textPrimary,
+          textAlign: 'center',
+          marginBottom: 10,
+        },
+        message: {
+          fontSize: 15,
+          color: theme.colors.textSecondary,
+          textAlign: 'center',
+          lineHeight: 22,
+          marginBottom: 28,
+        },
+        actionButton: {
+          backgroundColor: theme.colors.primary,
+          paddingHorizontal: 32,
+          paddingVertical: 13,
+          borderRadius: 25,
+          ...theme.shadows.button,
+          shadowColor: theme.colors.primary,
+        },
+        actionText: {
+          color: theme.colors.primaryContrast,
+          fontSize: 16,
+          fontWeight: '600',
+          letterSpacing: 0.3,
+        },
+      }),
+    [theme]
+  );
+
   return (
     <View style={styles.container} testID="empty-state">
       {icon ? <Text style={styles.icon}>{icon}</Text> : null}
@@ -33,50 +81,5 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 40,
-    backgroundColor: '#f5f5f5',
-  },
-  icon: {
-    fontSize: 56,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  message: {
-    fontSize: 15,
-    color: '#666',
-    textAlign: 'center',
-    lineHeight: 22,
-    marginBottom: 28,
-  },
-  actionButton: {
-    backgroundColor: '#6200ea',
-    paddingHorizontal: 32,
-    paddingVertical: 13,
-    borderRadius: 25,
-    elevation: 2,
-    shadowColor: '#6200ea',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-  },
-  actionText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-});
 
 export default EmptyState;

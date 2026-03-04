@@ -1,19 +1,25 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Text,
   TextInput,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
 } from 'react-native';
 import api from '../services/api';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
+import useTheme from '../theme/useTheme';
+import createAuthFormStyles from '../theme/createAuthFormStyles';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const styles = useMemo(
+    () => createAuthFormStyles(theme, { subtitleSize: 15 }),
+    [theme]
+  );
 
   const handleForgotPassword = async () => {
     if (!email.trim()) {
@@ -52,7 +58,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         keyboardType="email-address"
         autoCapitalize="none"
         style={styles.input}
-        placeholderTextColor="#9C94C9"
+        placeholderTextColor={theme.colors.textTertiary}
       />
 
       {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
@@ -64,7 +70,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         disabled={isSubmitting}
       >
         {isSubmitting ? (
-          <ActivityIndicator color="#ffffff" />
+          <ActivityIndicator color={theme.colors.primaryContrast} />
         ) : (
           <Text style={styles.primaryButtonText}>Send Reset Link</Text>
         )}
@@ -80,64 +86,5 @@ const ForgotPasswordScreen = ({ navigation }) => {
     </AuthFormScreenLayout>
   );
 };
-
-const styles = StyleSheet.create({
-  title: {
-    fontSize: 30,
-    fontWeight: '700',
-    color: '#2D225A',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#6B5FA8',
-    textAlign: 'center',
-    marginBottom: 24,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D9D3F3',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    fontSize: 16,
-    marginBottom: 12,
-    color: '#2D225A',
-  },
-  primaryButton: {
-    backgroundColor: '#6A4CFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  linkText: {
-    textAlign: 'center',
-    color: '#5B4CAF',
-    marginBottom: 12,
-    fontSize: 14,
-  },
-  errorText: {
-    color: '#C6354C',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-  successText: {
-    color: '#2E8B57',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-});
 
 export default ForgotPasswordScreen;

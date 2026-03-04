@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import useTheme from '../theme/useTheme';
 
 const BADGE_THEME = {
   FIRST_GAME: { background: '#FFF4C2', border: '#D4A431', icon: '✨' },
@@ -14,16 +15,50 @@ const DEFAULT_THEME = { background: '#F1F1F5', border: '#BDBDCB', icon: '🏅' }
 
 // eslint-disable-next-line react/prop-types
 const BadgeChip = ({ badge }) => {
+  const { theme } = useTheme();
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        chip: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          borderRadius: 14,
+          borderWidth: 1,
+          paddingHorizontal: 10,
+          paddingVertical: 8,
+          marginBottom: 8,
+        },
+        icon: {
+          fontSize: 16,
+          marginRight: 8,
+        },
+        textWrap: {
+          flex: 1,
+        },
+        title: {
+          fontSize: 13,
+          fontWeight: '700',
+          color: theme.colors.textPrimary,
+          marginBottom: 2,
+        },
+        description: {
+          fontSize: 11,
+          color: theme.colors.textSecondary,
+        },
+      }),
+    [theme]
+  );
+
   if (!badge) {
     return null;
   }
 
   const { code, title, description } = badge;
-  const theme = BADGE_THEME[code] || DEFAULT_THEME;
+  const badgeTheme = BADGE_THEME[code] || DEFAULT_THEME;
 
   return (
-    <View style={[styles.chip, { backgroundColor: theme.background, borderColor: theme.border }]}>
-      <Text style={styles.icon}>{theme.icon}</Text>
+    <View style={[styles.chip, { backgroundColor: badgeTheme.background, borderColor: badgeTheme.border }]}>
+      <Text style={styles.icon}>{badgeTheme.icon}</Text>
       <View style={styles.textWrap}>
         <Text style={styles.title} numberOfLines={1}>
           {title}
@@ -35,34 +70,5 @@ const BadgeChip = ({ badge }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  chip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 8,
-  },
-  icon: {
-    fontSize: 16,
-    marginRight: 8,
-  },
-  textWrap: {
-    flex: 1,
-  },
-  title: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#2D225A',
-    marginBottom: 2,
-  },
-  description: {
-    fontSize: 11,
-    color: '#534A76',
-  },
-});
 
 export default BadgeChip;

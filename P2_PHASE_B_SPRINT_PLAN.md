@@ -588,3 +588,34 @@ Phase B is done only if all are true:
   - frontend focused: pass
   - frontend full: pass
 - Lint diagnostics were executed on modified frontend files; residual Sonar warnings remain around prop-validation style in non-TypeScript React files (non-blocking for runtime/test correctness).
+
+### PB-B6.1 Additional in-depth validation rerun (user-requested gate, Feb 26, 2026)
+
+- Rationale:
+  - user requested explicit re-validation of unit, integration, and full regression suites before Part C planning approval.
+- Backend focused rerun command:
+  - `./gradlew test --tests "*GameServiceTest" --tests "*RestControllerTest" --tests "*GameControllerWebSocketTest" --tests "*WebSocketPerformanceTest"`
+  - result: pass
+- Backend full clean regression rerun command:
+  - `./gradlew clean test`
+  - result: pass
+  - suite summary (`backend/build/reports/tests/test/index.html`):
+    - total tests: `128`
+    - failures: `0`
+    - ignored: `0`
+    - success rate: `100%`
+    - package coverage snapshot:
+      - `com.onlyyours.service`: `62`
+      - `com.onlyyours.integration`: `37`
+      - `com.onlyyours.controller`: `28`
+      - `com.onlyyours`: `1`
+- Frontend focused rerun command:
+  - `YARN_IGNORE_ENGINES=1 yarn test --watchAll=false src/state/__tests__/useDashboardGameFlow.test.js src/state/__tests__/useGameHistoryFlow.test.js src/state/__tests__/AuthContext.test.js src/state/__tests__/GameContext.test.js src/services/__tests__/WebSocketService.test.js`
+  - result: pass (`46/46`)
+- Frontend full regression rerun command:
+  - `YARN_IGNORE_ENGINES=1 yarn test --watchAll=false`
+  - result: pass (`49/49`, `6/6` suites)
+- Observed console output notes (non-failing):
+  - expected mocked-error logs in fallback test paths,
+  - existing Expo notification warning in test environment,
+  - existing `act(...)` warning noise from historical auth-context async setup tests.

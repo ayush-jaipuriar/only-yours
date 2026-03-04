@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,14 @@ import {
   Alert,
   Platform,
   ToastAndroid,
+  useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
+import useTheme from '../theme/useTheme';
 
 /**
  * CategorySelectionScreen displays available question categories.
@@ -30,10 +32,72 @@ import EmptyState from '../components/EmptyState';
  * 4. Show "Waiting for partner..." alert
  */
 const CategorySelectionScreen = ({ navigation }) => {
+  const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
   const [loadError, setLoadError] = useState(false);
   const [isInviteInFlight, setIsInviteInFlight] = useState(false);
+
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background,
+        },
+        title: {
+          fontSize: 24,
+          fontWeight: 'bold',
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 12,
+          color: theme.colors.textPrimary,
+          textAlign: 'center',
+        },
+        listContent: {
+          paddingHorizontal: 15,
+          paddingBottom: 20,
+          alignSelf: 'center',
+          width: '100%',
+          maxWidth: isTablet ? 760 : 520,
+        },
+        categoryCard: {
+          backgroundColor: theme.colors.surface,
+          borderRadius: 12,
+          padding: 20,
+          marginBottom: 15,
+          ...theme.shadows.card,
+          shadowColor: '#000000',
+        },
+        sensitiveCard: {
+          borderWidth: 2,
+          borderColor: theme.colors.warning,
+        },
+        categoryName: {
+          fontSize: 20,
+          fontWeight: '600',
+          color: theme.colors.textPrimary,
+          marginBottom: 8,
+        },
+        categoryDescription: {
+          fontSize: 14,
+          color: theme.colors.textSecondary,
+          lineHeight: 20,
+        },
+        sensitiveLabel: {
+          marginTop: 10,
+          fontSize: 12,
+          color: theme.colors.warning,
+          fontWeight: '600',
+        },
+        disabledCard: {
+          opacity: 0.6,
+        },
+      }),
+    [isTablet, theme]
+  );
 
   /**
    * Load categories from backend on mount.
@@ -187,57 +251,6 @@ const CategorySelectionScreen = ({ navigation }) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    padding: 20,
-    color: '#333',
-  },
-  listContent: {
-    padding: 15,
-  },
-  categoryCard: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 15,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  sensitiveCard: {
-    borderWidth: 2,
-    borderColor: '#ff6f00',
-  },
-  categoryName: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    marginBottom: 8,
-  },
-  categoryDescription: {
-    fontSize: 14,
-    color: '#666',
-    lineHeight: 20,
-  },
-  sensitiveLabel: {
-    marginTop: 10,
-    fontSize: 12,
-    color: '#ff6f00',
-    fontWeight: '600',
-  },
-  disabledCard: {
-    opacity: 0.6,
-  },
-});
 
 export default CategorySelectionScreen;
 

@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
+import useTheme from '../theme/useTheme';
 
 /**
  * LoadingSpinner — reusable full-screen loading indicator.
@@ -12,28 +13,34 @@ import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
  *   color   {string} — spinner color (defaults to the app's primary purple)
  *   size    {'small'|'large'} — spinner size (defaults to 'large')
  */
-const LoadingSpinner = ({ message = 'Loading...', color = '#6200ea', size = 'large' }) => {
+const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
+  const { theme } = useTheme();
+  const spinnerColor = color || theme.colors.primary;
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: theme.colors.background,
+        },
+        message: {
+          marginTop: 12,
+          fontSize: 15,
+          fontWeight: '400',
+          letterSpacing: 0.2,
+        },
+      }),
+    [theme]
+  );
+
   return (
     <View style={styles.container} testID="loading-spinner">
-      <ActivityIndicator size={size} color={color} />
-      {message ? <Text style={[styles.message, { color }]}>{message}</Text> : null}
+      <ActivityIndicator size={size} color={spinnerColor} />
+      {message ? <Text style={[styles.message, { color: spinnerColor }]}>{message}</Text> : null}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  message: {
-    marginTop: 12,
-    fontSize: 15,
-    fontWeight: '400',
-    letterSpacing: 0.2,
-  },
-});
 
 export default LoadingSpinner;

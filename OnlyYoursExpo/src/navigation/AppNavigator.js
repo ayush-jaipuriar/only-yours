@@ -9,6 +9,8 @@ import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import GameHistoryScreen from '../screens/GameHistoryScreen';
+import OnboardingScreen from '../screens/OnboardingScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import PartnerLinkScreen from '../screens/PartnerLinkScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
 import GameScreen from '../screens/GameScreen';
@@ -24,7 +26,7 @@ const Stack = createStackNavigator();
  * - Wired navigation ref to AuthContext for invitation handling
  */
 const AppNavigator = () => {
-  const { isLoggedIn, setNavigationRef } = useContext(AuthContext);
+  const { isLoggedIn, shouldShowOnboarding, setNavigationRef } = useContext(AuthContext);
   const navigationRef = useRef(null);
 
   /**
@@ -42,6 +44,13 @@ const AppNavigator = () => {
       <Stack.Navigator>
         {isLoggedIn ? (
           <>
+            {shouldShowOnboarding && (
+              <Stack.Screen
+                name="Onboarding"
+                component={OnboardingScreen}
+                options={{ title: 'Welcome', headerShown: false }}
+              />
+            )}
             <Stack.Screen 
               name="Dashboard" 
               component={DashboardScreen}
@@ -51,6 +60,11 @@ const AppNavigator = () => {
               name="Profile" 
               component={ProfileScreen}
               options={{ title: 'My Profile' }}
+            />
+            <Stack.Screen
+              name="Settings"
+              component={SettingsScreen}
+              options={{ title: 'Settings' }}
             />
             <Stack.Screen
               name="GameHistory"

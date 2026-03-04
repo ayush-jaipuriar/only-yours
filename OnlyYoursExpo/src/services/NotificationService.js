@@ -80,6 +80,17 @@ async function unregisterToken(token) {
   }
 }
 
+const DEFAULT_ROUTE_BY_TYPE = {
+  INVITATION: 'Game',
+  CONTINUE_GAME: 'Game',
+  PARTNER_COMPLETED_ANSWERING: 'Game',
+  RESULTS_READY: 'Results',
+  SESSION_EXPIRED: 'Dashboard',
+  INVITATION_DECLINED: 'Dashboard',
+  COUPLE_UNLINKED: 'Settings',
+  COUPLE_RECOVERED: 'Dashboard',
+};
+
 function addNotificationReceivedListener(callback) {
   return Notifications.addNotificationReceivedListener(callback);
 }
@@ -88,10 +99,75 @@ function addNotificationResponseListener(callback) {
   return Notifications.addNotificationResponseReceivedListener(callback);
 }
 
+async function getLastNotificationResponse() {
+  return Notifications.getLastNotificationResponseAsync();
+}
+
+function extractNotificationData(payload) {
+  if (!payload) {
+    return null;
+  }
+  if (payload.notification?.request?.content?.data) {
+    return payload.notification.request.content.data;
+  }
+  if (payload.request?.content?.data) {
+    return payload.request.content.data;
+  }
+  if (payload.data) {
+    return payload.data;
+  }
+  return null;
+}
+
+function mapPushDataToIntent(data) {
+  if (!data || typeof data !== 'object') {
+    return null;
+  }
+
+  const eventType = typeof data.type === 'string' ? data.type.toUpperCase() : '';
+  const targetRoute =
+    typeof data.targetRoute === 'string' && data.targetRoute.trim()
+      ? data.targetRoute.trim()
+      : DEFAULT_ROUTE_BY_TYPE[eventType];
+
+  if (!targetRoute) {
+    return null;
+  }
+
+  const sessionId = data.sessionId ? String(data.sessionId) : null;
+  if ((targetRoute === 'Game' || targetRoute === 'Results') && !sessionId) {
+    return null;
+  }
+
+  if (targetRoute === 'Game') {
+    return {
+      targetRoute,
+      params: { sessionId },
+    };
+  }
+  if (targetRoute === 'Results') {
+    return {
+      targetRoute,
+      params: { sessionId },
+    };
+  }
+
+  return { targetRoute, params: {} };
+}
+
+function mapNotificationResponseToIntent(responsePayload) {
+  const data = extractNotificationData(responsePayload);
+  return mapPushDataToIntent(data);
+}
+
 export default {
   registerForPushNotifications,
   sendTokenToBackend,
   unregisterToken,
   addNotificationReceivedListener,
   addNotificationResponseListener,
+  getLastNotificationResponse,
+  extractNotificationData,
+  mapPushDataToIntent,
+  mapNotificationResponseToIntent,
 };

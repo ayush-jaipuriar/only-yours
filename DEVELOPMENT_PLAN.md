@@ -896,6 +896,20 @@ The React Native upgrade has been successfully completed:
     - [x] Ran lint diagnostics on newly modified frontend files.
     - [ ] Residual non-blocking Sonar prop-validation warnings remain in `BadgeChip.js` style pattern (no runtime/test failures).
 
+- [x] **Additional in-depth validation rerun (user-requested confidence gate, Feb 26, 2026):**
+    - [x] Backend focused rerun passed:
+        - [x] `./gradlew test --tests "*GameServiceTest" --tests "*RestControllerTest" --tests "*GameControllerWebSocketTest" --tests "*WebSocketPerformanceTest"`
+    - [x] Backend clean full regression rerun passed:
+        - [x] `./gradlew clean test`
+    - [x] Backend test-report summary captured from `backend/build/reports/tests/test/index.html`:
+        - [x] total tests `128`, failures `0`, ignored `0`, success `100%`
+        - [x] package mix confirms unit + integration coverage (`service` + `controller` + `integration`)
+    - [x] Frontend expanded focused rerun passed:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watchAll=false src/state/__tests__/useDashboardGameFlow.test.js src/state/__tests__/useGameHistoryFlow.test.js src/state/__tests__/AuthContext.test.js src/state/__tests__/GameContext.test.js src/services/__tests__/WebSocketService.test.js` (`46/46`)
+    - [x] Frontend full regression rerun passed:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watchAll=false` (`49/49`, `6/6 suites`)
+    - [x] **Why this change:** this explicit rerun closes confidence gaps before Phase C planning by proving the same code passes both targeted high-risk paths and full project regressions in one validation cycle.
+
 - [x] **Documentation synchronization:**
     - [x] Updated `P2_PHASE_B_SPRINT_PLAN.md` checklists and execution journal with implementation outcomes.
     - [x] Updated `P2_IMPLEMENTATION_PLAN.md` Phase B checklists.
@@ -904,3 +918,298 @@ The React Native upgrade has been successfully completed:
 - [ ] **Pending for closure outside this coding iteration:**
     - [ ] Manual multi-device verification for Phase B history/stats/badges matrix.
     - [ ] User sign-off after manual validation evidence is captured.
+
+---
+
+## P2 Phase C Planning Kickoff (Feb 26, 2026)
+
+**Goal:** Prepare a gated, implementation-ready blueprint for Phase C (`Onboarding + Theme Tokens + Responsive Expansion`) before any coding starts.
+
+- [x] **Created in-depth Phase C sprint planning document:**
+    - [x] Added new file: `P2_PHASE_C_SPRINT_PLAN.md`.
+    - [x] Structured work into detailed tracks `PC-C1` to `PC-C4` with file-level targets and checklist granularity.
+    - [x] Added architecture decisions for:
+        - [x] token-first migration strategy,
+        - [x] theme override model (`system` / `light` / `dark`),
+        - [x] gradient token + fallback policy,
+        - [x] onboarding state machine and replay flow.
+    - [x] Added explicit dependency map (cross-phase + intra-phase).
+    - [x] Added local state contract drafts (`onboarding_state_v1`, `theme_preference_v1`) and gradient token schema.
+    - [x] Added focused/full test command matrix and risk register with mitigation actions.
+    - [x] Added definition-of-done + approval checklist + post-approval execution journal.
+    - [x] **Why this change:** Phase C touches many UI and architectural layers; a contract-first sprint blueprint prevents style drift, scope creep, and sequencing mistakes.
+
+- [x] **Master plan synchronization:**
+    - [x] Updated `P2_IMPLEMENTATION_PLAN.md` to reference `P2_PHASE_C_SPRINT_PLAN.md`.
+    - [x] Marked Week 4 planning prerequisite as complete (plan created and ready for review).
+
+- [x] **Pending before implementation starts:**
+    - [x] User approval of `P2_PHASE_C_SPRINT_PLAN.md` (workflow Step 2) received.
+
+---
+
+## P2 Phase C Core Implementation (Feb 26, 2026)
+
+**Goal:** Ship first-run onboarding, centralized theme tokens, and responsive expansion across priority screens without regressing existing game/state flows.
+
+- [x] **Onboarding state + flow (`C1`):**
+    - [x] Added versioned onboarding persistence contract in `OnlyYoursExpo/src/state/onboardingStorage.js` with idempotent helpers:
+        - [x] `getOnboardingState`
+        - [x] `markOnboardingStarted`
+        - [x] `markOnboardingCompleted`
+        - [x] `resetOnboardingState`
+    - [x] Integrated onboarding state into `OnlyYoursExpo/src/state/AuthContext.js`:
+        - [x] Added `onboardingStatus` state and `shouldShowOnboarding` gate.
+        - [x] Added `startOnboarding`, `completeOnboarding`, `replayOnboarding` context actions.
+        - [x] Hydrated onboarding state on login and silent-auth bootstrap paths.
+    - [x] Added `OnlyYoursExpo/src/screens/OnboardingScreen.js` (multi-step narrative, skip/next/finish controls, deterministic dashboard handoff).
+    - [x] Added minimal settings flow:
+        - [x] `OnlyYoursExpo/src/screens/SettingsScreen.js`
+        - [x] `OnlyYoursExpo/src/navigation/AppNavigator.js` route wiring
+        - [x] `OnlyYoursExpo/src/screens/ProfileScreen.js` entry-point button
+    - [x] **Why this change:** onboarding progression must be deterministic and replay-safe while remaining decoupled from auth token/session semantics.
+
+- [x] **Theme token system + provider (`C2`):**
+    - [x] Added foundational token modules:
+        - [x] `OnlyYoursExpo/src/theme/tokens.js`
+        - [x] `OnlyYoursExpo/src/theme/gradients.js`
+        - [x] `OnlyYoursExpo/src/theme/motion.js`
+    - [x] Added theme runtime provider + hook:
+        - [x] `OnlyYoursExpo/src/theme/ThemeProvider.js`
+        - [x] `OnlyYoursExpo/src/theme/useTheme.js`
+        - [x] `OnlyYoursExpo/src/theme/index.js`
+    - [x] Added persistence + override behavior:
+        - [x] `system`/`light`/`dark` modes,
+        - [x] storage key `theme_preference_v1`,
+        - [x] system scheme resolution fallback.
+    - [x] Wired provider into app root in `OnlyYoursExpo/App.js`.
+    - [x] **Why this change:** centralizing design values prevents style drift, makes dark/light behavior consistent, and creates a scalable base for future settings work.
+
+- [x] **Responsive + token migration across priority screens (`C3`):**
+    - [x] Auth stack migrated to shared tokenized form styles:
+        - [x] `SignInScreen.js`
+        - [x] `SignUpScreen.js`
+        - [x] `ForgotPasswordScreen.js`
+        - [x] `ResetPasswordScreen.js`
+        - [x] `AuthFormScreenLayout.js`
+        - [x] shared helper `OnlyYoursExpo/src/theme/createAuthFormStyles.js`
+    - [x] Dashboard ecosystem responsive/token pass:
+        - [x] `DashboardScreen.js`
+        - [x] `GameHistoryScreen.js`
+        - [x] `CategorySelectionScreen.js`
+        - [x] `PartnerLinkScreen.js`
+    - [x] Gameplay/results responsive tokenized pass:
+        - [x] `GameScreen.js`
+        - [x] `ResultsScreen.js`
+    - [x] Profile/settings/onboarding consistency pass:
+        - [x] `ProfileScreen.js`
+        - [x] `SettingsScreen.js`
+        - [x] `OnboardingScreen.js`
+    - [x] Shared component migration:
+        - [x] `LoadingSpinner.js`
+        - [x] `EmptyState.js`
+        - [x] `BadgeChip.js`
+    - [x] **Why this change:** responsive behavior and consistent token usage must land together to avoid fragmented UX between screen sizes and theme modes.
+
+- [x] **Testing + regression validation (`C4` automated):**
+    - [x] Added new tests:
+        - [x] `OnlyYoursExpo/src/state/__tests__/onboardingStorage.test.js`
+        - [x] `OnlyYoursExpo/src/theme/__tests__/ThemeProvider.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/OnboardingScreenFlow.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/SettingsScreenFlow.test.js`
+    - [x] Updated context assertions in `OnlyYoursExpo/src/state/__tests__/AuthContext.test.js`.
+    - [x] Ran focused frontend suite:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watch=false src/state/__tests__/AuthContext.test.js src/state/__tests__/onboardingStorage.test.js src/state/__tests__/OnboardingScreenFlow.test.js src/state/__tests__/SettingsScreenFlow.test.js src/theme/__tests__/ThemeProvider.test.js`
+    - [x] Ran full frontend regression:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watch=false` (`10/10 suites`, `58/58 tests`)
+    - [x] Ran backend full-suite safety regression:
+        - [x] `./gradlew test` (backend)
+    - [x] Ran IDE lint diagnostics for changed files and fixed newly introduced hook-order issue in `BadgeChip`.
+    - [ ] Residual non-blocking Sonar prop-validation warnings remain in several legacy JS screens/components (no runtime/test failures).
+
+- [x] **Documentation synchronization:**
+    - [x] Updated `P2_PHASE_C_SPRINT_PLAN.md` checklists + execution journal with implementation and validation evidence.
+    - [x] Updated `P2_IMPLEMENTATION_PLAN.md` Phase C checklists and completion notes.
+    - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` with a dedicated Phase C validation matrix.
+
+- [ ] **Pending manual closure outside this coding iteration (user-deferred):**
+    - [ ] Manual phone/tablet responsive validation (portrait + landscape) for Phase C.
+    - [ ] Dark-mode/light-mode visual QA pass on real devices.
+    - [ ] User sign-off after manual evidence capture.
+
+---
+
+## P2 Phase D Planning Kickoff (Mar 1, 2026)
+
+**Goal:** Move into Phase D using the same gated workflow, while keeping deferred manual validation work pending for later.
+
+- [x] **Created in-depth Phase D sprint planning document:**
+    - [x] Added new file: `P2_PHASE_D_SPRINT_PLAN.md`.
+    - [x] Broke work into detailed tracks `PD-D1` to `PD-D4` with file-level target paths.
+    - [x] Added architecture decisions for:
+        - [x] soft-unlink lifecycle + cooldown model,
+        - [x] recoverable relink policy,
+        - [x] server-authoritative profile/settings data contract,
+        - [x] deep-link routing and duplicate fan-out prevention strategy.
+    - [x] Added API/event contract drafts for unlink, settings, and push deep-link payloads.
+    - [x] Added focused/full backend and frontend command matrix for validation.
+    - [x] Added risk register, definition of done, approval checklist, and execution journal.
+    - [x] **Why this change:** Phase D mixes backend state integrity and client notification routing; explicit contract-first planning reduces rework and de-risks implementation sequencing.
+
+- [x] **Master plan synchronization:**
+    - [x] Updated `P2_IMPLEMENTATION_PLAN.md` to reference `P2_PHASE_D_SPRINT_PLAN.md`.
+    - [x] Updated Week 5 checklist to mark Phase D planning artifact creation as complete.
+    - [x] **Why this change:** keeps the phase-level plan and weekly checkpoint view consistent, so progress tracking remains auditable.
+
+- [x] **Validation deferral note retained:**
+    - [x] Manual validation for Phase A/B/C remains deferred by user and does not block Phase D planning work.
+    - [x] **Why this change:** preserves workflow continuity without losing visibility of pending manual closure tasks.
+
+- [x] **Pending before Phase D implementation starts:**
+    - [x] User approval of `P2_PHASE_D_SPRINT_PLAN.md` (workflow Step 2) received (`Please proceed`).
+
+---
+
+## P2 Phase D Core Implementation (Mar 1, 2026)
+
+**Goal:** Complete reliability-first couple controls, profile/settings expansion, and notification deep-link hardening without regressing gameplay/auth/session flows.
+
+- [x] **`PD-D1` unlink flow + cooldown + recovery:**
+    - [x] Added couple lifecycle persistence model and migration (`status`, `createdAt`, `linkedAt`, `unlinkedAt`, `cooldownEndsAt`, `unlinkedByUser`, `unlinkReason`) in:
+        - [x] `backend/src/main/resources/db/migration/V9__PhaseD_Couple_Unlink_Cooldown.sql`
+        - [x] `backend/src/main/java/com/onlyyours/model/Couple.java`
+        - [x] `backend/src/main/java/com/onlyyours/repository/CoupleRepository.java`
+    - [x] Added couple status/unlink/recover API contracts and service logic:
+        - [x] `GET /api/couple/status`
+        - [x] `POST /api/couple/unlink` (preview + confirmation token flow)
+        - [x] `POST /api/couple/recover`
+        - [x] active-session unlink guard + cooldown enforcement
+    - [x] Added machine-readable business errors via `CoupleOperationException` and handler mapping in `GlobalExceptionHandler`.
+    - [x] Added frontend relationship-controls UX in `OnlyYoursExpo/src/screens/SettingsScreen.js`:
+        - [x] 2-step unlink confirmation,
+        - [x] cooldown status messaging,
+        - [x] recovery entry point.
+    - [x] **Why this change:** unlinking is a high-risk mutation; soft state transitions + explicit confirmation/cooldown/recovery minimize irreversible user harm and preserve historical data integrity.
+
+- [x] **`PD-D2` profile + settings expansion:**
+    - [x] Added profile/preferences persistence migrations:
+        - [x] `backend/src/main/resources/db/migration/V10__PhaseD_User_Profile_Fields.sql`
+        - [x] `backend/src/main/resources/db/migration/V11__PhaseD_User_Notification_Preferences.sql`
+    - [x] Extended user model + DTOs and controller contracts for editable profile and notification preferences in:
+        - [x] `backend/src/main/java/com/onlyyours/model/User.java`
+        - [x] `backend/src/main/java/com/onlyyours/dto/UserDto.java`
+        - [x] `backend/src/main/java/com/onlyyours/dto/UpdateProfileRequestDto.java`
+        - [x] `backend/src/main/java/com/onlyyours/dto/NotificationPreferencesDto.java`
+        - [x] `backend/src/main/java/com/onlyyours/controller/UserController.java`
+    - [x] Added frontend profile editing UX (`username`, `bio`) in `OnlyYoursExpo/src/screens/ProfileScreen.js`.
+    - [x] Added frontend reminder/quiet-hours/timezone controls in `OnlyYoursExpo/src/screens/SettingsScreen.js`.
+    - [x] **Why this change:** preferences become reliable only when the server is source-of-truth; local-only settings drift across reinstalls/devices and break predictable notification behavior.
+
+- [x] **`PD-D3` notification deep-link reliability + dedupe:**
+    - [x] Added typed gameplay push event contract and dedupe strategy in `backend/src/main/java/com/onlyyours/service/PushNotificationService.java`:
+        - [x] stable event metadata (`type`, `sessionId`, `targetRoute`),
+        - [x] idempotent dispatch suppression for duplicate triggers.
+    - [x] Wired gameplay notification triggers in `backend/src/main/java/com/onlyyours/controller/GameController.java` for:
+        - [x] invitation continuation,
+        - [x] partner-progress nudges,
+        - [x] results-ready routing.
+    - [x] Added results deep-link query support:
+        - [x] `backend/src/main/java/com/onlyyours/service/GameService.java`
+        - [x] `backend/src/main/java/com/onlyyours/controller/GameQueryController.java`
+    - [x] Added frontend deep-link intent mapping and cold-start/auth-safe replay:
+        - [x] `OnlyYoursExpo/src/services/NotificationService.js`
+        - [x] `OnlyYoursExpo/src/state/AuthContext.js`
+        - [x] route/session hydration in `GameScreen.js` and `ResultsScreen.js`
+    - [x] **Why this change:** notification UX is only trustworthy when routes are deterministic and duplicate fan-out is suppressed; otherwise users see confusing navigation and noisy pushes.
+
+- [x] **`PD-D4` automated validation + stability fixes:**
+    - [x] Backend tests expanded/added:
+        - [x] `backend/src/test/java/com/onlyyours/service/CoupleServiceTest.java`
+        - [x] `backend/src/test/java/com/onlyyours/controller/RestControllerTest.java`
+        - [x] `backend/src/test/java/com/onlyyours/service/PushNotificationServiceTest.java` (new)
+    - [x] Frontend tests expanded/added:
+        - [x] `OnlyYoursExpo/src/state/__tests__/AuthContext.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/SettingsScreenFlow.test.js`
+        - [x] `OnlyYoursExpo/src/state/__tests__/ProfileScreenFlow.test.js` (new)
+        - [x] `OnlyYoursExpo/src/services/__tests__/NotificationService.test.js` (new)
+    - [x] Lint/quality cleanup in sprint scope:
+        - [x] replaced wildcard response generics with explicit `ResponseEntity<Object>` where required,
+        - [x] made `CoupleOperationException.metadata` transient for serialization/lint safety.
+    - [x] **Why this change:** the highest-risk defects in this phase are behavioral regressions, so coverage was widened around state transitions and notification routing, with lint hygiene to avoid CI drift.
+
+- [x] **Automated verification evidence (executed):**
+    - [x] Backend focused: `./gradlew test --tests "*CoupleServiceTest" --tests "*RestControllerTest" --tests "*PushNotificationServiceTest"`
+    - [x] Backend full regression: `./gradlew test`
+    - [x] Frontend focused:
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watch=false src/services/__tests__/NotificationService.test.js`
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watch=false src/state/__tests__/AuthContext.test.js`
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watch=false src/state/__tests__/SettingsScreenFlow.test.js`
+        - [x] `YARN_IGNORE_ENGINES=1 yarn test --watch=false src/state/__tests__/ProfileScreenFlow.test.js`
+    - [x] Frontend full regression: `YARN_IGNORE_ENGINES=1 yarn test --watch=false`
+    - [x] **Why this change:** this layered test strategy validates both narrow high-risk paths and full-system compatibility before marking implementation complete.
+
+- [x] **Documentation synchronization:**
+    - [x] Updated `P2_PHASE_D_SPRINT_PLAN.md` checklist and execution journal.
+    - [x] Updated `P2_IMPLEMENTATION_PLAN.md` Phase D checklist/completion notes.
+    - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` with a dedicated Phase D validation matrix.
+
+- [ ] **Pending manual closure outside this coding iteration (user-deferred):**
+    - [ ] Manual two-device verification for Phase D unlink/recovery and deep-link flows.
+    - [ ] Manual verification for previously deferred Phase A/B/C matrices.
+    - [ ] User sign-off after manual evidence capture.
+
+---
+
+## P2 Phase D Manual Validation Readiness Pack (Mar 1, 2026)
+
+**Goal:** Reduce execution friction for deferred manual validation by converting the Phase D matrix into a ready-to-run artifact with traceable evidence slots.
+
+- [x] **Created a dedicated runnable worksheet for Phase D manual testing:**
+    - [x] Added new file: `PHASE_D_MANUAL_VALIDATION_RUN.md`.
+    - [x] Included:
+        - [x] run metadata block (date/tester/build/devices/environment),
+        - [x] strict case execution order (`D-1601` to `D-1611`),
+        - [x] pass/fail matrix with evidence + defect columns,
+        - [x] retest and final sign-off sections.
+    - [x] **Why this change:** separating execution artifacts from the reference guide improves test-run ergonomics, prevents skipped evidence capture, and makes sign-off auditable.
+
+- [x] **Added reference linkage from the canonical manual guide:**
+    - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` Phase D section to point to `PHASE_D_MANUAL_VALIDATION_RUN.md`.
+    - [x] **Why this change:** keeps one source-of-truth for expected behavior while giving QA a practical form to fill during live execution.
+
+- [x] **Added optional API snapshot helper block (placeholder-safe):**
+    - [x] Included `curl` examples with environment placeholders (`${BASE_URL}`, `${TOKEN_ACCOUNT_A}`) and no real credentials.
+    - [x] Included an endpoint snapshot checklist aligned with Phase D risk paths.
+    - [x] **Why this change:** API snapshots make state-transition defects easier to diagnose (especially cooldown/recovery/deep-link target issues) without leaking secrets.
+
+- [ ] **Still pending outside this coding iteration:**
+    - [ ] Execute the manual two-device Phase D run and fill `PHASE_D_MANUAL_VALIDATION_RUN.md`.
+    - [ ] Attach evidence artifacts and defect IDs.
+    - [ ] Complete user sign-off decision after retest (if needed).
+
+---
+
+## P2 Documentation Consistency Reconciliation (Mar 3, 2026)
+
+**Goal:** Align cross-document status reporting so master-phase checklists match actual implementation state without falsely closing manual validation gates.
+
+- [x] **Audited Phase C status across planning and execution artifacts:**
+    - [x] Reviewed `P2_IMPLEMENTATION_PLAN.md` Week 4 checklist entries.
+    - [x] Cross-checked completion state in `P2_PHASE_C_SPRINT_PLAN.md` (execution journal + final completion checks).
+    - [x] Cross-checked implementation narrative and pending-manual notes in `DEVELOPMENT_PLAN.md`.
+    - [x] **Why this change:** checklist drift creates false negatives in progress tracking and can block downstream closure decisions even when implementation is complete.
+
+- [x] **Reconciled Week 4 implementation checklist in `P2_IMPLEMENTATION_PLAN.md`:**
+    - [x] Marked `C2`, `C1`, `C3`, and `C4` as complete to match shipped work.
+    - [x] Clarified `C4` wording to explicitly separate automated/docs completion from deferred manual visual/responsive QA.
+    - [x] **Why this change:** this preserves truthful implementation reporting while still keeping release-signoff controls strict.
+
+- [x] **Preserved manual gate integrity (no false closure):**
+    - [x] Left Week 4 gate checks (`phone/tablet pass`, `theming consistency`, `user sign-off`) as pending.
+    - [x] Left deferred manual items in `DEVELOPMENT_PLAN.md` unchanged.
+    - [x] **Why this change:** implementation completeness and release-readiness are different layers; manual validation remains the quality gate for real-device confidence.
+
+- [ ] **Pending after this reconciliation pass:**
+    - [ ] Execute deferred manual validation runs (Phase A/B/C/D matrices).
+    - [ ] Update gate checkboxes from evidence.
+    - [ ] Capture final user sign-off for phase closure.
