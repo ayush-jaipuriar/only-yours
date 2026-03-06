@@ -307,6 +307,44 @@ class GameServiceTest {
     }
 
     @Test
+    void testSubmitAnswer_DuplicateAfterBothAnswersRecorded_RecoversStuckWaitingState() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        QuestionPayloadDto firstQ = gameService.acceptInvitation(
+                invitation.getSessionId(), user2.getId());
+
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        Question question = questionRepo.findById(firstQ.getQuestionId()).orElseThrow();
+
+        GameAnswer user1Answer = new GameAnswer();
+        user1Answer.setGameSession(session);
+        user1Answer.setQuestion(question);
+        user1Answer.setUser(user1);
+        user1Answer.setRound1Answer("A");
+        answerRepo.save(user1Answer);
+
+        GameAnswer user2Answer = new GameAnswer();
+        user2Answer.setGameSession(session);
+        user2Answer.setQuestion(question);
+        user2Answer.setUser(user2);
+        user2Answer.setRound1Answer("B");
+        answerRepo.save(user2Answer);
+
+        Optional<QuestionPayloadDto> recovered = gameService.submitAnswer(
+                invitation.getSessionId(),
+                user1.getId(),
+                firstQ.getQuestionId(),
+                "A"
+        );
+
+        assertTrue(recovered.isPresent(), "Duplicate submission should recover stale waiting state");
+        assertEquals(2, recovered.get().getQuestionNumber());
+
+        GameSession updated = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.ROUND1, updated.getStatus());
+        assertEquals(1, updated.getCurrentQuestionIndex());
+    }
+
+    @Test
     void testSubmitAnswer_InvalidFormat() {
         GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
         QuestionPayloadDto firstQ = gameService.acceptInvitation(
@@ -384,6 +422,36 @@ class GameServiceTest {
         assertEquals(first.getQuestionId(), currentQuestion.get().getQuestionId());
         assertEquals("ROUND1", currentQuestion.get().getRound());
         assertEquals(1, currentQuestion.get().getQuestionNumber());
+    }
+
+    @Test
+    void testGetCurrentQuestionForUser_RecoversStuckRound1AndAdvances() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        QuestionPayloadDto first = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        Question question = questionRepo.findById(first.getQuestionId()).orElseThrow();
+
+        GameAnswer user1Answer = new GameAnswer();
+        user1Answer.setGameSession(session);
+        user1Answer.setQuestion(question);
+        user1Answer.setUser(user1);
+        user1Answer.setRound1Answer("A");
+        answerRepo.save(user1Answer);
+
+        GameAnswer user2Answer = new GameAnswer();
+        user2Answer.setGameSession(session);
+        user2Answer.setQuestion(question);
+        user2Answer.setUser(user2);
+        user2Answer.setRound1Answer("B");
+        answerRepo.save(user2Answer);
+
+        Optional<QuestionPayloadDto> recovered =
+                gameService.getCurrentQuestionForUser(invitation.getSessionId(), user1.getId());
+
+        assertTrue(recovered.isPresent());
+        assertEquals("ROUND1", recovered.get().getRound());
+        assertEquals(2, recovered.get().getQuestionNumber());
     }
 
     @Test

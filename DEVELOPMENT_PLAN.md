@@ -1213,3 +1213,128 @@ The React Native upgrade has been successfully completed:
     - [ ] Execute deferred manual validation runs (Phase A/B/C/D matrices).
     - [ ] Update gate checkboxes from evidence.
     - [ ] Capture final user sign-off for phase closure.
+
+---
+
+## Backend Startup Hotfix - Flyway V7 Duplicate Active Session Guard (Mar 6, 2026)
+
+**Goal:** Fix backend startup failure caused by Flyway migration `V7__PhaseA_Game_Session_Continuation.sql` when legacy data contains multiple active game sessions for the same couple.
+
+- [x] **Diagnosed root cause from startup stack trace:**
+    - [x] Failure occurred while creating unique index `uk_game_sessions_one_active_per_couple`.
+    - [x] PostgreSQL error `23505` indicated duplicate `couple_id` values in active statuses (`INVITED`, `ROUND1`, `ROUND2`).
+    - [x] **Why this matters:** index creation is a schema-level invariant; any historical data violating it blocks `entityManagerFactory`, cascading into repository/service bean initialization failures.
+
+- [x] **Implemented migration hardening in `V7__PhaseA_Game_Session_Continuation.sql`:**
+    - [x] Added a pre-index deduplication step:
+        - [x] rank active sessions per couple by recency (`last_activity_at`, `started_at`, `created_at`, `id`),
+        - [x] keep the newest active session,
+        - [x] transition older active duplicates to `EXPIRED`,
+        - [x] set `completed_at`, `expires_at`, `last_activity_at` fallback values when missing.
+    - [x] Kept the unique partial index creation unchanged after cleanup.
+    - [x] **Why this change:** it preserves the business invariant ("one active session per couple") while safely reconciling pre-existing inconsistent rows instead of forcing manual DB surgery.
+
+- [ ] **Post-fix validation pending in local runtime:**
+    - [x] Re-run backend startup / Flyway migration path to confirm no `uk_game_sessions_one_active_per_couple` violation remains.
+        - [x] Validation command: `./gradlew bootRun` (backend starts cleanly; Tomcat up, JPA initialized, no Flyway index-violation crash).
+    - [ ] Verify existing active session flows still behave correctly after dedupe (continue/resume paths).
+    - [ ] Capture manual runtime evidence in troubleshooting notes if any additional edge cases appear.
+
+---
+
+## Local Wi-Fi Dev Client Connectivity Runbook Update (Mar 6, 2026)
+
+**Goal:** Standardize the local physical-device workflow so Expo dev client sessions consistently avoid `127.0.0.1:8081` bundle failures and always target the laptop backend over current LAN IP.
+
+- [x] **Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` Quick Start to the Wi-Fi-safe process:**
+    - [x] Added `LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)` runtime resolution.
+    - [x] Added `.env` rewrite step to keep `EXPO_PUBLIC_API_URL=http://$LAN_IP:8080` aligned with current Wi-Fi DHCP assignment.
+    - [x] Added `REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c` as the default Metro startup command.
+    - [x] **Why this change:** physical phones cannot use loopback (`127.0.0.1`) to reach laptop-hosted Metro/backend; explicit LAN host advertisement removes a recurring setup failure.
+
+- [x] **Propagated the same process across guide sections (consistency pass):**
+    - [x] Step 2 dev-client startup (`Step D`) now uses Node 24 + LAN host override.
+    - [x] Step 7/8 setup now verifies and updates LAN-based backend URL before Expo startup.
+    - [x] Setup troubleshooting now includes a dedicated `failed to connect to 127.0.0.1:8081` cause/fix block.
+    - [x] Boot sequence command updated to include Node 24 activation + Metro LAN host override.
+    - [x] **Why this change:** one canonical command flow prevents partial fixes where one section is correct and another reintroduces stale localhost instructions.
+
+- [x] **Removed stale machine-specific assumptions in the guide:**
+    - [x] Replaced hardcoded sample check (`192.168.1.101`) with dynamic LAN-IP checks.
+    - [x] Replaced `rg`-based env check with portable `grep` command in setup checks.
+    - [x] **Why this change:** LAN IP changes between sessions and `rg` is not guaranteed in every local shell environment.
+
+- [ ] **Next manual validation step (outside this doc-only iteration):**
+    - [ ] Run one full two-device startup using the new runbook and capture evidence in `PHASE_D_MANUAL_VALIDATION_RUN.md`.
+    - [ ] If LAN changes again, re-run the same command sequence and confirm startup remains deterministic.
+
+---
+
+## Invitation Pending -> Loading Question Recovery Hardening (Mar 6, 2026)
+
+**Goal:** Fix the runtime dead-end where both devices could land on `GameScreen` with indefinite `Loading question...` while the session remained in `INVITED` state.
+
+- [x] **Diagnosed root cause from combined frontend/backend evidence:**
+    - [x] Backend log showed invitation creation (`status=INVITED`) without a matching `Game started` acceptance transition.
+    - [x] Frontend flow opened `GameScreen` from `INVITATION_SENT`/active-session paths even when no question payload existed yet.
+    - [x] **Why this matters:** `GET /api/game/{sessionId}/current-question` returns conflict for `INVITED` sessions by design, so clients need explicit acceptance/recovery UX instead of endless spinner.
+
+- [x] **Added invite-state recovery in frontend game state layer (`OnlyYoursExpo/src/state/GameContext.js`):**
+    - [x] Added invited-session detection during current-question hydration fallback (`/api/game/active` check on conflict).
+    - [x] Added `isInvitationPending` state + `acceptPendingInvitation()` action.
+    - [x] Added `refreshCurrentQuestion()` action for manual resync when question payload is delayed.
+    - [x] Updated same-session re-entry (`startGame` with identical `sessionId`) to re-hydrate snapshot instead of no-op.
+    - [x] **Why this change:** recovery must be deterministic after missed invitation events or reconnect races.
+
+- [x] **Added explicit pending-invitation UI in `OnlyYoursExpo/src/screens/GameScreen.js`:**
+    - [x] Replaced ambiguous spinner-only state with actionable panel when session is pending invite acceptance.
+    - [x] Added `Accept Invitation` CTA (sends `/app/game.accept`) and `Refresh Session` CTA.
+    - [x] **Why this change:** users need a visible unblocking action when the session has not advanced to Round 1 yet.
+
+- [x] **Hardened invitation alert actions in `OnlyYoursExpo/src/state/AuthContext.js`:**
+    - [x] Added send-result checks for `/app/game.accept` and `/app/game.decline` (`WebSocketService.sendMessage` false path).
+    - [x] Added explicit realtime-disconnected alerts instead of optimistic navigation when STOMP publish fails.
+    - [x] **Why this change:** previously the UI could move to `GameScreen` even if acceptance was never delivered to backend.
+
+- [x] **Documentation synchronization for this runtime issue:**
+    - [x] Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` troubleshooting with a dedicated section for "both phones stuck on Loading question".
+    - [x] Added step-by-step recovery sequence and hard fallback restart command.
+
+- [ ] **Validation follow-up (runtime):**
+    - [ ] Re-run two-device invite -> accept flow and confirm backend logs `Game started: session=...` on recovery path.
+    - [ ] Capture evidence in `PHASE_D_MANUAL_VALIDATION_RUN.md` under runtime defects/retest notes.
+
+---
+
+## Round 1 "Waiting for Partner" Race Condition Fix (Mar 6, 2026)
+
+**Goal:** Fix a concurrency bug where both players could answer question 1 at nearly the same time and both clients remained stuck on "Waiting for partner..." even though both answers were already saved.
+
+- [x] **Diagnosed race condition from backend evidence:**
+    - [x] Observed logs where both `Answer recorded` events appeared for the same session/question, but both handlers logged `Waiting for partner...`.
+    - [x] Confirmed this can happen when two `submitAnswer` transactions run in parallel and each transaction counts answers before the other transaction commits.
+    - [x] **Why this matters:** the game can dead-end in Round 1 because no request executes the advance-to-next-question branch after both answers are already persisted.
+
+- [x] **Added session-row locking for write-critical game mutations:**
+    - [x] Added `GameSessionRepository.findByIdForUpdate(...)` with `PESSIMISTIC_WRITE` lock.
+    - [x] Updated `GameService.submitAnswer(...)` to load the session with row lock before validation and answer-write logic.
+    - [x] Updated `GameService.submitGuess(...)` to use the same lock path for consistency under concurrent writes.
+    - [x] **Why this change:** serializing concurrent writes per session removes non-deterministic interleavings that were leaving the state machine in a "both answered but not advanced" state.
+
+- [x] **Added stale-state recovery path inside Round 1 progression logic:**
+    - [x] Refactored progression into `resolveRound1Progress(...)` so both new submissions and duplicate submissions use the same advancement decision.
+    - [x] Added guard that checks current session question ID before advancing, avoiding accidental double-advance on stale duplicate events.
+    - [x] Added duplicate-submission recovery: if both answers already exist for the current question, a duplicate submit now safely triggers advancement instead of returning early.
+    - [x] Added hydration-time recovery in `getCurrentQuestionForUser(...)`: when both answers already exist for the current Round 1 question, the API now advances session state before returning payload.
+    - [x] **Why this change:** this self-heals sessions that were already stuck before the lock-based fix was deployed.
+
+- [x] **Added regression test coverage in backend service tests:**
+    - [x] Added `testSubmitAnswer_DuplicateAfterBothAnswersRecorded_RecoversStuckWaitingState` in `backend/src/test/java/com/onlyyours/service/GameServiceTest.java`.
+    - [x] Test verifies that when both answers are present and a duplicate submit occurs, the session advances to question 2.
+    - [x] **Why this change:** reproduces the formerly stuck state in a deterministic test and guards against future regressions.
+
+- [ ] **Runtime validation follow-up (manual):**
+    - [ ] Execute two-device Round 1 with near-simultaneous answer taps on question 1.
+    - [ ] Confirm logs show one `Waiting for partner` and one `Both players answered ... Advancing...` for the same question.
+    - [ ] Capture evidence in `PHASE_D_MANUAL_VALIDATION_RUN.md` under runtime defect retest notes.
+

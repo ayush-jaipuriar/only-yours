@@ -4,11 +4,25 @@ set -euo pipefail
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
+# Load nvm in non-interactive shells (npm scripts) and force Node 24 onto PATH.
+NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  # npm run can set this and nvm refuses to load when it is present.
+  unset npm_config_prefix
+  # shellcheck disable=SC1090
+  . "$NVM_DIR/nvm.sh"
+  nvm use 24 >/dev/null 2>&1 || true
+  if [ -n "${NVM_BIN:-}" ] && [ -x "${NVM_BIN}/node" ]; then
+    export PATH="${NVM_BIN}:${PATH}"
+    hash -r
+  fi
+fi
+
 # Enforce Node 24+ because Expo SDK 54 / RN 0.81 expect modern Node.
 NODE_MAJOR="$(node -p "process.versions.node.split('.')[0]")"
 if [ "$NODE_MAJOR" -lt 24 ]; then
   echo "Error: Node 24+ is required. Current: $(node -v)"
-  echo "Run: nvm use 24"
+  echo "Run: source \"\$HOME/.nvm/nvm.sh\" && nvm use 24 && export PATH=\"\$NVM_BIN:\$PATH\""
   exit 1
 fi
 

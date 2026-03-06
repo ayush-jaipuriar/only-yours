@@ -30,6 +30,9 @@ const GameScreen = ({ route, navigation }) => {
     scores,
     correctCount,
     isTransitioning,
+    isInvitationPending,
+    acceptPendingInvitation,
+    refreshCurrentQuestion,
     clearGuessResult,
   } = useGame();
 
@@ -84,6 +87,16 @@ const GameScreen = ({ route, navigation }) => {
       submitAnswer(selectedOption);
     }
   }, [selectedOption, round, submitAnswer, submitGuess]);
+
+  const handleAcceptPendingInvitation = useCallback(() => {
+    const accepted = acceptPendingInvitation();
+    if (!accepted) {
+      return;
+    }
+    if (activeSession) {
+      startGame(activeSession);
+    }
+  }, [acceptPendingInvitation, activeSession, startGame]);
 
   const renderOption = (letter, text) => {
     const isSelected = selectedOption === letter;
@@ -164,6 +177,35 @@ const GameScreen = ({ route, navigation }) => {
   }
 
   if (!currentQuestion) {
+    if (isInvitationPending || gameStatus === 'invited') {
+      return (
+        <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+          <Text style={[styles.pendingTitle, { color: theme.colors.textPrimary }]}>
+            Invitation pending
+          </Text>
+          <Text style={[styles.pendingText, { color: theme.colors.textSecondary }]}>
+            This session is still in invite state. Accept the invite to start Round 1, or wait for your partner to accept.
+          </Text>
+          <TouchableOpacity
+            style={[styles.pendingButton, { backgroundColor: theme.colors.primary }]}
+            onPress={handleAcceptPendingInvitation}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.pendingButtonText}>Accept Invitation</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.pendingButtonSecondary, { borderColor: theme.colors.border }]}
+            onPress={refreshCurrentQuestion}
+            activeOpacity={0.85}
+          >
+            <Text style={[styles.pendingButtonSecondaryText, { color: theme.colors.textPrimary }]}>
+              Refresh Session
+            </Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
@@ -319,6 +361,44 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: '#666',
+  },
+  pendingTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 12,
+    textAlign: 'center',
+  },
+  pendingText: {
+    fontSize: 15,
+    lineHeight: 22,
+    textAlign: 'center',
+    marginBottom: 18,
+    paddingHorizontal: 20,
+  },
+  pendingButton: {
+    borderRadius: 24,
+    paddingVertical: 12,
+    paddingHorizontal: 22,
+    marginBottom: 10,
+    minWidth: 220,
+    alignItems: 'center',
+  },
+  pendingButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  pendingButtonSecondary: {
+    borderRadius: 24,
+    paddingVertical: 11,
+    paddingHorizontal: 22,
+    minWidth: 220,
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  pendingButtonSecondaryText: {
+    fontSize: 15,
+    fontWeight: '600',
   },
 
   // Round badge

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
 import WebSocketService from '../services/WebSocketService';
 import api from '../services/api';
 import { Alert } from 'react-native';
@@ -28,16 +28,82 @@ export const GameProvider = ({ children }) => {
   const [scores, setScores] = useState(null);
   const [correctCount, setCorrectCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isInvitationPending, setIsInvitationPending] = useState(false);
 
   const activeSessionRef = useRef(null);
   const topicSubRef = useRef(null);
   const privateSubRef = useRef(null);
 
-  const startGame = (sessionId) => {
+  const applyGamePayload = useCallback((payload) => {
+    console.log('[GameContext] Received message:', payload.type || payload.status);
+
+    if (payload.type === 'QUESTION') {
+      if (payload.round === 'ROUND2') {
+        setRound('round2');
+        setIsTransitioning(false);
+      }
+      setCurrentQuestion(payload);
+      setMyAnswer(null);
+      setWaitingForPartner(false);
+      setGuessResult(null);
+      setGameStatus('playing');
+      setIsInvitationPending(false);
+    } else if (payload.type === 'STATUS' && payload.status === 'ROUND1_COMPLETE') {
+      console.log('[GameContext] Round 1 complete, transitioning...');
+      setIsTransitioning(true);
+      setCurrentQuestion(null);
+      setMyAnswer(null);
+      setWaitingForPartner(false);
+      setGameStatus('playing');
+      setIsInvitationPending(false);
+    } else if (payload.type === 'GAME_RESULTS') {
+      console.log('[GameContext] Game completed:', payload);
+      setScores(payload);
+      setGameStatus('completed');
+      setIsTransitioning(false);
+      setIsInvitationPending(false);
+    }
+  }, []);
+
+  const hydrateCurrentQuestion = useCallback(async (sessionId) => {
+    try {
+      const response = await api.get(`/game/${sessionId}/current-question`);
+      const payload = response?.data;
+      if (payload?.type === 'QUESTION') {
+        applyGamePayload(payload);
+      }
+    } catch (error) {
+      const status = error?.response?.status;
+      if (status === 404 || status === 410) {
+        return;
+      }
+
+      if (status === 409) {
+        try {
+          const activeResponse = await api.get('/game/active');
+          const activeSession = activeResponse?.data;
+          const activeSessionId = activeSession?.sessionId ? String(activeSession.sessionId) : null;
+          if (activeSessionId === String(sessionId) && activeSession?.status === 'INVITED') {
+            setGameStatus('invited');
+            setIsInvitationPending(true);
+            return;
+          }
+        } catch (activeSessionError) {
+          console.warn('[GameContext] Failed to inspect active session state:', activeSessionError?.message || activeSessionError);
+        }
+        return;
+      }
+
+      console.warn('[GameContext] Failed to hydrate current question:', error?.message || error);
+    }
+  }, [applyGamePayload]);
+
+  const startGame = useCallback((sessionId) => {
     console.log('[GameContext] Starting game:', sessionId);
 
     if (activeSessionRef.current === sessionId && topicSubRef.current) {
-      console.log('[GameContext] Session already active, skipping reset:', sessionId);
+      console.log('[GameContext] Session already active, refreshing snapshot:', sessionId);
+      hydrateCurrentQuestion(sessionId);
       return;
     }
 
@@ -72,32 +138,7 @@ export const GameProvider = ({ children }) => {
     setScores(null);
     setCorrectCount(0);
     setIsTransitioning(false);
-
-    const applyGamePayload = (payload) => {
-      console.log('[GameContext] Received message:', payload.type || payload.status);
-
-      if (payload.type === 'QUESTION') {
-        if (payload.round === 'ROUND2') {
-          setRound('round2');
-          setIsTransitioning(false);
-        }
-        setCurrentQuestion(payload);
-        setMyAnswer(null);
-        setWaitingForPartner(false);
-        setGuessResult(null);
-      } else if (payload.type === 'STATUS' && payload.status === 'ROUND1_COMPLETE') {
-        console.log('[GameContext] Round 1 complete, transitioning...');
-        setIsTransitioning(true);
-        setCurrentQuestion(null);
-        setMyAnswer(null);
-        setWaitingForPartner(false);
-      } else if (payload.type === 'GAME_RESULTS') {
-        console.log('[GameContext] Game completed:', payload);
-        setScores(payload);
-        setGameStatus('completed');
-        setIsTransitioning(false);
-      }
-    };
+    setIsInvitationPending(false);
 
     const gameTopic = `/topic/game/${sessionId}`;
     const sub = WebSocketService.subscribe(gameTopic, (payload) => {
@@ -123,26 +164,8 @@ export const GameProvider = ({ children }) => {
 
     console.log('[GameContext] Subscribed to:', gameTopic);
 
-    // Resume-safe hydration: fetch the current question snapshot in case
-    // the client reconnects after missing prior real-time messages.
-    const hydrateCurrentQuestion = async () => {
-      try {
-        const response = await api.get(`/game/${sessionId}/current-question`);
-        const payload = response?.data;
-        if (payload?.type === 'QUESTION') {
-          applyGamePayload(payload);
-        }
-      } catch (error) {
-        const status = error?.response?.status;
-        if (status === 404 || status === 409 || status === 410) {
-          return;
-        }
-        console.warn('[GameContext] Failed to hydrate current question:', error?.message || error);
-      }
-    };
-
-    hydrateCurrentQuestion();
-  };
+    hydrateCurrentQuestion(sessionId);
+  }, [applyGamePayload, hydrateCurrentQuestion]);
 
   const submitAnswer = (answer) => {
     if (!activeSession || !currentQuestion) {
@@ -198,6 +221,42 @@ export const GameProvider = ({ children }) => {
     setGuessResult(null);
   };
 
+  const acceptPendingInvitation = () => {
+    const sessionId = activeSessionRef.current;
+    if (!sessionId) {
+      return false;
+    }
+
+    if (!WebSocketService.isConnected()) {
+      Alert.alert(
+        'Realtime Disconnected',
+        'Cannot accept invitation right now because realtime connection is not ready. Please retry in a few seconds.'
+      );
+      return false;
+    }
+
+    const sent = WebSocketService.sendMessage('/app/game.accept', { sessionId });
+    if (!sent) {
+      Alert.alert(
+        'Realtime Disconnected',
+        'Unable to send invitation acceptance. Please retry once connection is restored.'
+      );
+      return false;
+    }
+
+    setGameStatus('joining');
+    setIsInvitationPending(false);
+    return true;
+  };
+
+  const refreshCurrentQuestion = () => {
+    const sessionId = activeSessionRef.current;
+    if (!sessionId) {
+      return;
+    }
+    hydrateCurrentQuestion(sessionId);
+  };
+
   const endGame = () => {
     console.log('[GameContext] Ending game');
 
@@ -227,6 +286,7 @@ export const GameProvider = ({ children }) => {
     setScores(null);
     setCorrectCount(0);
     setIsTransitioning(false);
+    setIsInvitationPending(false);
   };
 
   useEffect(() => {
@@ -266,10 +326,13 @@ export const GameProvider = ({ children }) => {
     scores,
     correctCount,
     isTransitioning,
+    isInvitationPending,
 
     startGame,
     submitAnswer,
     submitGuess,
+    acceptPendingInvitation,
+    refreshCurrentQuestion,
     clearGuessResult,
     endGame,
   };

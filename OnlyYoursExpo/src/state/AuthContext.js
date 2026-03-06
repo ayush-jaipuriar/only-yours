@@ -168,9 +168,15 @@ export const AuthProvider = ({ children }) => {
           onPress: () => {
             console.log('[AuthContext] Declining invitation');
             try {
-              WebSocketService.sendMessage('/app/game.decline', {
+              const sent = WebSocketService.sendMessage('/app/game.decline', {
                 sessionId: invitation.sessionId,
               });
+              if (!sent) {
+                Alert.alert(
+                  'Realtime Disconnected',
+                  'Unable to decline invitation right now. Please retry once the connection is restored.'
+                );
+              }
             } catch (error) {
               console.error('[AuthContext] Error declining invitation:', error);
             }
@@ -182,9 +188,16 @@ export const AuthProvider = ({ children }) => {
             console.log('[AuthContext] Accepting invitation');
             try {
               // Send acceptance message
-              WebSocketService.sendMessage('/app/game.accept', {
+              const sent = WebSocketService.sendMessage('/app/game.accept', {
                 sessionId: invitation.sessionId,
               });
+              if (!sent) {
+                Alert.alert(
+                  'Realtime Disconnected',
+                  'Unable to accept invitation right now. Please retry once the connection is restored.'
+                );
+                return;
+              }
               
               // Start game in GameContext
               if (gameContextRef.current) {

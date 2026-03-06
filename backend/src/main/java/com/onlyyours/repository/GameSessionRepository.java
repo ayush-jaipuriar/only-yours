@@ -1,8 +1,10 @@
 package com.onlyyours.repository;
 
 import com.onlyyours.model.GameSession;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,6 +33,10 @@ public interface GameSessionRepository extends JpaRepository<GameSession, UUID> 
      * @return Optional containing the session if found with that status
      */
     Optional<GameSession> findByIdAndStatus(UUID id, GameSession.GameStatus status);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT gs FROM GameSession gs WHERE gs.id = :id")
+    Optional<GameSession> findByIdForUpdate(@Param("id") UUID id);
     
     /**
      * Find all game sessions for a couple with a specific status.

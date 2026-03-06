@@ -35,7 +35,10 @@ source "$HOME/.nvm/nvm.sh"
 nvm use 24
 npm install
 npm run android:local-build
-npx expo start --dev-client -c
+
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
 ### Terminal C — APK install (if needed)
@@ -58,9 +61,9 @@ On each phone:
 2. Enable **Wireless debugging**
 3. Tap **Pair device with pairing code**
 4. Note:
-   - Pairing endpoint: `<PHONE_IP>:<PAIRING_PORT>`
-   - Debug endpoint: `<PHONE_IP>:<DEBUG_PORT>`
-   - Pairing code
+  - Pairing endpoint: `<PHONE_IP>:<PAIRING_PORT>`
+  - Debug endpoint: `<PHONE_IP>:<DEBUG_PORT>`
+  - Pairing code
 
 From laptop:
 
@@ -102,16 +105,19 @@ adb disconnect   # disconnect all wifi adb sessions
 ### One-time/occasional checks
 
 ```bash
-# confirm phone-accessible backend endpoint (replace with your current LAN IP)
-curl -s http://192.168.1.101:8080/actuator/health
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+
+# confirm phone-accessible backend endpoint for current Wi-Fi
+curl -s "http://$LAN_IP:8080/actuator/health"
 
 # confirm frontend env is set for phone-on-Wi-Fi
-rg "EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/.env
+grep "^EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/.env
 ```
 
 ### If you see common failures
 
-- **WebSocket timeout:** restart backend + `npx expo start --dev-client -c`
+- **WebSocket timeout:** restart backend + Metro using LAN host override (`REACT_NATIVE_PACKAGER_HOSTNAME`)
+- **Failed to connect to `127.0.0.1:8081`:** restart Metro with `LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)` and `REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c`
 - **Resend key missing in logs:** verify root `.env` has `RESEND_API_KEY`, then restart backend
 - **Node API errors (`toReversed`)**: run `nvm use 24` before Expo commands
 
@@ -229,9 +235,9 @@ Do this once per device:
 
 ### 2.4 - Success criteria for Step 2
 
-- [ ] Android test devices are ready (Expo Go optional, dev client preferred)
-- [ ] Both devices share the same Wi-Fi as laptop
-- [ ] (Optional) `adb version` works if USB/APK flow is needed
+- Android test devices are ready (Expo Go optional, dev client preferred)
+- Both devices share the same Wi-Fi as laptop
+- (Optional) `adb version` works if USB/APK flow is needed
 
 ---
 
@@ -294,8 +300,13 @@ adb install -r android/app/build/outputs/apk/debug/app-debug.apk
 
 ```bash
 cd OnlyYoursExpo
-npx expo start --dev-client -c
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
+
+This prevents the dev client from trying `127.0.0.1:8081` on phone.
 
 Open the installed dev client app on phone and attach to Metro.
 
@@ -351,12 +362,12 @@ curl http://<LAPTOP_LAN_IP>:8080/actuator/health
 
 ### Success criteria for local setup
 
-- [ ] Node 24 active in terminal
-- [ ] `npm run android:local-build` completes
-- [ ] APK exists at debug output path
-- [ ] APK installs on device
-- [ ] `npx expo start --dev-client -c` starts cleanly
-- [ ] App launches and calls backend over LAN
+- Node 24 active in terminal
+- `npm run android:local-build` completes
+- APK exists at debug output path
+- APK installs on device
+- `npx expo start --dev-client -c` starts cleanly
+- App launches and calls backend over LAN
 
 ---
 
@@ -476,10 +487,10 @@ Example:
 EXPO_PUBLIC_API_URL=http://192.168.1.23:8080
 ```
 
-Current workspace setting (this machine, current Wi-Fi):
+Quick verify (must match your current LAN IP):
 
-```text
-OnlyYoursExpo/.env -> EXPO_PUBLIC_API_URL=http://192.168.1.101:8080
+```bash
+grep "^EXPO_PUBLIC_API_URL" OnlyYoursExpo/.env
 ```
 
 Find your laptop LAN IP on macOS:
@@ -511,9 +522,14 @@ Important:
 
 ```bash
 cd OnlyYoursExpo
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
 npm install
 npm run android:local-build
-npx expo start --dev-client -c
+
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
 Important:
@@ -654,8 +670,8 @@ This is backend configuration, not frontend/mobile configuration.
 Check:
 
 1. Root `.env` contains:
-   - `RESEND_API_KEY=<your_resend_key>`
-   - `RESEND_FROM_EMAIL=onboarding@resend.dev` (or your verified sender)
+  - `RESEND_API_KEY=<your_resend_key>`
+  - `RESEND_FROM_EMAIL=onboarding@resend.dev` (or your verified sender)
 2. Backend loads `.env` through Spring config import (already configured)
 3. Backend process restarted after env changes:
 
@@ -689,7 +705,10 @@ Try clean restart:
 
 ```bash
 cd OnlyYoursExpo
-npx expo start --dev-client -c
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
 If you see `configs.toReversed is not a function`:
@@ -698,9 +717,22 @@ If you see `configs.toReversed is not a function`:
 - Fix:
 
 ```bash
-nvm use 24
 cd OnlyYoursExpo
-npx expo start --dev-client -c
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
+```
+
+If dev client shows `failed to connect to 127.0.0.1:8081`:
+
+- Cause: Metro advertised loopback host (`127.0.0.1`) instead of laptop LAN IP.
+- Fix:
+
+```bash
+cd OnlyYoursExpo
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
 If you see `Network Error` after app loads:
@@ -744,9 +776,9 @@ curl -I "http://localhost:8081/index.bundle?platform=android&dev=true&minify=fal
 Most common causes and fixes:
 
 1. Backend security not permitting native endpoint path
-   - Ensure `/ws-native` and `/ws-native/**` are permitted in `SecurityConfig` (already fixed in latest code).
+  - Ensure `/ws-native` and `/ws-native/**` are permitted in `SecurityConfig` (already fixed in latest code).
 2. Backend restarted is stale / old process still running
-   - Restart backend with latest code:
+  - Restart backend with latest code:
 
 ```bash
 cd backend
@@ -754,12 +786,76 @@ cd backend
 ```
 
 3. Frontend still running stale bundle
-   - Restart Metro and reload dev client:
+  - Restart Metro and reload dev client:
 
 ```bash
 cd OnlyYoursExpo
-npx expo start --dev-client -c
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
+
+### Problem: both phones are stuck on **"Loading question..."**
+
+Symptoms:
+
+- Session opens on both devices, but no question payload appears.
+- Backend logs show `Game session created ... status=INVITED`, but no `Game started` acceptance log.
+
+Root cause:
+
+- The session is still in `INVITED` state (acceptance event was not processed yet), so `/game/{sessionId}/current-question` cannot return a question.
+
+Recovery flow (new default):
+
+1. Open the stuck game session on either device.
+2. Tap **Accept Invitation** on the in-app pending-invitation panel.
+3. On both devices, tap **Refresh Session** once if the first question does not appear immediately.
+4. Verify backend now logs `Game started: session=...`.
+
+Hard fallback if still blocked:
+
+```bash
+cd OnlyYoursExpo
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
+```
+
+### Problem: both phones are stuck on **"Waiting for partner..."** on question 1
+
+Symptoms:
+
+- Both players submit an answer on the first question almost simultaneously.
+- Backend logs show both `Answer recorded` events for the same question, but no `Both players answered ... Advancing...` log for that question.
+- Both phones remain in waiting state even though both users already answered.
+
+Root cause:
+
+- This was a Round 1 concurrency race in older backend code: two parallel answer submissions could each count only one visible answer before the peer transaction committed.
+- Result: both requests took the "waiting" branch, and the session did not advance.
+
+Fix status:
+
+- Latest backend includes session-level locking + recovery logic in `GameService.submitAnswer`.
+- If you still see this issue, ensure backend is restarted on latest code before testing.
+
+Recovery for an already-stuck session created before backend restart:
+
+1. Restart backend on latest code.
+2. Re-open the active game session on both devices (or use in-app refresh).
+3. If session still does not advance, start a fresh invitation (old stale session may already be in a dead-end state from older backend behavior).
+
+Verification steps (post-fix):
+
+1. Start a fresh invitation/game session.
+2. On question 1, tap answers on both phones nearly at the same time.
+3. Confirm backend logs now include exactly one advancement path:
+   - one request may still log `Waiting for partner...`
+   - the paired request must log `Both players answered question ... Advancing...`
+4. Confirm both clients move to question 2 without manual restart.
 
 ### Problem: Expo requests fail with `401/403` and Profile shows "Couldn't Load Profile"
 
@@ -784,9 +880,12 @@ What to do now:
 cd backend
 ./gradlew bootRun
 
-# Restart Expo with clean cache
+# Restart Expo with clean cache + LAN host override
 cd ../OnlyYoursExpo
-npx expo start --dev-client -c
+source "$HOME/.nvm/nvm.sh"
+nvm use 24
+LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
+REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
 If issue persists:
@@ -806,9 +905,10 @@ For physical phones, `localhost` means “the phone itself,” not your laptop.
 
 ### Option A (Recommended): Physical devices over same Wi-Fi LAN
 
-Use laptop LAN IP in app config:
+Use laptop LAN IP in app config and Metro host advertisement:
 
 - Frontend env base: `http://<LAPTOP_LAN_IP>:8080`
+- Metro host override: `REACT_NATIVE_PACKAGER_HOSTNAME=<LAPTOP_LAN_IP>`
 
 Where to update:
 
@@ -825,10 +925,10 @@ This tunnels phone `localhost` traffic to laptop `localhost`.
 
 1. Connect both phones via USB
 2. Verify devices:
-   - `adb devices`
+  - `adb devices`
 3. For each device serial:
-   - `adb -s <SERIAL_1> reverse tcp:8080 tcp:8080`
-   - `adb -s <SERIAL_2> reverse tcp:8080 tcp:8080`
+  - `adb -s <SERIAL_1> reverse tcp:8080 tcp:8080`
+  - `adb -s <SERIAL_2> reverse tcp:8080 tcp:8080`
 
 Why reverse port `8080`:
 
@@ -842,13 +942,13 @@ Follow this exact order each test session:
 
 1. **Start DB**
 2. **Start backend**
-   - `cd backend && ./gradlew bootRun`
+  - `cd backend && ./gradlew bootRun`
 3. **Start Expo**
-   - `cd OnlyYoursExpo && npx expo start --dev-client -c`
+  - `cd OnlyYoursExpo && source "$HOME/.nvm/nvm.sh" && nvm use 24 && LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1) && REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c`
 4. **Open app on Device A**
-   - Open installed local dev client
+  - Open installed local dev client
 5. **Open app on Device B**
-   - Open installed local dev client
+  - Open installed local dev client
 6. **If using USB reverse fallback, run `adb reverse` for port `8080`**
 7. **Run manual test matrix**
 
@@ -950,10 +1050,10 @@ Steps:
 
 1. Device A -> `Sign Up`.
 2. Enter:
-   - Username: `manual_user_a`
-   - Email: `manual_user_a@test.local`
-   - Password: `Password123!`
-   - Confirm Password: `Password123!`
+  - Username: `manual_user_a`
+  - Email: `manual_user_a@test.local`
+  - Password: `Password123!`
+  - Confirm Password: `Password123!`
 3. Tap `Create Account`.
 
 Expected:
@@ -967,9 +1067,9 @@ Expected:
 Steps:
 
 1. Repeat M-002 on Device B using:
-   - Username: `manual_user_b`
-   - Email: `manual_user_b@test.local`
-   - Password: `Password123!`
+  - Username: `manual_user_b`
+  - Email: `manual_user_b@test.local`
+  - Password: `Password123!`
 
 Expected:
 
@@ -983,8 +1083,8 @@ Steps:
 1. On Device A, open Profile -> `Sign Out`.
 2. Confirm `Sign In` screen appears.
 3. Sign in using:
-   - Email: `manual_user_a@test.local`
-   - Password: `Password123!`
+  - Email: `manual_user_a@test.local`
+  - Password: `Password123!`
 
 Expected:
 
@@ -1037,14 +1137,14 @@ Expected:
 Steps:
 
 1. In backend logs, locate line:
-   - `DEV ONLY - Password reset token for email manual_user_b@test.local: <TOKEN>`
+  - `DEV ONLY - Password reset token for email manual_user_b@test.local: <TOKEN>`
 2. Device B -> `Reset Password`.
 3. Paste `<TOKEN>`.
 4. Set new password: `Password456!` and confirm.
 5. Submit reset.
 6. Try login with:
-   - old password `Password123!` (should fail)
-   - new password `Password456!` (should succeed)
+  - old password `Password123!` (should fail)
+  - new password `Password456!` (should succeed)
 
 Expected:
 
@@ -1382,9 +1482,9 @@ For each failed case, log:
 5. Screenshot/video
 6. Relevant backend log timestamp
 7. Severity:
-   - Critical (release blocker)
-   - Major (core flow broken)
-   - Minor (non-blocking UX issue)
+  - Critical (release blocker)
+  - Major (core flow broken)
+  - Minor (non-blocking UX issue)
 
 ---
 
@@ -1392,12 +1492,12 @@ For each failed case, log:
 
 Release to production only if:
 
-- [ ] All manual cases pass
-- [ ] Auth matrix passes (signup/login/logout/forgot/reset/refresh/revocation)
-- [ ] No open critical bugs
-- [ ] No open major bugs
-- [ ] Backend tests pass
-- [ ] Frontend tests pass
+- All manual cases pass
+- Auth matrix passes (signup/login/logout/forgot/reset/refresh/revocation)
+- No open critical bugs
+- No open major bugs
+- Backend tests pass
+- Frontend tests pass
 
 ---
 
@@ -1460,9 +1560,9 @@ Example use:
 
 ## 11) Open Clarifications for Final Version
 
-- [x] Pass evidence policy finalized: failures + critical-path pass proof
-- [x] Emulator in release gate: optional
-- [ ] Do you want a printable checklist sheet format (Yes/No boxes) for each run?
+- Pass evidence policy finalized: failures + critical-path pass proof
+- Emulator in release gate: optional
+- Do you want a printable checklist sheet format (Yes/No boxes) for each run?
 
 ---
 
@@ -2022,3 +2122,4 @@ Use this template as the official pass/fail artifact for sign-off.
 - Ready for Phase D sign-off: Yes/No
 - Notes:
 ```
+
