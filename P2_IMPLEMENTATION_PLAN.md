@@ -50,14 +50,26 @@ Status: Drafted from finalized user clarifications; ready for implementation
 
 - Game history includes pagination + sort (recent/oldest) + win filters.
 - Dashboard metrics include: games played, average score, streak, acceptance rate, response time.
-- Initial gamification scope: badges only, with generated gradient backgrounds.
+- Initial gamification scope through `Phase D`: badges only, with generated gradient backgrounds.
+- Post-`Phase D` expansion adds levels + XP + expanded badges, centered on consistency and completion over pure competition.
 
 ### UX / Design System
 
 - Onboarding appears during signup and is reopenable in settings.
 - Design direction: richer illustrated storytelling flow.
 - Theme direction: light + dark token system, romantic red gradient language, smooth/cute/bubbly animation style.
+- Dark mode post-`Phase D` direction: premium romantic evening feel, not just token parity.
 - Responsive support target: landscape on all screens including game (tablet-friendly).
+- Haptics post-`Phase D`: subtle semantic cues, enabled by default with in-app opt-out.
+- Accessibility post-`Phase D`: screen-reader baseline across all primary flows.
+
+### Content / Sharing
+
+- Custom questions are planned as a couple-private shared library.
+- Custom question format stays aligned with the current gameplay engine: question text + four answer options.
+- Custom questions are played through a dedicated custom deck/category, not mixed into standard categories by default.
+- Social sharing scope is external/native-share-sheet only for first release.
+- Shared output defaults to privacy-safe summary cards; no raw answers or sensitive question text.
 
 ### Reliability / Reconnection Behavior
 
@@ -109,13 +121,25 @@ Primary critical path:
 3. `Phase C (C2 -> C1 -> C3 -> C4)`
 4. `Phase D (D1 + D2 -> D3 -> D4)`
 5. `Phase E (E1 -> E2 -> E3 -> E4)`
+6. `Phase F (F1 -> F2 -> F3)`
+7. `Phase G (G1 -> G2 -> G3)`
+8. `Phase H (H1 -> H2 -> H3 -> H4 -> H5)`
+9. `Phase I (I1 -> I2 -> I3 -> I4)`
+10. `Phase J (J1 -> J2 -> J3 -> J4 -> J5)`
+11. `Phase K (K1 -> K2 -> K3 -> K4)`
 
 Cross-phase dependencies:
 - `B3/B4` (stats) depend on `A2` stabilized round/state transitions.
 - `B5` (badges) depends on `B3` metrics and `B1` history events.
 - `C3` responsive rollout should start after token foundation in `C2`.
 - `D3` deep-link notifications depend on `A3` event contract.
-- `E3` rollback runbook depends on schema/event changes from `A` and `B`.
+- `E1/E2` dark-mode completion depends on `C2` theme token foundation being stable.
+- `F1/F2` accessibility pass depends on `E` screen/system parity to avoid duplicate audits.
+- `G1` haptic mapping depends on `D3` notification/game event surfaces and `F` accessibility rules for non-visual alternatives.
+- `H2/H3` custom questions depend on `A2` session integrity and `D1` couple lifecycle guardrails.
+- `I2` sharing cards depends on `E` visual system and `J` milestone metadata for milestone-sharing surfaces.
+- `J2/J3` progression model depends on `B3/B5` existing stats and badge foundations.
+- `K3` rollback runbook depends on schema/API/event changes introduced across `A` through `J`.
 
 ### Phase A - Game Continuation Core (Highest Product Risk)
 
@@ -396,30 +420,347 @@ Phase D completion notes (implementation references):
   - Added/updated backend and frontend tests for cooldown/recovery/profile/preferences/deep-link/dedupe paths.
   - Focused + full backend/frontend automated suites passed; manual Phase D device validation remains pending by deferral.
 
-### Phase E - DevOps, Secrets, Rollback, and Release Safety
+### Phase E - Dark Mode Redesign Completion
 
 #### Phase E priority + estimate + dependency board
 
 | Item | Priority | Estimate | Depends on |
 |---|---|---|---|
-| E1 Secret management | Critical | 1 day | none |
-| E2 Release workflow | High | 0.5-1 day | E1 |
-| E3 Rollback strategy | Critical | 1-1.5 days | A, B schema/event deltas + E2 |
-| E4 Validation | Critical | 0.5-1 day | E1, E2, E3 |
+| E1 Dark token expansion | High | 1-1.5 days | C2 |
+| E2 Screen-level redesign pass | High | 2-3 days | E1 |
+| E3 Visual QA and regression hardening | High | 1-1.5 days | E2 |
+| E4 Documentation and acceptance closure | Medium | 0.5-1 day | E3 |
 
-#### E1) Secret management checklist
+#### E1) Dark token expansion checklist
+
+- [ ] Expand the theme token system beyond baseline parity into premium dark-mode semantic tokens.
+- [ ] Define dark-specific treatment for:
+  - cards
+  - overlays
+  - banners
+  - gradients
+  - celebratory states
+  - form surfaces
+- [ ] Audit and remove remaining hardcoded light-biased colors from shared components and critical screens.
+- [ ] Preserve `system` / `light` / `dark` preference support as a stable contract.
+
+#### E2) Screen-level redesign pass checklist
+
+- [ ] Redesign dark mode for all primary screens:
+  - auth
+  - onboarding
+  - dashboard
+  - partner link
+  - category selection
+  - game
+  - results
+  - history
+  - profile
+  - settings
+- [ ] Ensure dark-mode treatments remain consistent with the romantic premium direction.
+- [ ] Refine badges, empty states, loading states, reconnect banners, and modal surfaces for dark mode.
+
+#### E3) Visual QA and regression hardening checklist
+
+- [ ] Add focused rendering/regression coverage for theme mode switching on priority screens.
+- [ ] Execute manual visual QA for `system`, `light`, and `dark` modes on phone and tablet form factors.
+- [ ] Verify no unreadable contrast, clipped text, or light-only visual artifacts remain.
+
+#### E4) Documentation and acceptance closure checklist
+
+- [ ] Update the manual guide with dark-mode acceptance criteria and evidence capture guidance.
+- [ ] Document any intentionally deferred dark-only polish items.
+- [ ] Record final screen parity checklist before moving to accessibility phase.
+
+Definition of done:
+- Dark mode feels intentional and premium across all primary flows.
+- Theme switching is stable and persistent.
+- No major visual regressions remain between light and dark surfaces.
+
+### Phase F - Accessibility Baseline Across Primary Flows
+
+#### Phase F priority + estimate + dependency board
+
+| Item | Priority | Estimate | Depends on |
+|---|---|---|---|
+| F1 Shared accessibility contract | High | 1 day | E2 |
+| F2 Screen-reader baseline pass | High | 2-2.5 days | F1 |
+| F3 Validation and docs | High | 1 day | F2 |
+
+#### F1) Shared accessibility contract checklist
+
+- [ ] Define baseline accessibility rules for interactive components:
+  - labels
+  - roles
+  - hints
+  - state/value announcements
+- [ ] Add shared component guidance for icon-only, decorative, loading, error, and modal patterns.
+- [ ] Define which dynamic state changes require accessibility announcements.
+
+#### F2) Screen-reader baseline pass checklist
+
+- [ ] Apply accessibility labels and hints across all primary flows:
+  - auth
+  - onboarding
+  - dashboard
+  - linking
+  - gameplay
+  - results
+  - history
+  - profile
+  - settings
+- [ ] Fix focus order and focus traps for dialogs, banners, forms, and navigation transitions.
+- [ ] Add announcements for critical gameplay and reliability events:
+  - invite received
+  - reconnect/disconnect
+  - round transition
+  - guess outcome
+  - session expired
+  - results ready
+  - unlink/recover confirmations
+
+#### F3) Validation and docs checklist
+
+- [ ] Add component/screen coverage for baseline accessibility props where practical.
+- [ ] Run manual screen-reader walkthroughs across all primary flows.
+- [ ] Update the manual guide with accessibility acceptance criteria and known limitations.
+
+Definition of done:
+- All primary flows are screen-reader usable at a baseline level.
+- Critical dynamic state changes are announced clearly.
+- Unlabeled controls and common focus-order issues are removed.
+
+### Phase G - Haptic Feedback System
+
+#### Phase G priority + estimate + dependency board
+
+| Item | Priority | Estimate | Depends on |
+|---|---|---|---|
+| G1 Haptic design map and preferences | High | 0.5-1 day | F2 |
+| G2 Runtime integration | High | 1-1.5 days | G1 |
+| G3 Validation and docs | Medium | 0.5-1 day | G2 |
+
+#### G1) Haptic design map and preferences checklist
+
+- [ ] Define a centralized semantic haptic map for key app moments.
+- [ ] Add in-app preference support for enabling/disabling haptics.
+- [ ] Keep first-release haptics intentionally subtle and sparse.
+
+#### G2) Runtime integration checklist
+
+- [ ] Implement haptic cues for major interaction moments:
+  - important submit/confirm
+  - invite sent/accepted
+  - answer submitted
+  - correct guess
+  - incorrect guess
+  - round unlocked
+  - game completed
+  - invalid action/error
+  - unlink confirmation/recovery
+- [ ] Centralize dispatch through a reusable service/helper rather than per-screen ad hoc calls.
+- [ ] Ensure graceful no-op behavior on unsupported devices/platform conditions.
+
+#### G3) Validation and docs checklist
+
+- [ ] Add unit coverage for event-to-haptic mapping.
+- [ ] Run manual device validation for enabled, disabled, and unsupported-device behavior.
+- [ ] Update the settings and manual guide documentation for haptic preferences.
+
+Definition of done:
+- Haptics feel consistent and intentional across key flows.
+- Users can disable haptics without side effects.
+- Unsupported-device paths degrade safely.
+
+### Phase H - Custom Questions (Couple-Private Deck)
+
+#### Phase H priority + estimate + dependency board
+
+| Item | Priority | Estimate | Depends on |
+|---|---|---|---|
+| H1 Data model and backend contracts | Critical | 1.5-2 days | A2, D1 |
+| H2 Library management API and validation | High | 1.5-2 days | H1 |
+| H3 Frontend custom library surfaces | High | 2-2.5 days | H2 |
+| H4 Dedicated custom-deck gameplay integration | Critical | 1.5-2 days | H1, H3 |
+| H5 Validation and docs | High | 1-1.5 days | H2, H3, H4 |
+
+#### H1) Data model and backend contracts checklist
+
+- [ ] Add backend model(s) for couple-private custom questions with:
+  - couple ownership
+  - authorship tracking
+  - active/archived lifecycle state
+- [ ] Keep custom question format aligned with current gameplay:
+  - question text
+  - four answer options
+- [ ] Define API contracts for create/read/update/archive operations.
+- [ ] Define minimum playable-deck rules for starting a custom-question session.
+
+#### H2) Library management API and validation checklist
+
+- [ ] Implement CRUD endpoints for the couple-private question library.
+- [ ] Enforce that only linked partners within the same couple can access or manage the shared library.
+- [ ] Add validation for:
+  - required fields
+  - reasonable length limits
+  - empty/duplicate options
+  - duplicate-question protection rules
+  - basic safety placeholder checks
+
+#### H3) Frontend custom library surfaces checklist
+
+- [ ] Create custom-question management UI for listing, creating, editing, and archiving questions.
+- [ ] Make both partners equally able to manage the shared library.
+- [ ] Add empty/loading/error states and clear guidance when the deck is not yet playable.
+
+#### H4) Dedicated custom-deck gameplay integration checklist
+
+- [ ] Add a dedicated custom deck/category entry point instead of blending custom questions into standard categories by default.
+- [ ] Extend game-start flow so users can explicitly launch a session from the custom deck.
+- [ ] Ensure custom sessions reuse the existing game engine without breaking standard category sessions.
+- [ ] Decide and document how history/results distinguish custom-deck sessions, if needed for UX clarity.
+
+#### H5) Validation and docs checklist
+
+- [ ] Add backend tests for CRUD, validation, and couple-isolation behavior.
+- [ ] Add integration coverage for starting and completing a game from a custom deck.
+- [ ] Add frontend tests for library management and custom-deck entry flow.
+- [ ] Update manual testing documentation for custom-question lifecycle and gameplay scenarios.
+
+Definition of done:
+- A linked couple can manage a shared private question library.
+- Users can explicitly start and complete a game from the custom deck.
+- Standard category gameplay remains unaffected.
+
+### Phase I - Social Sharing (Results + Milestones)
+
+#### Phase I priority + estimate + dependency board
+
+| Item | Priority | Estimate | Depends on |
+|---|---|---|---|
+| I1 Shareable content contract | High | 0.5-1 day | E2, J2 |
+| I2 Share-card rendering and UX | High | 1.5-2 days | I1 |
+| I3 Native share flow integration | High | 1 day | I2 |
+| I4 Validation and docs | Medium | 0.5-1 day | I3 |
+
+#### I1) Shareable content contract checklist
+
+- [ ] Define first-release share moments:
+  - result cards
+  - progression milestone cards
+- [ ] Lock privacy-safe share-card rules:
+  - no raw answers
+  - no sensitive question text
+  - no detailed per-question breakdown by default
+- [ ] Define minimal content payload needed for share-card generation.
+
+#### I2) Share-card rendering and UX checklist
+
+- [ ] Create branded share-card designs for results and milestones.
+- [ ] Ensure cards match the established Only Yours visual system in both light and dark contexts.
+- [ ] Add resilient fallback behavior if share-card preparation fails.
+
+#### I3) Native share flow integration checklist
+
+- [ ] Add native share-sheet launch from the results screen.
+- [ ] Add share actions for milestone moments on dashboard/profile or milestone reveal surfaces.
+- [ ] Ensure share entry points never expose more detail than the approved safe-summary contract.
+
+#### I4) Validation and docs checklist
+
+- [ ] Add coverage for share payload/card-state generation.
+- [ ] Run manual device validation for result and milestone share flows.
+- [ ] Update the manual guide with privacy checks and share-flow acceptance criteria.
+
+Definition of done:
+- Users can share privacy-safe result and milestone cards externally.
+- Shared output is visually polished and brand-consistent.
+- No sensitive gameplay data leaks through default sharing behavior.
+
+### Phase J - Gamification Expansion (Levels, XP, Expanded Badges)
+
+#### Phase J priority + estimate + dependency board
+
+| Item | Priority | Estimate | Depends on |
+|---|---|---|---|
+| J1 Progression model design | High | 1 day | B3, B5 |
+| J2 Backend progression computation | High | 1.5-2 days | J1 |
+| J3 API and data-contract expansion | High | 1 day | J2 |
+| J4 Frontend progression surfaces | High | 1.5-2 days | J3 |
+| J5 Validation and docs | High | 1 day | J2, J4 |
+
+#### J1) Progression model design checklist
+
+- [ ] Define first-release progression mechanics:
+  - XP
+  - levels
+  - expanded badge catalog
+- [ ] Keep reward logic centered on:
+  - consistency
+  - completion
+  - streak maintenance
+  - shared couple participation
+- [ ] Keep competitive/high-score-only mechanics secondary in this release.
+
+#### J2) Backend progression computation checklist
+
+- [ ] Implement deterministic XP and level computation rules.
+- [ ] Expand badge logic beyond the current MVP set.
+- [ ] Define unlock triggers and data needed for milestone celebration surfaces.
+- [ ] Preserve compatibility with existing stats and badge endpoints where possible, or version/extend contracts safely.
+
+#### J3) API and data-contract expansion checklist
+
+- [ ] Add/extend API payloads for progression snapshot data:
+  - current XP
+  - current level
+  - progress to next level
+  - expanded badges
+  - recent unlock metadata if needed
+- [ ] Ensure null/no-history users still receive safe defaults and understandable progression state.
+
+#### J4) Frontend progression surfaces checklist
+
+- [ ] Add progression display primarily to dashboard and profile.
+- [ ] Add celebratory UX for level-ups and badge unlocks.
+- [ ] Keep progression information understandable at a glance without cluttering core gameplay.
+
+#### J5) Validation and docs checklist
+
+- [ ] Add backend tests for XP/level/badge calculations.
+- [ ] Add regression coverage to preserve current stats/badges behavior where unchanged.
+- [ ] Add frontend tests for dashboard/profile rendering and milestone states.
+- [ ] Update manual testing documentation for progression and unlock verification.
+
+Definition of done:
+- Users can understand their progression quickly on dashboard and profile.
+- XP/level/badge logic is deterministic and testable.
+- Milestone surfaces are ready to support privacy-safe sharing.
+
+### Phase K - DevOps, Secrets, Rollback, and Release Safety
+
+#### Phase K priority + estimate + dependency board
+
+| Item | Priority | Estimate | Depends on |
+|---|---|---|---|
+| K1 Secret management | Critical | 1 day | none |
+| K2 Release workflow | High | 0.5-1 day | K1 |
+| K3 Rollback strategy | Critical | 1-1.5 days | A-J schema/API/event deltas + K2 |
+| K4 Validation | Critical | 0.5-1 day | K1, K2, K3 |
+
+#### K1) Secret management checklist
 
 - [ ] Integrate backend runtime secrets with GCP Secret Manager.
 - [ ] Add environment mapping for dev/staging/release values.
 - [ ] Ensure local `.env` flow remains documented and isolated from release.
 
-#### E2) Release workflow checklist
+#### K2) Release workflow checklist
 
 - [ ] Restrict deploy workflow to release branch only.
 - [ ] Add required quality gates before release deploy trigger.
 - [ ] Add branch protection assumptions/checks to documentation.
 
-#### E3) Rollback strategy checklist
+#### K3) Rollback strategy checklist
 
 - [ ] Define mobile artifact rollback process (previous signed build restore path).
 - [ ] Define backend rollback decision tree:
@@ -428,7 +769,7 @@ Phase D completion notes (implementation references):
 - [ ] Add incident runbook with trigger conditions, owners, and execution steps.
 - [ ] Run at least one rollback drill and capture findings.
 
-#### E4) Validation checklist
+#### K4) Validation checklist
 
 - [ ] Verify secret resolution in release-like environment.
 - [ ] Verify release-branch-only deploy gating behavior.
@@ -451,6 +792,8 @@ Definition of done:
   - dashboard stats aggregation
 - Add scheduled/triggered expiration handling.
 - Extend eventing for continue/resume/partner-left states and notification triggers.
+- Add private custom-question domain models and CRUD endpoints for couple-scoped content.
+- Extend dashboard/profile contracts to support progression metadata (`XP`, levels, expanded badge/unlock payloads).
 
 ### Frontend (Expected major work)
 
@@ -460,6 +803,12 @@ Definition of done:
   - historical games screen
   - enhanced dashboard metrics cards
   - settings controls (reminders, unlink recovery, onboarding reopen)
+- dark-mode redesign completion across all primary flows
+- accessibility improvements across all primary flows
+- haptic feedback preference and semantic event mapping
+- couple-private custom-question library and dedicated custom-deck entry flow
+- result/milestone share-card actions
+- progression surfaces on dashboard/profile
 - Centralized design tokens + dark/light theme plumbing.
 - Progressive responsive refactors by screen priority.
 
@@ -467,6 +816,13 @@ Definition of done:
 
 - Block P2 push validation until Firebase Android config prerequisite is complete.
 - Reminder scheduling respects user local timezone + quiet hours.
+
+### Design system / experience expansion
+
+- Treat current theme infrastructure as a foundation; post-`Phase D` work focuses on premium dark-mode completion rather than first introduction.
+- Shared components must carry baseline accessibility semantics by default where practical.
+- Haptics are first-release local device feedback only; sound effects are intentionally deferred.
+- Share cards must remain privacy-safe by default and align with the same visual language as in-app milestone surfaces.
 
 ---
 
@@ -477,16 +833,27 @@ Definition of done:
   - lock/unlock rules for rounds/results
   - cooldown/expiry logic
   - stats aggregation correctness
+  - theme and progression computation correctness
+  - haptic event mapping
+  - custom-question validation rules
 - Integration tests:
   - multi-step async resume flows across two users
   - notification event trigger correctness
+  - custom-question gameplay flow
+  - progression data compatibility with existing stats/badges surfaces
 - Manual tests (Android physical devices first):
   - interruption/recovery flows
   - cross-device consistency after app kill/background
   - landscape/tablet usability on priority screens, then full-surface pass
+  - light/dark/system theme visual QA
+  - screen-reader walkthroughs across all major flows
+  - device haptic verification (enabled/disabled/unsupported)
+  - custom-question lifecycle management + gameplay
+  - result/milestone share flows with privacy checks
 - Release gate:
   - functional pass for active/resume/result flow
   - no blocking regressions in auth/game/linking
+  - progression, custom-question, and sharing flows validated
   - rollback drill validated
 
 ---
@@ -501,6 +868,21 @@ Definition of done:
 
 - **Risk:** UI quality drift during responsive expansion.  
   **Mitigation:** phased rollout by screen priority + explicit per-screen acceptance checklist.
+
+- **Risk:** dark-mode redesign introduces inconsistent screen parity or unreadable contrast.  
+  **Mitigation:** semantic token expansion + explicit screen-by-screen visual QA in `system`, `light`, and `dark`.
+
+- **Risk:** accessibility improvements regress during ongoing feature work.  
+  **Mitigation:** shared component accessibility rules + manual screen-reader validation in each major phase.
+
+- **Risk:** custom-question content creates quality or privacy issues.  
+  **Mitigation:** couple-scoped access control + basic validation + dedicated custom-deck separation from standard categories.
+
+- **Risk:** progression system becomes confusing or inflated.  
+  **Mitigation:** start with `XP + levels + expanded badges` only, reward consistency/completion, and keep dashboard/profile surfaces understandable at a glance.
+
+- **Risk:** social sharing leaks sensitive gameplay context.  
+  **Mitigation:** safe-summary-only share contract with no raw answers or sensitive question text by default.
 
 - **Risk:** release rollback complexity with schema changes.  
   **Mitigation:** migration safety policy + forward-fix defaults + documented emergency rollback steps.
@@ -609,10 +991,10 @@ Gate to exit Week 4:
 - [ ] Theming consistency verified in both light and dark modes.
 - [ ] User sign-off on visual direction fidelity.
 
-### Week 5 - Phase D + Phase E Safety Closure
+### Week 5 - Phase D Completion + Phase E Dark Mode Redesign
 
 Focus:
-- Finalize settings/control flows and release safety infrastructure.
+- Close relationship/settings reliability work, then complete premium dark-mode parity across primary flows.
 
 Checklist:
 - [x] Create and review detailed Phase D sprint plan document (`P2_PHASE_D_SPRINT_PLAN.md`) before coding starts.
@@ -620,15 +1002,94 @@ Checklist:
 - [x] Complete `D2` profile/settings edits and reminder controls.
 - [x] Complete `D3` notification deep-link paths and fan-out correctness.
 - [x] Complete `D4` validation + docs.
-- [ ] Complete `E1` secret manager integration.
-- [ ] Complete `E2` release-branch deploy gating.
-- [ ] Complete `E3` rollback strategy runbook + rollback drill.
-- [ ] Complete `E4` release-safety validation.
+- [ ] Create and review detailed Phase E sprint plan document before coding starts.
+- [ ] Complete `E1` dark token expansion.
+- [ ] Complete `E2` screen-level dark redesign pass.
+- [ ] Complete `E3` visual QA and regression hardening.
+- [ ] Complete `E4` dark-mode docs and acceptance closure.
 
 Gate to exit Week 5:
-- [ ] Critical flows pass full automated + manual validation suite.
+- [ ] Manual Phase D device validation completed or explicitly deferred with rationale.
+- [ ] Dark mode visually coherent across all primary flows.
+- [ ] User sign-off on dark-mode direction fidelity.
+
+### Week 6 - Phase F Accessibility + Phase G Haptics
+
+Focus:
+- Establish accessibility baseline across primary flows, then layer subtle haptics on top of stable UX states.
+
+Checklist:
+- [ ] Create and review detailed Phase F sprint plan document before coding starts.
+- [ ] Complete `F1` shared accessibility contract.
+- [ ] Complete `F2` screen-reader baseline pass.
+- [ ] Complete `F3` validation + docs.
+- [ ] Create and review detailed Phase G sprint plan document before coding starts.
+- [ ] Complete `G1` haptic design map + preferences.
+- [ ] Complete `G2` runtime integration.
+- [ ] Complete `G3` validation + docs.
+
+Gate to exit Week 6:
+- [ ] Primary flows are usable with screen-reader baseline support.
+- [ ] Haptics feel intentional and can be disabled cleanly.
+- [ ] User sign-off on accessibility + feedback behavior.
+
+### Week 7 - Phase H Custom Questions
+
+Focus:
+- Deliver the couple-private question library and dedicated custom-deck gameplay path.
+
+Checklist:
+- [ ] Create and review detailed Phase H sprint plan document before coding starts.
+- [ ] Complete `H1` data model + backend contracts.
+- [ ] Complete `H2` library management API + validation.
+- [ ] Complete `H3` frontend custom library surfaces.
+- [ ] Complete `H4` dedicated custom-deck gameplay integration.
+- [ ] Complete `H5` validation + docs.
+
+Gate to exit Week 7:
+- [ ] Linked couples can manage and play from a private custom deck.
+- [ ] Standard category gameplay remains regression-free.
+- [ ] User sign-off on custom-question UX and scope boundaries.
+
+### Week 8 - Phase J Gamification Expansion + Phase I Sharing
+
+Focus:
+- Expand progression foundations first, then add privacy-safe sharing for results and milestones.
+
+Checklist:
+- [ ] Create and review detailed Phase J sprint plan document before coding starts.
+- [ ] Complete `J1` progression model design.
+- [ ] Complete `J2` backend progression computation.
+- [ ] Complete `J3` API/data-contract expansion.
+- [ ] Complete `J4` frontend progression surfaces.
+- [ ] Complete `J5` validation + docs.
+- [ ] Create and review detailed Phase I sprint plan document before coding starts.
+- [ ] Complete `I1` shareable content contract.
+- [ ] Complete `I2` share-card rendering + UX.
+- [ ] Complete `I3` native share flow integration.
+- [ ] Complete `I4` validation + docs.
+
+Gate to exit Week 8:
+- [ ] Progression model is stable, understandable, and validated.
+- [ ] Result and milestone sharing works with privacy-safe defaults.
+- [ ] User sign-off on gamification and sharing behavior.
+
+### Week 9 - Phase K Release Safety Closure
+
+Focus:
+- Finalize secret management, release gating, rollback readiness, and expanded-scope release safety.
+
+Checklist:
+- [ ] Create and review detailed Phase K sprint plan document before coding starts.
+- [ ] Complete `K1` secret manager integration.
+- [ ] Complete `K2` release-branch deploy gating.
+- [ ] Complete `K3` rollback strategy runbook + rollback drill.
+- [ ] Complete `K4` release-safety validation.
+
+Gate to exit Week 9:
+- [ ] Critical flows across `A` through `J` pass full automated + manual validation suite.
 - [ ] Rollback drill executed with documented outcome.
-- [ ] User sign-off for P2 closure readiness.
+- [ ] User sign-off for expanded P2 closure readiness.
 
 ### Ongoing Weekly Health Checklist (Run Every Week)
 
