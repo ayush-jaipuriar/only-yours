@@ -13,6 +13,19 @@ jest.mock('../../services/api', () => ({
   },
 }));
 
+jest.mock('../../services/NotificationService', () => ({
+  __esModule: true,
+  default: {
+    addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+    addNotificationResponseListener: jest.fn(() => ({ remove: jest.fn() })),
+    getLastNotificationResponse: jest.fn(() => Promise.resolve(null)),
+    mapNotificationResponseToIntent: jest.fn(() => null),
+    registerForPushNotifications: jest.fn(() => Promise.resolve(null)),
+    sendTokenToBackend: jest.fn(() => Promise.resolve()),
+    unregisterToken: jest.fn(() => Promise.resolve()),
+  },
+}));
+
 const api = require('../../services/api').default;
 
 describe('SettingsScreen flow', () => {
@@ -60,7 +73,7 @@ describe('SettingsScreen flow', () => {
     const replayOnboarding = jest.fn(() => Promise.resolve());
     const navigation = { replace: jest.fn() };
 
-    const { getByA11yLabel, getByText } = render(
+    const { getByLabelText, getByText } = render(
       <ThemeProvider>
         <AuthContext.Provider value={{ replayOnboarding }}>
           <SettingsScreen navigation={navigation} />
@@ -74,13 +87,13 @@ describe('SettingsScreen flow', () => {
       expect(replayOnboarding).toHaveBeenCalledTimes(1);
       expect(navigation.replace).toHaveBeenCalledWith('Onboarding');
     });
-    expect(getByA11yLabel('Replay onboarding')).toBeTruthy();
+    expect(getByLabelText('Replay onboarding')).toBeTruthy();
   });
 
   it('prepares two-step unlink flow from linked status', async () => {
     const navigation = { replace: jest.fn() };
 
-    const { getByA11yLabel, getByText } = render(
+    const { getByLabelText, getByText } = render(
       <ThemeProvider>
         <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
           <SettingsScreen navigation={navigation} />
@@ -99,13 +112,13 @@ describe('SettingsScreen flow', () => {
       expect(getByText('Final Confirmation')).toBeTruthy();
       expect(getByText('Confirm Unlink')).toBeTruthy();
     });
-    expect(getByA11yLabel('Unlink partner')).toBeTruthy();
+    expect(getByLabelText('Unlink partner')).toBeTruthy();
   });
 
   it('saves notification preferences through backend contract', async () => {
     const navigation = { replace: jest.fn() };
 
-    const { getByA11yLabel, getByDisplayValue, getByText } = render(
+    const { getByLabelText, getByDisplayValue, getByText } = render(
       <ThemeProvider>
         <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
           <SettingsScreen navigation={navigation} />
@@ -129,7 +142,7 @@ describe('SettingsScreen flow', () => {
       });
       expect(getByText('Notification preferences saved.')).toBeTruthy();
     });
-    expect(getByA11yLabel('Timezone')).toBeTruthy();
-    expect(getByA11yLabel('Save notification preferences')).toBeTruthy();
+    expect(getByLabelText('Timezone')).toBeTruthy();
+    expect(getByLabelText('Save notification preferences')).toBeTruthy();
   });
 });

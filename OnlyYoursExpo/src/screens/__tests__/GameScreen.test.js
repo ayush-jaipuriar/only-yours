@@ -6,6 +6,26 @@ import { GameProvider } from '../../state/GameContext';
 import WebSocketService from '../../services/WebSocketService';
 
 jest.mock('../../services/WebSocketService');
+jest.mock('../../services/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(() => Promise.resolve({ data: {} })),
+    post: jest.fn(),
+    delete: jest.fn(),
+  },
+}));
+jest.mock('../../services/NotificationService', () => ({
+  __esModule: true,
+  default: {
+    addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+    addNotificationResponseListener: jest.fn(() => ({ remove: jest.fn() })),
+    getLastNotificationResponse: jest.fn(() => Promise.resolve(null)),
+    mapNotificationResponseToIntent: jest.fn(() => null),
+    registerForPushNotifications: jest.fn(() => Promise.resolve(null)),
+    sendTokenToBackend: jest.fn(() => Promise.resolve()),
+    unregisterToken: jest.fn(() => Promise.resolve()),
+  },
+}));
 
 const MockAuthProvider = ({ children }) => (
   <AuthContext.Provider value={{ setGameContextRef: jest.fn() }}>
@@ -34,9 +54,9 @@ describe('GameScreen', () => {
   });
 
   it('should show loading indicator when no current question', () => {
-    const { getByA11yRole, getByText } = renderWithProviders();
+    const { getByRole, getByText } = renderWithProviders();
     expect(getByText('Loading question...')).toBeTruthy();
-    expect(getByA11yRole('status')).toBeTruthy();
+    expect(getByRole('status')).toBeTruthy();
   });
 
   it('should render Round 1 badge by default', () => {

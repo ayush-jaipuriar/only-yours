@@ -16,6 +16,7 @@
   },
   "jest": {
     "preset": "jest-expo",
+    "watchman": false,
     "transformIgnorePatterns": [
       "node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|react-navigation|@react-navigation/.*|@stomp/stompjs|axios)"
     ],

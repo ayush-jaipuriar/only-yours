@@ -347,6 +347,8 @@ Task IDs use `PF-*` format.
 - [ ] Prioritize assertions in the highest-risk flows instead of forcing exhaustive snapshot churn.
 - [ ] Run focused frontend tests for touched flows.
 - [ ] Run full Expo frontend regression after accessibility edits stabilize.
+- [x] Validation note (Mar 11, 2026): Jest startup was hanging under Watchman in this local Expo workspace; use Node `24.x` from `.nvmrc` and disable Watchman for stable local runs.
+- [x] Validation note (Mar 11, 2026): `src/screens/__tests__/` remains excluded by package Jest config, so focused screen-test validation currently requires an explicit `--testPathIgnorePatterns=/node_modules/` override when running those files directly.
 
 #### PF-F3.2 Manual accessibility walkthrough docs
 

@@ -11,6 +11,19 @@ jest.mock('../../services/api', () => ({
   },
 }));
 
+jest.mock('../../services/NotificationService', () => ({
+  __esModule: true,
+  default: {
+    addNotificationReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+    addNotificationResponseListener: jest.fn(() => ({ remove: jest.fn() })),
+    getLastNotificationResponse: jest.fn(() => Promise.resolve(null)),
+    mapNotificationResponseToIntent: jest.fn(() => null),
+    registerForPushNotifications: jest.fn(() => Promise.resolve(null)),
+    sendTokenToBackend: jest.fn(() => Promise.resolve()),
+    unregisterToken: jest.fn(() => Promise.resolve()),
+  },
+}));
+
 describe('SignInScreen', () => {
   const renderScreen = (overrides = {}) => {
     const login = jest.fn();
@@ -30,15 +43,15 @@ describe('SignInScreen', () => {
   });
 
   it('shows validation error when fields are empty', async () => {
-    const { getByA11yLabel, getByText } = renderScreen();
+    const { getByLabelText, getByText } = renderScreen();
 
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => {
       expect(getByText('Please enter both email and password.')).toBeTruthy();
     });
-    expect(getByA11yLabel('Email')).toBeTruthy();
-    expect(getByA11yLabel('Password')).toBeTruthy();
+    expect(getByLabelText('Email')).toBeTruthy();
+    expect(getByLabelText('Password')).toBeTruthy();
     expect(api.post).not.toHaveBeenCalled();
   });
 
@@ -50,10 +63,10 @@ describe('SignInScreen', () => {
     };
     api.post.mockResolvedValue({ data: authPayload });
 
-    const { getByA11yLabel, getByText, login } = renderScreen();
+    const { getByLabelText, getByText, login } = renderScreen();
 
-    fireEvent.changeText(getByA11yLabel('Email'), 'Alice@Example.com');
-    fireEvent.changeText(getByA11yLabel('Password'), 'password123');
+    fireEvent.changeText(getByLabelText('Email'), 'Alice@Example.com');
+    fireEvent.changeText(getByLabelText('Password'), 'password123');
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => {
@@ -66,14 +79,14 @@ describe('SignInScreen', () => {
   });
 
   it('navigates to SignUp and ForgotPassword', async () => {
-    const { getByA11yLabel, getByText, navigation } = renderScreen();
+    const { getByLabelText, getByText, navigation } = renderScreen();
 
     fireEvent.press(getByText("Don't have an account? Sign Up"));
     fireEvent.press(getByText('Forgot Password?'));
 
     expect(navigation.navigate).toHaveBeenCalledWith('SignUp');
     expect(navigation.navigate).toHaveBeenCalledWith('ForgotPassword');
-    expect(getByA11yLabel('Create a new account')).toBeTruthy();
-    expect(getByA11yLabel('Forgot password')).toBeTruthy();
+    expect(getByLabelText('Create a new account')).toBeTruthy();
+    expect(getByLabelText('Forgot password')).toBeTruthy();
   });
 });
