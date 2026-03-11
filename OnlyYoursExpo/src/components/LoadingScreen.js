@@ -1,7 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
+import useTheme from '../theme/useTheme';
 
 const LoadingScreen = () => {
+  const { theme } = useTheme();
   const pulseAnim = useRef(new Animated.Value(0.6)).current;
   const dotAnims = useRef([
     new Animated.Value(0),
@@ -50,6 +52,53 @@ const LoadingScreen = () => {
     };
   }, []);
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        container: {
+          flex: 1,
+          backgroundColor: theme.colors.background,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        content: {
+          alignItems: 'center',
+          borderRadius: 28,
+          paddingHorizontal: 34,
+          paddingVertical: 30,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          ...theme.shadows.card,
+          shadowColor: theme.colors.glowPrimary,
+        },
+        logo: {
+          fontSize: 36,
+          fontWeight: '700',
+          color: theme.colors.textPrimary,
+          letterSpacing: 1,
+        },
+        tagline: {
+          fontSize: 14,
+          color: theme.colors.textSecondary,
+          marginTop: 6,
+          fontStyle: 'italic',
+        },
+        dotsRow: {
+          flexDirection: 'row',
+          marginTop: 32,
+          gap: 8,
+        },
+        dot: {
+          width: 8,
+          height: 8,
+          borderRadius: 4,
+          backgroundColor: theme.colors.primary,
+        },
+      }),
+    [theme]
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.content}>
@@ -73,40 +122,5 @@ const LoadingScreen = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F6F5FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  content: {
-    alignItems: 'center',
-  },
-  logo: {
-    fontSize: 36,
-    fontWeight: '700',
-    color: '#2D225A',
-    letterSpacing: 1,
-  },
-  tagline: {
-    fontSize: 14,
-    color: '#6B5FA8',
-    marginTop: 6,
-    fontStyle: 'italic',
-  },
-  dotsRow: {
-    flexDirection: 'row',
-    marginTop: 32,
-    gap: 8,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#6A4CFF',
-  },
-});
 
 export default LoadingScreen;

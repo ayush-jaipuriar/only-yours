@@ -25,11 +25,25 @@ const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
           alignItems: 'center',
           backgroundColor: theme.colors.background,
         },
+        panel: {
+          minWidth: 220,
+          maxWidth: 320,
+          alignItems: 'center',
+          borderRadius: 24,
+          paddingHorizontal: 26,
+          paddingVertical: 28,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          ...theme.shadows.card,
+          shadowColor: theme.colors.glowPrimary,
+        },
         message: {
           marginTop: 12,
           fontSize: 15,
           fontWeight: '400',
           letterSpacing: 0.2,
+          textAlign: 'center',
         },
       }),
     [theme]
@@ -37,8 +51,10 @@ const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
 
   return (
     <View style={styles.container} testID="loading-spinner">
-      <ActivityIndicator size={size} color={spinnerColor} />
-      {message ? <Text style={[styles.message, { color: spinnerColor }]}>{message}</Text> : null}
+      <View style={styles.panel}>
+        <ActivityIndicator size={size} color={spinnerColor} />
+        {message ? <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text> : null}
+      </View>
     </View>
   );
 };

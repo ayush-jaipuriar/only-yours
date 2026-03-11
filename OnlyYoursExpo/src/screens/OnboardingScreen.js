@@ -44,7 +44,7 @@ const OnboardingScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
 
-  const gradient = getGradientToken('romanceSoft');
+  const gradient = getGradientToken('romanceSoft', theme.mode);
   const currentStep = ONBOARDING_STEPS[currentIndex];
   const isLastStep = currentIndex === ONBOARDING_STEPS.length - 1;
   const contentWidth = Math.min(width - 32, 640);
@@ -58,8 +58,9 @@ const OnboardingScreen = ({ navigation }) => {
         },
         card: {
           width: contentWidth,
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderColor: theme.colors.borderAccent,
+          shadowColor: theme.colors.glowPrimary,
         },
         heroCard: {
           backgroundColor: gradient.fallback,
@@ -90,7 +91,7 @@ const OnboardingScreen = ({ navigation }) => {
         },
         secondaryButton: {
           borderColor: theme.colors.border,
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.colors.surfaceElevated,
         },
         secondaryButtonText: {
           color: theme.colors.textSecondary,
@@ -198,13 +199,17 @@ const styles = StyleSheet.create({
   },
   card: {
     borderWidth: 1,
-    borderRadius: 20,
+    borderRadius: 24,
     overflow: 'hidden',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.18,
+    shadowRadius: 18,
+    elevation: 8,
   },
   heroCard: {
     paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 18,
+    paddingTop: 28,
+    paddingBottom: 22,
     alignItems: 'center',
   },
   heroEmoji: {
@@ -261,8 +266,8 @@ const styles = StyleSheet.create({
   primaryButton: {
     marginHorizontal: 20,
     marginBottom: 12,
-    borderRadius: 14,
-    paddingVertical: 14,
+    borderRadius: 18,
+    paddingVertical: 15,
     alignItems: 'center',
   },
   primaryButtonText: {
@@ -273,8 +278,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginBottom: 20,
     borderWidth: 1,
-    borderRadius: 14,
-    paddingVertical: 12,
+    borderRadius: 18,
+    paddingVertical: 13,
     alignItems: 'center',
   },
   secondaryButtonText: {

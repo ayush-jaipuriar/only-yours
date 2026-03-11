@@ -28,6 +28,28 @@ const AuthFormScreenLayout = ({ children }) => {
         keyboardRoot: {
           flex: 1,
         },
+        atmosphere: {
+          ...StyleSheet.absoluteFillObject,
+          backgroundColor: theme.colors.backgroundCanvas,
+        },
+        atmosphereGlowTop: {
+          position: 'absolute',
+          top: -120,
+          left: -40,
+          width: width > 700 ? 320 : 240,
+          height: width > 700 ? 320 : 240,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowPrimary,
+        },
+        atmosphereGlowBottom: {
+          position: 'absolute',
+          right: -60,
+          bottom: -120,
+          width: width > 700 ? 300 : 220,
+          height: width > 700 ? 300 : 220,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowAccent,
+        },
         scrollContent: {
           flexGrow: 1,
           alignItems: 'center',
@@ -37,13 +59,24 @@ const AuthFormScreenLayout = ({ children }) => {
         },
         formContainer: {
           maxWidth: MAX_FORM_WIDTH,
+          borderRadius: 28,
+          padding: width >= 900 ? 28 : 22,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          ...theme.shadows.card,
+          shadowColor: theme.colors.glowPrimary,
         },
       }),
-    [theme]
+    [theme, width]
   );
 
   return (
     <SafeAreaView style={styles.safeArea}>
+      <View style={styles.atmosphere} pointerEvents="none">
+        <View style={styles.atmosphereGlowTop} />
+        <View style={styles.atmosphereGlowBottom} />
+      </View>
       <KeyboardAvoidingView
         style={styles.keyboardRoot}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}

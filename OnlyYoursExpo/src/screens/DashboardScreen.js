@@ -80,13 +80,15 @@ const DashboardScreen = ({ navigation }) => {
         activeSessionCard: {
           width: '100%',
           maxWidth: isTablet ? 640 : 360,
-          backgroundColor: theme.colors.surface,
-          borderRadius: 16,
-          padding: 16,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderRadius: 20,
+          padding: 18,
           marginBottom: 10,
           borderWidth: 1,
-          borderColor: theme.colors.border,
+          borderColor: theme.colors.borderAccent,
           alignItems: 'center',
+          ...theme.shadows.card,
+          shadowColor: theme.colors.glowPrimary,
         },
         activeSessionTitle: {
           fontSize: 18,
@@ -104,33 +106,35 @@ const DashboardScreen = ({ navigation }) => {
           backgroundColor: theme.colors.primary,
           paddingHorizontal: 40,
           paddingVertical: 15,
-          borderRadius: 25,
+          borderRadius: 18,
           marginBottom: 18,
           minWidth: isTablet ? 320 : 250,
           alignItems: 'center',
           ...theme.shadows.button,
-          shadowColor: theme.colors.primary,
+          shadowColor: theme.colors.glowPrimary,
         },
         secondaryButton: {
           backgroundColor: theme.colors.accent,
           paddingHorizontal: 40,
           paddingVertical: 15,
-          borderRadius: 25,
+          borderRadius: 18,
           marginBottom: 15,
           minWidth: isTablet ? 320 : 250,
           alignItems: 'center',
           ...theme.shadows.button,
-          shadowColor: theme.colors.accent,
+          shadowColor: theme.colors.glowAccent,
         },
         sectionCard: {
           width: '100%',
           maxWidth: isTablet ? 740 : 420,
           backgroundColor: theme.colors.surface,
-          borderRadius: 16,
-          padding: 16,
+          borderRadius: 20,
+          padding: 18,
           marginBottom: 14,
           borderWidth: 1,
           borderColor: theme.colors.border,
+          ...theme.shadows.card,
+          shadowColor: theme.colors.overlayScrim,
         },
         sectionTitle: {
           fontSize: 16,
@@ -145,11 +149,13 @@ const DashboardScreen = ({ navigation }) => {
         },
         metricItem: {
           width: isTablet ? '31.8%' : '48%',
-          backgroundColor: theme.colors.surfaceMuted,
-          borderRadius: 12,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderRadius: 16,
           paddingVertical: 10,
           paddingHorizontal: 8,
           marginBottom: 8,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
         },
         metricValue: {
           fontSize: 16,
@@ -296,5 +302,4 @@ const DashboardScreen = ({ navigation }) => {
 };
 
 export default DashboardScreen;
-
 

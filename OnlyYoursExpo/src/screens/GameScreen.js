@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -98,6 +98,136 @@ const GameScreen = ({ route, navigation }) => {
     }
   }, [acceptPendingInvitation, activeSession, startGame]);
 
+  const isRound2 = round === 'round2';
+  const dynamicStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        centered: {
+          backgroundColor: theme.colors.background,
+        },
+        loadingText: {
+          color: theme.colors.textSecondary,
+        },
+        pendingTitle: {
+          color: theme.colors.textPrimary,
+        },
+        pendingText: {
+          color: theme.colors.textSecondary,
+        },
+        pendingButtonText: {
+          color: theme.colors.primaryContrast,
+        },
+        pendingButtonSecondaryText: {
+          color: theme.colors.textPrimary,
+        },
+        roundBadge: {
+          backgroundColor: isRound2 ? theme.colors.badgeSurfaceMint : theme.colors.surfaceEmphasis,
+          borderColor: isRound2 ? theme.colors.accent : theme.colors.borderAccent,
+        },
+        roundBadgeText: {
+          color: isRound2 ? theme.colors.accentContrast : theme.colors.primary,
+        },
+        runningScore: {
+          color: theme.colors.accentContrast,
+        },
+        progressBar: {
+          backgroundColor: theme.colors.surfaceMuted,
+        },
+        guessPrompt: {
+          backgroundColor: theme.colors.surfaceElevated,
+          borderLeftColor: theme.colors.accent,
+          borderColor: theme.colors.border,
+        },
+        guessPromptText: {
+          color: theme.colors.textOnEmphasis,
+        },
+        questionContainer: {
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.overlayScrim,
+        },
+        questionText: {
+          color: theme.colors.textPrimary,
+        },
+        optionCard: {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.overlayScrim,
+        },
+        selectedOption: {
+          borderColor: theme.colors.primary,
+          backgroundColor: theme.colors.surfaceEmphasis,
+        },
+        selectedOptionR2: {
+          borderColor: theme.colors.accent,
+          backgroundColor: theme.colors.badgeSurfaceMint,
+        },
+        submittedOption: {
+          borderColor: theme.colors.accent,
+          backgroundColor: theme.colors.badgeSurfaceMint,
+        },
+        optionLetterRound1: {
+          backgroundColor: theme.colors.primary,
+        },
+        optionLetterRound2: {
+          backgroundColor: theme.colors.accent,
+        },
+        optionLetterText: {
+          color: isRound2 ? theme.colors.accentContrast : theme.colors.primaryContrast,
+        },
+        optionText: {
+          color: theme.colors.textPrimary,
+        },
+        submitButtonDisabled: {
+          backgroundColor: theme.colors.border,
+        },
+        submitButtonText: {
+          color: isRound2 ? theme.colors.accentContrast : theme.colors.primaryContrast,
+        },
+        waitingText: {
+          color: theme.colors.textSecondary,
+        },
+        transitionContainer: {
+          backgroundColor: theme.colors.celebrationSurface,
+        },
+        transitionTitle: {
+          color: theme.colors.textPrimary,
+        },
+        transitionSubtitle: {
+          color: theme.colors.textSecondary,
+        },
+        resultOverlay: {
+          backgroundColor: theme.colors.overlayScrim,
+        },
+        resultCard: {
+          backgroundColor: theme.colors.surfaceOverlay,
+          shadowColor: theme.colors.overlayScrim,
+        },
+        resultCorrect: {
+          borderColor: theme.colors.success,
+        },
+        resultWrong: {
+          borderColor: theme.colors.danger,
+        },
+        resultTitle: {
+          color: theme.colors.textPrimary,
+        },
+        resultDetail: {
+          color: theme.colors.textSecondary,
+        },
+        resultBold: {
+          color: theme.colors.textPrimary,
+        },
+        resultQuestion: {
+          color: theme.colors.textTertiary,
+        },
+        resultScore: {
+          color: theme.colors.accent,
+        },
+      }),
+    [isRound2, theme]
+  );
+
   const renderOption = (letter, text) => {
     const isSelected = selectedOption === letter;
     const isMyAnswer = myAnswer === letter;
@@ -112,28 +242,36 @@ const GameScreen = ({ route, navigation }) => {
         key={letter}
         style={[
           styles.optionCard,
-          { backgroundColor: theme.colors.surface, borderColor: theme.colors.border },
+          dynamicStyles.optionCard,
           isSelected && (round === 'round2' ? styles.selectedOptionR2 : styles.selectedOption),
+          isSelected && (round === 'round2' ? dynamicStyles.selectedOptionR2 : dynamicStyles.selectedOption),
           isMyAnswer && styles.submittedOption,
+          isMyAnswer && dynamicStyles.submittedOption,
           isDisabled && styles.disabledOption,
         ]}
         onPress={() => handleOptionSelect(letter)}
         disabled={isDisabled}
         activeOpacity={0.7}>
-        <View style={[styles.optionLetter, optionLetterBg]}>
-          <Text style={styles.optionLetterText}>{letter}</Text>
+        <View
+          style={[
+            styles.optionLetter,
+            optionLetterBg,
+            round === 'round2' ? dynamicStyles.optionLetterRound2 : dynamicStyles.optionLetterRound1,
+          ]}
+        >
+          <Text style={[styles.optionLetterText, dynamicStyles.optionLetterText]}>{letter}</Text>
         </View>
-        <Text style={[styles.optionText, { color: theme.colors.textPrimary }]}>{text}</Text>
+        <Text style={[styles.optionText, dynamicStyles.optionText]}>{text}</Text>
       </TouchableOpacity>
     );
   };
 
   if (isTransitioning) {
     return (
-      <View style={styles.transitionContainer}>
+      <View style={[styles.transitionContainer, dynamicStyles.transitionContainer]}>
         <Text style={styles.transitionEmoji}>🎯</Text>
-        <Text style={[styles.transitionTitle, { color: theme.colors.textPrimary }]}>Round 1 Complete!</Text>
-        <Text style={[styles.transitionSubtitle, { color: theme.colors.textSecondary }]}>
+        <Text style={[styles.transitionTitle, dynamicStyles.transitionTitle]}>Round 1 Complete!</Text>
+        <Text style={[styles.transitionSubtitle, dynamicStyles.transitionSubtitle]}>
           Now guess how your partner answered...
         </Text>
         <ActivityIndicator
@@ -147,28 +285,30 @@ const GameScreen = ({ route, navigation }) => {
 
   if (showingResult && guessResult && round === 'round2') {
     return (
-      <View style={styles.resultOverlay}>
+      <View style={[styles.resultOverlay, dynamicStyles.resultOverlay]}>
         <View
           style={[
             styles.resultCard,
+            dynamicStyles.resultCard,
             guessResult.correct ? styles.resultCorrect : styles.resultWrong,
+            guessResult.correct ? dynamicStyles.resultCorrect : dynamicStyles.resultWrong,
           ]}>
           <Text style={styles.resultEmoji}>
             {guessResult.correct ? '✅' : '❌'}
           </Text>
-          <Text style={styles.resultTitle}>
+          <Text style={[styles.resultTitle, dynamicStyles.resultTitle]}>
             {guessResult.correct ? 'Correct!' : 'Not quite!'}
           </Text>
-          <Text style={styles.resultDetail}>
+          <Text style={[styles.resultDetail, dynamicStyles.resultDetail]}>
             Your partner chose{' '}
-            <Text style={styles.resultBold}>{guessResult.partnerAnswer}</Text>
+            <Text style={[styles.resultBold, dynamicStyles.resultBold]}>{guessResult.partnerAnswer}</Text>
           </Text>
           {guessResult.questionText && (
-            <Text style={styles.resultQuestion} numberOfLines={2}>
+            <Text style={[styles.resultQuestion, dynamicStyles.resultQuestion]} numberOfLines={2}>
               "{guessResult.questionText}"
             </Text>
           )}
-          <Text style={styles.resultScore}>
+          <Text style={[styles.resultScore, dynamicStyles.resultScore]}>
             {guessResult.correctCount} correct so far
           </Text>
         </View>
@@ -179,11 +319,11 @@ const GameScreen = ({ route, navigation }) => {
   if (!currentQuestion) {
     if (isInvitationPending || gameStatus === 'invited') {
       return (
-        <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
-          <Text style={[styles.pendingTitle, { color: theme.colors.textPrimary }]}>
+        <View style={[styles.centered, dynamicStyles.centered]}>
+          <Text style={[styles.pendingTitle, dynamicStyles.pendingTitle]}>
             Invitation pending
           </Text>
-          <Text style={[styles.pendingText, { color: theme.colors.textSecondary }]}>
+          <Text style={[styles.pendingText, dynamicStyles.pendingText]}>
             This session is still in invite state. Accept the invite to start Round 1, or wait for your partner to accept.
           </Text>
           <TouchableOpacity
@@ -191,14 +331,14 @@ const GameScreen = ({ route, navigation }) => {
             onPress={handleAcceptPendingInvitation}
             activeOpacity={0.85}
           >
-            <Text style={styles.pendingButtonText}>Accept Invitation</Text>
+            <Text style={[styles.pendingButtonText, dynamicStyles.pendingButtonText]}>Accept Invitation</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.pendingButtonSecondary, { borderColor: theme.colors.border }]}
             onPress={refreshCurrentQuestion}
             activeOpacity={0.85}
           >
-            <Text style={[styles.pendingButtonSecondaryText, { color: theme.colors.textPrimary }]}>
+            <Text style={[styles.pendingButtonSecondaryText, dynamicStyles.pendingButtonSecondaryText]}>
               Refresh Session
             </Text>
           </TouchableOpacity>
@@ -207,14 +347,13 @@ const GameScreen = ({ route, navigation }) => {
     }
 
     return (
-      <View style={[styles.centered, { backgroundColor: theme.colors.background }]}>
+      <View style={[styles.centered, dynamicStyles.centered]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading question...</Text>
+        <Text style={[styles.loadingText, dynamicStyles.loadingText]}>Loading question...</Text>
       </View>
     );
   }
 
-  const isRound2 = round === 'round2';
   const primaryColor = isRound2 ? theme.colors.accent : theme.colors.primary;
   const progressPercent =
     (currentQuestion.questionNumber / currentQuestion.totalQuestions) * 100;
@@ -238,21 +377,21 @@ const GameScreen = ({ route, navigation }) => {
           <View
             style={[
               styles.roundBadge,
-              { backgroundColor: theme.colors.surfaceMuted },
+              dynamicStyles.roundBadge,
               isRound2 && styles.roundBadgeR2,
             ]}
           >
             <Text
               style={[
                 styles.roundBadgeText,
-                { color: isRound2 ? theme.colors.accentContrast : theme.colors.primary },
+                dynamicStyles.roundBadgeText,
                 isRound2 && styles.roundBadgeTextR2,
               ]}
             >
               {isRound2 ? 'Round 2: Guess' : 'Round 1: Answer'}
             </Text>
             {isRound2 && (
-              <Text style={[styles.runningScore, { color: theme.colors.accentContrast }]}>
+              <Text style={[styles.runningScore, dynamicStyles.runningScore]}>
                 {correctCount}/{currentQuestion.questionNumber - 1} correct
               </Text>
             )}
@@ -264,7 +403,7 @@ const GameScreen = ({ route, navigation }) => {
               Question {currentQuestion.questionNumber} of{' '}
               {currentQuestion.totalQuestions}
             </Text>
-            <View style={[styles.progressBar, { backgroundColor: theme.colors.border }]}>
+            <View style={[styles.progressBar, dynamicStyles.progressBar]}>
               <View
                 style={[
                   styles.progressFill,
@@ -276,16 +415,16 @@ const GameScreen = ({ route, navigation }) => {
 
           {/* Round 2 Prompt */}
           {isRound2 && (
-            <View style={[styles.guessPrompt, { backgroundColor: theme.colors.surfaceMuted }]}>
-              <Text style={[styles.guessPromptText, { color: theme.colors.accentContrast }]}>
+            <View style={[styles.guessPrompt, dynamicStyles.guessPrompt]}>
+              <Text style={[styles.guessPromptText, dynamicStyles.guessPromptText]}>
                 How did your partner answer this?
               </Text>
             </View>
           )}
 
           {/* Question */}
-          <View style={[styles.questionContainer, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.questionText, { color: theme.colors.textPrimary }]}>
+          <View style={[styles.questionContainer, dynamicStyles.questionContainer]}>
+            <Text style={[styles.questionText, dynamicStyles.questionText]}>
               {currentQuestion.questionText}
             </Text>
           </View>
@@ -316,12 +455,12 @@ const GameScreen = ({ route, navigation }) => {
                 style={[
                   styles.submitButton,
                   { backgroundColor: primaryColor },
-                  !selectedOption && [styles.submitButtonDisabled, { backgroundColor: theme.colors.border }],
+                  !selectedOption && [styles.submitButtonDisabled, dynamicStyles.submitButtonDisabled],
                 ]}
                 onPress={handleSubmit}
                 disabled={!selectedOption}
                 activeOpacity={0.8}>
-                <Text style={styles.submitButtonText}>
+                <Text style={[styles.submitButtonText, dynamicStyles.submitButtonText]}>
                   {isRound2 ? 'Submit Guess' : 'Submit Answer'}
                 </Text>
               </TouchableOpacity>

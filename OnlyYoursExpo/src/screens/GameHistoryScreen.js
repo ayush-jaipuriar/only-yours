@@ -61,9 +61,9 @@ const GameHistoryScreen = ({ navigation }) => {
   } = useGameHistoryFlow(navigation);
 
   const resultTheme = {
-    WIN: { text: 'You won', color: theme.colors.success, background: '#E3F7ED' },
-    LOSS: { text: 'Partner won', color: theme.colors.danger, background: '#FDECEC' },
-    DRAW: { text: 'Draw', color: theme.colors.textSecondary, background: '#EEE9FF' },
+    WIN: { text: 'You won', color: theme.colors.success, background: theme.colors.badgeSurfaceMint },
+    LOSS: { text: 'Partner won', color: theme.colors.danger, background: theme.colors.badgeSurfaceRose },
+    DRAW: { text: 'Draw', color: theme.colors.textSecondary, background: theme.colors.badgeSurfaceLavender },
   };
 
   const styles = useMemo(
@@ -114,12 +114,14 @@ const GameHistoryScreen = ({ navigation }) => {
           color: theme.colors.primaryContrast,
         },
         card: {
-          backgroundColor: theme.colors.surface,
-          borderRadius: 14,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderRadius: 18,
           padding: 14,
           marginBottom: 12,
           borderWidth: 1,
           borderColor: theme.colors.border,
+          ...theme.shadows.card,
+          shadowColor: theme.colors.overlayScrim,
         },
         cardHeader: {
           flexDirection: 'row',
@@ -132,9 +134,11 @@ const GameHistoryScreen = ({ navigation }) => {
           fontSize: 13,
         },
         resultBadge: {
-          borderRadius: 12,
+          borderRadius: 999,
           paddingHorizontal: 10,
           paddingVertical: 4,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
         },
         resultText: {
           fontSize: 12,
@@ -149,10 +153,12 @@ const GameHistoryScreen = ({ navigation }) => {
           flexDirection: 'row',
           alignItems: 'center',
           justifyContent: 'space-between',
-          backgroundColor: theme.colors.surfaceMuted,
-          borderRadius: 12,
+          backgroundColor: theme.colors.surfaceElevated,
+          borderRadius: 14,
           paddingVertical: 10,
           paddingHorizontal: 14,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
         },
         scoreBlock: {
           alignItems: 'center',

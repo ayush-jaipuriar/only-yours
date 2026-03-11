@@ -3,15 +3,15 @@ import { View, Text, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
 
 const BADGE_THEME = {
-  FIRST_GAME: { background: '#FFF4C2', border: '#D4A431', icon: '✨' },
-  FIVE_GAMES: { background: '#E7F3FF', border: '#4A90E2', icon: '🎯' },
-  TEN_GAMES: { background: '#EDE9FF', border: '#7B5AF0', icon: '🏆' },
-  SHARP_GUESSER: { background: '#FDE6EA', border: '#DB4B73', icon: '🧠' },
-  STREAK_3: { background: '#FFE8D5', border: '#F97316', icon: '🔥' },
-  RESPONSIVE_COUPLE: { background: '#E2FAEE', border: '#2E9B66', icon: '💌' },
+  FIRST_GAME: { surface: 'badgeSurfaceGold', border: 'warning', icon: '✨' },
+  FIVE_GAMES: { surface: 'badgeSurfaceSky', border: 'info', icon: '🎯' },
+  TEN_GAMES: { surface: 'badgeSurfaceLavender', border: 'primary', icon: '🏆' },
+  SHARP_GUESSER: { surface: 'badgeSurfaceRose', border: 'accent', icon: '🧠' },
+  STREAK_3: { surface: 'badgeSurfacePeach', border: 'warning', icon: '🔥' },
+  RESPONSIVE_COUPLE: { surface: 'badgeSurfaceMint', border: 'success', icon: '💌' },
 };
 
-const DEFAULT_THEME = { background: '#F1F1F5', border: '#BDBDCB', icon: '🏅' };
+const DEFAULT_THEME = { surface: 'surfaceMuted', border: 'borderStrong', icon: '🏅' };
 
 // eslint-disable-next-line react/prop-types
 const BadgeChip = ({ badge }) => {
@@ -22,10 +22,10 @@ const BadgeChip = ({ badge }) => {
         chip: {
           flexDirection: 'row',
           alignItems: 'center',
-          borderRadius: 14,
+          borderRadius: 16,
           borderWidth: 1,
-          paddingHorizontal: 10,
-          paddingVertical: 8,
+          paddingHorizontal: 12,
+          paddingVertical: 10,
           marginBottom: 8,
         },
         icon: {
@@ -55,9 +55,11 @@ const BadgeChip = ({ badge }) => {
 
   const { code, title, description } = badge;
   const badgeTheme = BADGE_THEME[code] || DEFAULT_THEME;
+  const backgroundColor = theme.colors[badgeTheme.surface] || theme.colors.surfaceMuted;
+  const borderColor = theme.colors[badgeTheme.border] || theme.colors.borderStrong;
 
   return (
-    <View style={[styles.chip, { backgroundColor: badgeTheme.background, borderColor: badgeTheme.border }]}>
+    <View style={[styles.chip, { backgroundColor, borderColor }]}>
       <Text style={styles.icon}>{badgeTheme.icon}</Text>
       <View style={styles.textWrap}>
         <Text style={styles.title} numberOfLines={1}>

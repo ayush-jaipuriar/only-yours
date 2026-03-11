@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import useTheme from '../theme/useTheme';
 
 /**
  * ReconnectionBanner — slides down from the top when the WebSocket connection is lost.
@@ -19,6 +20,7 @@ import { Animated, View, Text, ActivityIndicator, StyleSheet } from 'react-nativ
  *   connectionState {string} — 'connected' | 'disconnected' | 'reconnecting'
  */
 const ReconnectionBanner = ({ connectionState }) => {
+  const { theme } = useTheme();
   const translateY = useRef(new Animated.Value(-44)).current;
   const isVisible = connectionState === 'reconnecting' || connectionState === 'disconnected';
 
@@ -30,55 +32,68 @@ const ReconnectionBanner = ({ connectionState }) => {
     }).start();
   }, [isVisible, translateY]);
 
-  const bannerColor = connectionState === 'reconnecting' ? '#f57c00' : '#c62828';
+  const bannerColor = connectionState === 'reconnecting'
+    ? theme.colors.bannerWarning
+    : theme.colors.bannerDanger;
+  const bannerBorderColor = connectionState === 'reconnecting'
+    ? theme.colors.bannerWarningBorder
+    : theme.colors.bannerDangerBorder;
   const message = connectionState === 'reconnecting'
     ? 'Reconnecting...'
     : 'No connection';
 
+  const styles = useMemo(
+    () =>
+      StyleSheet.create({
+        banner: {
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 44,
+          zIndex: 1000,
+          justifyContent: 'flex-end',
+          paddingBottom: 8,
+          elevation: 10,
+          borderBottomWidth: 1,
+          shadowColor: theme.colors.overlayScrim,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.3,
+          shadowRadius: 4,
+        },
+        content: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        spinner: {
+          marginRight: 8,
+        },
+        text: {
+          color: theme.colors.textOnEmphasis,
+          fontSize: 13,
+          fontWeight: '600',
+          letterSpacing: 0.3,
+        },
+      }),
+    [theme]
+  );
+
   return (
     <Animated.View
-      style={[styles.banner, { backgroundColor: bannerColor, transform: [{ translateY }] }]}
+      style={[
+        styles.banner,
+        { backgroundColor: bannerColor, borderBottomColor: bannerBorderColor, transform: [{ translateY }] },
+      ]}
       testID="reconnection-banner"
       pointerEvents="none"
     >
       <View style={styles.content}>
-        <ActivityIndicator size="small" color="#fff" style={styles.spinner} />
+        <ActivityIndicator size="small" color={theme.colors.textOnEmphasis} style={styles.spinner} />
         <Text style={styles.text}>{message}</Text>
       </View>
     </Animated.View>
   );
 };
-
-const styles = StyleSheet.create({
-  banner: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 44,
-    zIndex: 1000,
-    justifyContent: 'flex-end',
-    paddingBottom: 8,
-    elevation: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  spinner: {
-    marginRight: 8,
-  },
-  text: {
-    color: '#fff',
-    fontSize: 13,
-    fontWeight: '600',
-    letterSpacing: 0.3,
-  },
-});
 
 export default ReconnectionBanner;

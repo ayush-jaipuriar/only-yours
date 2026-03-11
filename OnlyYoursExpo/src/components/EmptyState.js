@@ -32,6 +32,19 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
           padding: 40,
           backgroundColor: theme.colors.background,
         },
+        panel: {
+          width: '100%',
+          maxWidth: 420,
+          alignItems: 'center',
+          borderRadius: 24,
+          paddingHorizontal: 28,
+          paddingVertical: 32,
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+          ...theme.shadows.card,
+          shadowColor: theme.colors.glowPrimary,
+        },
         icon: {
           fontSize: 56,
           marginBottom: 20,
@@ -70,14 +83,16 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
 
   return (
     <View style={styles.container} testID="empty-state">
-      {icon ? <Text style={styles.icon}>{icon}</Text> : null}
-      {title ? <Text style={styles.title}>{title}</Text> : null}
-      {message ? <Text style={styles.message}>{message}</Text> : null}
-      {actionLabel && onAction ? (
-        <TouchableOpacity style={styles.actionButton} onPress={onAction} activeOpacity={0.8}>
-          <Text style={styles.actionText}>{actionLabel}</Text>
-        </TouchableOpacity>
-      ) : null}
+      <View style={styles.panel}>
+        {icon ? <Text style={styles.icon}>{icon}</Text> : null}
+        {title ? <Text style={styles.title}>{title}</Text> : null}
+        {message ? <Text style={styles.message}>{message}</Text> : null}
+        {actionLabel && onAction ? (
+          <TouchableOpacity style={styles.actionButton} onPress={onAction} activeOpacity={0.8}>
+            <Text style={styles.actionText}>{actionLabel}</Text>
+          </TouchableOpacity>
+        ) : null}
+      </View>
     </View>
   );
 };

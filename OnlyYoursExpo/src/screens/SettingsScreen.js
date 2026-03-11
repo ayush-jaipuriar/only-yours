@@ -240,7 +240,7 @@ const SettingsScreen = ({ navigation }) => {
           marginLeft: 6,
         },
         unlinkConfirmButtonText: {
-          color: '#FFFFFF',
+          color: theme.colors.textOnEmphasis,
           fontSize: 14,
           fontWeight: '700',
         },

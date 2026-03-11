@@ -16,8 +16,8 @@ const createAuthFormStyles = (theme, overrides = {}) =>
       marginBottom: overrides.subtitleMarginBottom || 24,
     },
     input: {
-      backgroundColor: theme.colors.surface,
-      borderRadius: 12,
+      backgroundColor: theme.colors.surfaceInput,
+      borderRadius: 14,
       borderWidth: 1,
       borderColor: theme.colors.border,
       paddingHorizontal: 14,
@@ -28,11 +28,13 @@ const createAuthFormStyles = (theme, overrides = {}) =>
     },
     primaryButton: {
       backgroundColor: theme.colors.primary,
-      borderRadius: 12,
+      borderRadius: 14,
       paddingVertical: 14,
       alignItems: 'center',
       marginTop: 4,
       marginBottom: 16,
+      shadowColor: theme.colors.glowPrimary,
+      ...theme.shadows.button,
     },
     buttonDisabled: {
       opacity: 0.7,
@@ -44,9 +46,10 @@ const createAuthFormStyles = (theme, overrides = {}) =>
     },
     linkText: {
       textAlign: 'center',
-      color: theme.colors.textSecondary,
+      color: theme.colors.accent,
       marginBottom: 12,
       fontSize: 14,
+      fontWeight: '600',
     },
     errorText: {
       color: theme.colors.danger,

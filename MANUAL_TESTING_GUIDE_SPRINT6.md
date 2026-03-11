@@ -1924,6 +1924,94 @@ Use this template as the official pass/fail artifact for sign-off.
 
 ## 16) Phase D Verification (Unlink Controls + Profile/Settings + Notification Deep-Links)
 
+## 17) Phase E Verification (Dark Mode Completion + Cross-Theme Visual Polish)
+
+Use this section after Phase E implementation to run the deferred visual sign-off.
+
+### Objective
+
+Verify that the `Warm Luxe` dark-mode redesign is visually coherent, readable, and consistent across all primary Expo flows while theme switching remains stable for:
+
+- `system`
+- `light`
+- `dark`
+
+### Preconditions
+
+- Latest `OnlyYoursExpo/` Phase E build installed
+- Theme preference controls available in Settings
+- At least one linked-couple account available so dashboard/history/game/results surfaces can be reached
+- One completed game available so history/results surfaces can be checked
+
+### Required screen list
+
+Validate all of the following in `dark`, then spot-check parity in `light`, then confirm `system` resolves correctly:
+
+- Sign in
+- Sign up
+- Forgot password
+- Reset password
+- Onboarding
+- Dashboard
+- Partner link
+- Category selection
+- Game
+- Results
+- Game history
+- Profile
+- Settings
+
+### Visual acceptance checklist
+
+- [ ] No unreadable text or washed-out contrast on any primary surface
+- [ ] No light-only cards, inputs, banners, or badges remain in dark mode
+- [ ] Elevated cards/panels are visually distinct from the base background
+- [ ] Form fields feel intentional in dark mode and are not just flat inverted light inputs
+- [ ] CTA buttons remain visually clear and correctly prioritized
+- [ ] Reliability UI is readable:
+  - reconnect banner
+  - loading states
+  - empty states
+  - inline error/success states
+- [ ] Game option states remain clear:
+  - unselected
+  - selected
+  - submitted
+  - disabled
+- [ ] Results screen still feels celebratory in dark mode
+- [ ] History badges and profile badges look intentional in both themes
+- [ ] No clipped text, overflow, or broken spacing introduced by visual polish
+- [ ] Theme switching in Settings persists after app restart
+- [ ] `system` mode matches device appearance correctly
+
+### Evidence to capture
+
+Capture at least one screenshot per major surface in dark mode, plus one screenshot each for:
+
+- Settings theme selector in all three modes
+- Dashboard
+- Game
+- Results
+- History
+- Profile
+- Partner link
+
+### Defect logging guidance
+
+Log each visual issue with:
+
+- screen name
+- theme mode
+- device/orientation
+- screenshot
+- issue type:
+  - contrast
+  - hierarchy/depth
+  - clipped text
+  - hardcoded light artifact
+  - inconsistent component styling
+  - theme persistence failure
+
 Run this matrix after pulling the Phase D patch (soft-unlink lifecycle, cooldown/recovery, profile/preferences persistence, and deep-link reliability updates).
 
 Companion working artifact for real test execution:
@@ -2122,4 +2210,3 @@ Use this template as the official pass/fail artifact for sign-off.
 - Ready for Phase D sign-off: Yes/No
 - Notes:
 ```
-

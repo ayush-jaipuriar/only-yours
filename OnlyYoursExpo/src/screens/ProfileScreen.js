@@ -188,7 +188,7 @@ const ProfileScreen = ({ navigation }) => {
           opacity: isSavingProfile ? 0.65 : 1,
         },
         saveText: {
-          color: '#FFFFFF',
+          color: theme.colors.textOnEmphasis,
           fontSize: 15,
           fontWeight: '700',
         },

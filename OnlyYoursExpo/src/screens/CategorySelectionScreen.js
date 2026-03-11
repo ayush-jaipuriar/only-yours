@@ -69,7 +69,7 @@ const CategorySelectionScreen = ({ navigation }) => {
           padding: 20,
           marginBottom: 15,
           ...theme.shadows.card,
-          shadowColor: '#000000',
+          shadowColor: theme.colors.overlayScrim,
         },
         sensitiveCard: {
           borderWidth: 2,
@@ -253,5 +253,4 @@ const CategorySelectionScreen = ({ navigation }) => {
 };
 
 export default CategorySelectionScreen;
-
 

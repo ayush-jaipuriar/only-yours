@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import {
   View,
   Text,
@@ -17,7 +17,7 @@ import {
 import api from '../services/api';
 import useTheme from '../theme/useTheme';
 
-const HeartIllustration = () => {
+const HeartIllustration = ({ primaryColor, linkColor }) => {
   const pulse = useRef(new Animated.Value(1)).current;
   const float = useRef(new Animated.Value(0)).current;
 
@@ -50,12 +50,12 @@ const HeartIllustration = () => {
       ]}
     >
       <View style={styles.heartRow}>
-        <View style={[styles.heartHalf, styles.heartLeft]} />
-        <View style={[styles.heartHalf, styles.heartRight]} />
+        <View style={[styles.heartHalf, styles.heartLeft, { backgroundColor: primaryColor }]} />
+        <View style={[styles.heartHalf, styles.heartRight, { backgroundColor: primaryColor }]} />
       </View>
-      <View style={styles.heartBottom} />
-      <View style={styles.linkLine} />
-      <View style={styles.linkDot} />
+      <View style={[styles.heartBottom, { borderTopColor: primaryColor }]} />
+      <View style={[styles.linkLine, { backgroundColor: linkColor }]} />
+      <View style={[styles.linkDot, { backgroundColor: linkColor }]} />
     </Animated.View>
   );
 };
@@ -154,9 +154,87 @@ const PartnerLinkScreen = ({ navigation }) => {
     }
   };
 
+  const dynamicStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        screen: {
+          backgroundColor: theme.colors.background,
+        },
+        heading: {
+          color: theme.colors.textPrimary,
+        },
+        subheading: {
+          color: theme.colors.textSecondary,
+        },
+        card: {
+          backgroundColor: theme.colors.surfaceOverlay,
+          shadowColor: theme.colors.glowPrimary,
+          borderColor: theme.colors.border,
+        },
+        heartHalf: {
+          backgroundColor: theme.colors.primary,
+        },
+        heartBottom: {
+          borderTopColor: theme.colors.primary,
+        },
+        linkDetail: {
+          backgroundColor: theme.colors.border,
+        },
+        stepBadge: {
+          backgroundColor: theme.colors.surfaceEmphasis,
+        },
+        stepText: {
+          color: theme.colors.primary,
+        },
+        cardTitle: {
+          color: theme.colors.textPrimary,
+        },
+        cardDescription: {
+          color: theme.colors.textTertiary,
+        },
+        primaryButton: {
+          backgroundColor: theme.colors.primary,
+        },
+        primaryButtonText: {
+          color: theme.colors.primaryContrast,
+        },
+        codeBadge: {
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: theme.colors.borderAccent,
+        },
+        codeText: {
+          color: theme.colors.textPrimary,
+        },
+        actionButton: {
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: theme.colors.border,
+        },
+        actionButtonText: {
+          color: theme.colors.primary,
+        },
+        shareButton: {
+          backgroundColor: theme.colors.accent,
+          borderColor: theme.colors.accent,
+        },
+        shareButtonText: {
+          color: theme.colors.accentContrast,
+        },
+        input: {
+          backgroundColor: theme.colors.surfaceInput,
+          borderColor: theme.colors.border,
+          color: theme.colors.textPrimary,
+        },
+        connectButton: {
+          backgroundColor: theme.colors.accent,
+          shadowColor: theme.colors.glowAccent,
+        },
+      }),
+    [theme]
+  );
+
   return (
     <ScrollView
-      style={[styles.screen, { backgroundColor: theme.colors.background }]}
+      style={[styles.screen, dynamicStyles.screen]}
       contentContainerStyle={styles.scrollContent}
       keyboardShouldPersistTaps="handled"
     >
@@ -167,22 +245,22 @@ const PartnerLinkScreen = ({ navigation }) => {
           { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
         ]}
       >
-        <HeartIllustration />
+        <HeartIllustration primaryColor={theme.colors.primary} linkColor={theme.colors.border} />
 
-        <Text style={styles.heading}>Link with Partner</Text>
-        <Text style={[styles.subheading, { color: theme.colors.textSecondary }]}>
+        <Text style={[styles.heading, dynamicStyles.heading]}>Link with Partner</Text>
+        <Text style={[styles.subheading, dynamicStyles.subheading]}>
           Share your code or enter theirs to connect
         </Text>
 
         {/* --- Generate & Share Section --- */}
-        <View style={styles.card}>
+        <View style={[styles.card, dynamicStyles.card]}>
           <View style={styles.cardHeader}>
-            <View style={styles.stepBadge}>
-              <Text style={styles.stepText}>1</Text>
+            <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
+              <Text style={[styles.stepText, dynamicStyles.stepText]}>1</Text>
             </View>
-            <Text style={styles.cardTitle}>Share your code</Text>
+            <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Share your code</Text>
           </View>
-          <Text style={styles.cardDescription}>
+          <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
             Generate a unique code and send it to your partner
           </Text>
 
@@ -196,27 +274,27 @@ const PartnerLinkScreen = ({ navigation }) => {
                 },
               ]}
             >
-              <View style={styles.codeBadge}>
-                <Text style={styles.codeText}>{generatedCode}</Text>
+              <View style={[styles.codeBadge, dynamicStyles.codeBadge]}>
+                <Text style={[styles.codeText, dynamicStyles.codeText]}>{generatedCode}</Text>
               </View>
 
               <View style={styles.codeActions}>
                 <TouchableOpacity
-                  style={styles.actionButton}
+                  style={[styles.actionButton, dynamicStyles.actionButton]}
                   onPress={copyCode}
                   activeOpacity={0.7}
                 >
-                  <Text style={styles.actionButtonText}>
+                  <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText]}>
                     {copied ? 'Copied!' : 'Copy'}
                   </Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  style={[styles.actionButton, styles.shareButton]}
+                  style={[styles.actionButton, dynamicStyles.actionButton, styles.shareButton, dynamicStyles.shareButton]}
                   onPress={shareCode}
                   activeOpacity={0.7}
                 >
-                  <Text style={[styles.actionButtonText, styles.shareButtonText]}>
+                  <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText, styles.shareButtonText, dynamicStyles.shareButtonText]}>
                     Share
                   </Text>
                 </TouchableOpacity>
@@ -224,15 +302,15 @@ const PartnerLinkScreen = ({ navigation }) => {
             </Animated.View>
           ) : (
             <TouchableOpacity
-              style={[styles.primaryButton, loadingGen && styles.buttonDisabled]}
+              style={[styles.primaryButton, dynamicStyles.primaryButton, loadingGen && styles.buttonDisabled]}
               onPress={generateCode}
               disabled={loadingGen}
               activeOpacity={0.8}
             >
               {loadingGen ? (
-                <ActivityIndicator color="#fff" size="small" />
+                <ActivityIndicator color={theme.colors.primaryContrast} size="small" />
               ) : (
-                <Text style={styles.primaryButtonText}>Generate Code</Text>
+                <Text style={[styles.primaryButtonText, dynamicStyles.primaryButtonText]}>Generate Code</Text>
               )}
             </TouchableOpacity>
           )}
@@ -246,14 +324,14 @@ const PartnerLinkScreen = ({ navigation }) => {
         </View>
 
         {/* --- Enter Code Section --- */}
-        <View style={styles.card}>
+        <View style={[styles.card, dynamicStyles.card]}>
           <View style={styles.cardHeader}>
-            <View style={styles.stepBadge}>
-              <Text style={styles.stepText}>2</Text>
+            <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
+              <Text style={[styles.stepText, dynamicStyles.stepText]}>2</Text>
             </View>
-            <Text style={styles.cardTitle}>Enter their code</Text>
+            <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Enter their code</Text>
           </View>
-          <Text style={styles.cardDescription}>
+          <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
             Paste the code your partner shared with you
           </Text>
 
@@ -261,14 +339,15 @@ const PartnerLinkScreen = ({ navigation }) => {
             value={code}
             onChangeText={setCode}
             placeholder="e.g. ABCD1234"
-            placeholderTextColor="#B8B0D6"
+            placeholderTextColor={theme.colors.textTertiary}
             autoCapitalize="characters"
-            style={styles.input}
+            style={[styles.input, dynamicStyles.input]}
           />
 
           <TouchableOpacity
             style={[
               styles.connectButton,
+              dynamicStyles.connectButton,
               (!code.trim() || loadingLink) && styles.buttonDisabled,
             ]}
             onPress={link}
@@ -276,9 +355,9 @@ const PartnerLinkScreen = ({ navigation }) => {
             activeOpacity={0.8}
           >
             {loadingLink ? (
-              <ActivityIndicator color="#fff" size="small" />
+              <ActivityIndicator color={theme.colors.accentContrast} size="small" />
             ) : (
-              <Text style={styles.primaryButtonText}>Connect</Text>
+              <Text style={[styles.primaryButtonText, dynamicStyles.shareButtonText]}>Connect</Text>
             )}
           </TouchableOpacity>
         </View>
@@ -366,6 +445,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 20,
+    borderWidth: 1,
     shadowColor: '#6A4CFF',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
