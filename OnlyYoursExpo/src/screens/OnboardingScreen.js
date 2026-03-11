@@ -10,6 +10,7 @@ import {
 import { useAuth } from '../state/AuthContext';
 import useTheme from '../theme/useTheme';
 import { getGradientToken } from '../theme/gradients';
+import { announceForAccessibility, decorativeAccessibilityProps } from '../accessibility';
 
 /* eslint-disable react/prop-types */
 
@@ -108,6 +109,10 @@ const OnboardingScreen = ({ navigation }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  useEffect(() => {
+    announceForAccessibility(`Onboarding step ${currentIndex + 1} of ${ONBOARDING_STEPS.length}. ${currentStep.title}.`);
+  }, [currentIndex, currentStep.title]);
+
   const goToNext = async () => {
     if (!isLastStep) {
       setCurrentIndex((prev) => prev + 1);
@@ -143,14 +148,20 @@ const OnboardingScreen = ({ navigation }) => {
     >
       <View style={[styles.card, dynamicStyles.card]}>
         <View style={[styles.heroCard, dynamicStyles.heroCard]}>
-          <Text style={styles.heroEmoji}>💗</Text>
-          <Text style={[styles.title, dynamicStyles.title]}>Welcome to Only Yours</Text>
+          <Text style={styles.heroEmoji} {...decorativeAccessibilityProps}>💗</Text>
+          <Text style={[styles.title, dynamicStyles.title]} accessibilityRole="header">Welcome to Only Yours</Text>
           <Text style={[styles.subtitle, dynamicStyles.subtitle]}>
             Let’s set up your experience in under a minute.
           </Text>
         </View>
 
-        <View style={[styles.progressTrack, dynamicStyles.progressTrack]}>
+        <View
+          style={[styles.progressTrack, dynamicStyles.progressTrack]}
+          accessible
+          accessibilityRole="progressbar"
+          accessibilityLabel="Onboarding progress"
+          accessibilityValue={{ min: 1, now: currentIndex + 1, max: ONBOARDING_STEPS.length }}
+        >
           <View style={[styles.progressFill, dynamicStyles.progressFill, { width: `${progressPercent}%` }]} />
         </View>
         <Text style={[styles.progressLabel, dynamicStyles.subtitle]}>
@@ -158,8 +169,8 @@ const OnboardingScreen = ({ navigation }) => {
         </Text>
 
         <View style={styles.stepCard}>
-          <Text style={styles.stepEmoji}>{currentStep.emoji}</Text>
-          <Text style={[styles.stepTitle, dynamicStyles.stepTitle]}>{currentStep.title}</Text>
+          <Text style={styles.stepEmoji} {...decorativeAccessibilityProps}>{currentStep.emoji}</Text>
+          <Text style={[styles.stepTitle, dynamicStyles.stepTitle]} accessibilityRole="header">{currentStep.title}</Text>
           <Text style={[styles.stepDescription, dynamicStyles.stepDescription]}>
             {currentStep.description}
           </Text>
@@ -169,6 +180,10 @@ const OnboardingScreen = ({ navigation }) => {
           style={[styles.primaryButton, dynamicStyles.primaryButton, isFinishing && styles.disabledButton]}
           onPress={goToNext}
           disabled={isFinishing}
+          accessibilityRole="button"
+          accessibilityLabel={isLastStep ? 'Get started' : 'Next onboarding step'}
+          accessibilityHint={isLastStep ? 'Completes onboarding and opens the dashboard.' : 'Moves to the next onboarding step.'}
+          accessibilityState={{ disabled: isFinishing }}
         >
           <Text style={[styles.primaryButtonText, dynamicStyles.primaryButtonText]}>
             {isLastStep ? 'Get Started' : 'Next'}
@@ -180,6 +195,10 @@ const OnboardingScreen = ({ navigation }) => {
             style={[styles.secondaryButton, dynamicStyles.secondaryButton, isFinishing && styles.disabledButton]}
             onPress={skipOnboarding}
             disabled={isFinishing}
+            accessibilityRole="button"
+            accessibilityLabel="Skip onboarding for now"
+            accessibilityHint="Completes onboarding immediately and opens the dashboard."
+            accessibilityState={{ disabled: isFinishing }}
           >
             <Text style={[styles.secondaryButtonText, dynamicStyles.secondaryButtonText]}>Skip for now</Text>
           </TouchableOpacity>

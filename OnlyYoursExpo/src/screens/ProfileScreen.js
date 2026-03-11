@@ -6,6 +6,7 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import BadgeChip from '../components/BadgeChip';
 import useTheme from '../theme/useTheme';
+import { accessibilityAlertProps } from '../accessibility';
 
 /**
  * ProfileScreen — displays the current user's profile and logout option.
@@ -323,13 +324,13 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <View style={styles.avatarContainer}>
+        <View style={styles.avatarContainer} accessible={false}>
           <Text style={styles.avatarInitial}>
             {(profile.username || profile.name || '?').charAt(0).toUpperCase()}
           </Text>
         </View>
 
-        <Text style={styles.name}>{profile.name}</Text>
+        <Text style={styles.name} accessibilityRole="header">{profile.name}</Text>
         <Text style={styles.email}>{profile.email}</Text>
         <Text style={styles.username}>@{profile.username || 'username'}</Text>
         {profile.bio ? <Text style={styles.bioText}>{profile.bio}</Text> : null}
@@ -347,6 +348,8 @@ const ProfileScreen = ({ navigation }) => {
               style={styles.input}
               placeholder="username"
               placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Username"
+              accessibilityHint="Edit your public username."
             />
 
             <Text style={styles.inputLabel}>Bio</Text>
@@ -358,8 +361,10 @@ const ProfileScreen = ({ navigation }) => {
               style={[styles.input, styles.textArea]}
               placeholder="Share a short bio..."
               placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Bio"
+              accessibilityHint="Add a short profile bio."
             />
-            {profileFormError ? <Text style={styles.formError}>{profileFormError}</Text> : null}
+            {profileFormError ? <Text style={styles.formError} {...accessibilityAlertProps}>{profileFormError}</Text> : null}
           </View>
         )}
 
@@ -380,6 +385,9 @@ const ProfileScreen = ({ navigation }) => {
                 onPress={handleSaveProfile}
                 activeOpacity={0.8}
                 disabled={isSavingProfile}
+                accessibilityRole="button"
+                accessibilityLabel={isSavingProfile ? 'Saving profile' : 'Save profile'}
+                accessibilityState={{ disabled: isSavingProfile }}
               >
                 <Text style={styles.saveText}>{isSavingProfile ? 'Saving...' : 'Save'}</Text>
               </TouchableOpacity>
@@ -388,6 +396,9 @@ const ProfileScreen = ({ navigation }) => {
                 onPress={handleCancelProfileEdit}
                 activeOpacity={0.8}
                 disabled={isSavingProfile}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel profile editing"
+                accessibilityState={{ disabled: isSavingProfile }}
               >
                 <Text style={styles.cancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -397,6 +408,8 @@ const ProfileScreen = ({ navigation }) => {
               style={styles.editButton}
               onPress={() => setIsEditingProfile(true)}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel="Edit profile"
             >
               <Text style={styles.editText}>Edit Profile</Text>
             </TouchableOpacity>
@@ -406,11 +419,19 @@ const ProfileScreen = ({ navigation }) => {
             style={styles.settingsButton}
             onPress={() => navigation.navigate('Settings')}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
           >
             <Text style={styles.settingsText}>Settings</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={logout} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.logoutButton}
+            onPress={logout}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Sign out"
+          >
             <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>

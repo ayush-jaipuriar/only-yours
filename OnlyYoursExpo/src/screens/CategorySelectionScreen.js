@@ -16,6 +16,7 @@ import WebSocketService from '../services/WebSocketService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import useTheme from '../theme/useTheme';
+import { announceForAccessibility } from '../accessibility';
 
 /**
  * CategorySelectionScreen displays available question categories.
@@ -160,6 +161,7 @@ const CategorySelectionScreen = ({ navigation }) => {
         } else {
           Alert.alert('Invitation Pending', 'Please wait for your partner to respond.');
         }
+        announceForAccessibility('Invitation already pending. Please wait for your partner to respond.');
         return;
       }
 
@@ -170,6 +172,7 @@ const CategorySelectionScreen = ({ navigation }) => {
           'Realtime Disconnected',
           'Cannot send invitation right now because realtime connection is not ready. Please wait a few seconds and try again.'
         );
+        announceForAccessibility('Realtime disconnected. Cannot send invitation right now.');
         setIsInviteInFlight(false);
         return;
       }
@@ -185,6 +188,7 @@ const CategorySelectionScreen = ({ navigation }) => {
       if (Platform.OS === 'android') {
         ToastAndroid.show('Invitation sent. Waiting for your partner...', ToastAndroid.SHORT);
       }
+      announceForAccessibility(`Invitation sent for ${category.name}. Waiting for your partner to respond.`);
     } catch (error) {
       console.error('[CategorySelection] Error sending invitation:', error);
       Alert.alert('Error', 'Failed to send invitation. Please try again.');
@@ -204,7 +208,11 @@ const CategorySelectionScreen = ({ navigation }) => {
       ]}
       onPress={() => handleCategorySelect(item)}
       disabled={isInviteInFlight}
-      activeOpacity={0.7}>
+      activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`${item.name}. ${item.description}${item.sensitive ? '. Mature content.' : ''}`}
+      accessibilityHint="Double tap to send a game invitation with this category."
+      accessibilityState={{ disabled: isInviteInFlight }}>
       <Text style={styles.categoryName}>{item.name}</Text>
       <Text style={styles.categoryDescription}>{item.description}</Text>
       {item.sensitive && (
@@ -241,7 +249,7 @@ const CategorySelectionScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>What do you want to explore?</Text>
+      <Text style={styles.title} accessibilityRole="header">What do you want to explore?</Text>
       <FlatList
         data={categories}
         renderItem={renderCategory}
@@ -253,4 +261,3 @@ const CategorySelectionScreen = ({ navigation }) => {
 };
 
 export default CategorySelectionScreen;
-

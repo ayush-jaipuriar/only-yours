@@ -9,6 +9,7 @@ import api from '../services/api';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 import useTheme from '../theme/useTheme';
 import createAuthFormStyles from '../theme/createAuthFormStyles';
+import { accessibilityAlertProps } from '../accessibility';
 
 const ResetPasswordScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -66,7 +67,7 @@ const ResetPasswordScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
-      <Text style={styles.title}>Reset Password</Text>
+      <Text style={styles.title} accessibilityRole="header">Reset Password</Text>
       <Text style={styles.subtitle}>Enter your reset token and choose a new password.</Text>
 
       <TextInput
@@ -76,6 +77,8 @@ const ResetPasswordScreen = ({ navigation }) => {
         autoCapitalize="none"
         style={styles.input}
         placeholderTextColor={theme.colors.textTertiary}
+        accessibilityLabel="Reset token"
+        accessibilityHint="Enter the reset token you received."
       />
       <TextInput
         value={newPassword}
@@ -84,6 +87,8 @@ const ResetPasswordScreen = ({ navigation }) => {
         secureTextEntry
         style={styles.input}
         placeholderTextColor={theme.colors.textTertiary}
+        accessibilityLabel="New password"
+        accessibilityHint="Enter your new password."
       />
       <TextInput
         value={confirmPassword}
@@ -92,15 +97,21 @@ const ResetPasswordScreen = ({ navigation }) => {
         secureTextEntry
         style={styles.input}
         placeholderTextColor={theme.colors.textTertiary}
+        accessibilityLabel="Confirm new password"
+        accessibilityHint="Re-enter your new password to confirm it."
       />
 
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-      {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
+      {errorMessage ? <Text style={styles.errorText} {...accessibilityAlertProps}>{errorMessage}</Text> : null}
+      {successMessage ? <Text style={styles.successText} {...accessibilityAlertProps}>{successMessage}</Text> : null}
 
       <TouchableOpacity
         style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
         onPress={handleResetPassword}
         disabled={isSubmitting}
+        accessibilityRole="button"
+        accessibilityLabel={isSubmitting ? 'Resetting password' : 'Reset password'}
+        accessibilityHint="Submits your token and new password."
+        accessibilityState={{ disabled: isSubmitting }}
       >
         {isSubmitting ? (
           <ActivityIndicator color={theme.colors.primaryContrast} />
@@ -109,7 +120,12 @@ const ResetPasswordScreen = ({ navigation }) => {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('SignIn')}
+        accessibilityRole="button"
+        accessibilityLabel="Back to sign in"
+        accessibilityHint="Returns to the sign in screen."
+      >
         <Text style={styles.linkText}>Back to Sign In</Text>
       </TouchableOpacity>
     </AuthFormScreenLayout>

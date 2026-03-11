@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Text, Animated, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
+import { accessibilityStatusProps, decorativeAccessibilityProps } from '../accessibility';
 
 const LoadingScreen = () => {
   const { theme } = useTheme();
@@ -101,13 +102,20 @@ const LoadingScreen = () => {
 
   return (
     <View style={styles.container}>
-      <View style={styles.content}>
+      <View
+        style={styles.content}
+        accessible
+        {...accessibilityStatusProps}
+        accessibilityRole="progressbar"
+        accessibilityLabel="Only Yours is loading"
+        accessibilityHint="Please wait while the app finishes loading."
+      >
         <Animated.Text style={[styles.logo, { opacity: pulseAnim }]}>
           Only Yours
         </Animated.Text>
         <Text style={styles.tagline}>made for two</Text>
 
-        <View style={styles.dotsRow}>
+        <View style={styles.dotsRow} {...decorativeAccessibilityProps}>
           {dotAnims.map((anim, i) => (
             <Animated.View
               key={`dot-${i}`}

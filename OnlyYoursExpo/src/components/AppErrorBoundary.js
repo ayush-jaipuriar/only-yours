@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { accessibilityAlertProps, decorativeAccessibilityProps } from '../accessibility';
 
 /**
  * AppErrorBoundary — catches unhandled JavaScript errors in the React component tree.
@@ -49,12 +50,19 @@ class AppErrorBoundary extends React.Component {
     if (this.state.hasError) {
       return (
         <View style={styles.container} testID="error-boundary-fallback">
-          <Text style={styles.icon}>💔</Text>
-          <Text style={styles.title}>Something went wrong</Text>
-          <Text style={styles.message}>
+          <Text style={styles.icon} {...decorativeAccessibilityProps}>💔</Text>
+          <Text style={styles.title} accessibilityRole="header">Something went wrong</Text>
+          <Text style={styles.message} {...accessibilityAlertProps}>
             The app ran into an unexpected problem. Your progress may not be saved.
           </Text>
-          <TouchableOpacity style={styles.button} onPress={this.handleReset} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={this.handleReset}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Try again"
+            accessibilityHint="Attempts to recover from the unexpected app error."
+          >
             <Text style={styles.buttonText}>Try Again</Text>
           </TouchableOpacity>
         </View>

@@ -230,13 +230,16 @@ const GameHistoryScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle}>Sort</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">Sort</Text>
       <View style={styles.filterRow}>
         {SORT_OPTIONS.map((option) => (
           <TouchableOpacity
             key={option.key}
             style={[styles.pill, sortOption === option.key && styles.pillActive]}
             onPress={() => setSortOption(option.key)}
+            accessibilityRole="button"
+            accessibilityLabel={`Sort by ${option.label}`}
+            accessibilityState={{ selected: sortOption === option.key }}
           >
             <Text style={[styles.pillText, sortOption === option.key && styles.pillTextActive]}>
               {option.label}
@@ -245,13 +248,16 @@ const GameHistoryScreen = ({ navigation }) => {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle}>Winner Filter</Text>
+      <Text style={styles.sectionTitle} accessibilityRole="header">Winner Filter</Text>
       <View style={styles.filterRow}>
         {WINNER_OPTIONS.map((option) => (
           <TouchableOpacity
             key={option.key}
             style={[styles.pill, winnerFilter === option.key && styles.pillActive]}
             onPress={() => setWinnerFilter(option.key)}
+            accessibilityRole="button"
+            accessibilityLabel={`Filter by ${option.label}`}
+            accessibilityState={{ selected: winnerFilter === option.key }}
           >
             <Text style={[styles.pillText, winnerFilter === option.key && styles.pillTextActive]}>
               {option.label}
@@ -263,7 +269,13 @@ const GameHistoryScreen = ({ navigation }) => {
       {historyItems.map((item) => {
         const cardResultTheme = resultTheme[item.result] || resultTheme.DRAW;
         return (
-          <View key={item.sessionId} style={styles.card}>
+          <View
+            key={item.sessionId}
+            style={styles.card}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={`${formatPlayedAt(item.completedAt)}. ${cardResultTheme.text}. Played with ${item.partnerName}. You scored ${item.myScore ?? 0}. Partner scored ${item.partnerScore ?? 0}.`}
+          >
             <View style={styles.cardHeader}>
               <Text style={styles.cardDate}>{formatPlayedAt(item.completedAt)}</Text>
               <View style={[styles.resultBadge, { backgroundColor: cardResultTheme.background }]}>
@@ -289,7 +301,15 @@ const GameHistoryScreen = ({ navigation }) => {
       })}
 
       {hasNext ? (
-        <TouchableOpacity style={styles.loadMoreButton} onPress={loadMore} disabled={loadingMore}>
+        <TouchableOpacity
+          style={styles.loadMoreButton}
+          onPress={loadMore}
+          disabled={loadingMore}
+          accessibilityRole="button"
+          accessibilityLabel={loadingMore ? 'Loading more history' : 'Load more history'}
+          accessibilityHint="Loads older game history entries."
+          accessibilityState={{ disabled: loadingMore }}
+        >
           {loadingMore ? (
             <ActivityIndicator color={theme.colors.primaryContrast} />
           ) : (

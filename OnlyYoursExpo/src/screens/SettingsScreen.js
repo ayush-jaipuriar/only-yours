@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../state/AuthContext';
 import useTheme from '../theme/useTheme';
 import api from '../services/api';
+import { accessibilityAlertProps, announceForAccessibility } from '../accessibility';
 
 /* eslint-disable react/prop-types */
 
@@ -42,6 +43,7 @@ const SettingsScreen = ({ navigation }) => {
   const [unlinkFlowOpen, setUnlinkFlowOpen] = useState(false);
   const [unlinkError, setUnlinkError] = useState('');
   const [isRecoveringCouple, setIsRecoveringCouple] = useState(false);
+  const previousCoupleStatusRef = useRef(null);
 
   const styles = useMemo(
     () =>
@@ -310,6 +312,40 @@ const SettingsScreen = ({ navigation }) => {
     };
   }, []);
 
+  useEffect(() => {
+    if (preferencesMessage) {
+      announceForAccessibility(preferencesMessage);
+    }
+  }, [preferencesMessage]);
+
+  useEffect(() => {
+    if (preferencesError) {
+      announceForAccessibility(preferencesError);
+    }
+  }, [preferencesError]);
+
+  useEffect(() => {
+    if (unlinkError) {
+      announceForAccessibility(unlinkError);
+    }
+  }, [unlinkError]);
+
+  useEffect(() => {
+    const nextStatus = coupleStatus?.status || null;
+    const previousStatus = previousCoupleStatusRef.current;
+    previousCoupleStatusRef.current = nextStatus;
+
+    if (!previousStatus || previousStatus === nextStatus) {
+      return;
+    }
+
+    if (nextStatus === 'COOLDOWN_ACTIVE') {
+      announceForAccessibility('Partner unlinked. Cooldown is now active.');
+    } else if (nextStatus === 'LINKED') {
+      announceForAccessibility('Relationship restored.');
+    }
+  }, [coupleStatus]);
+
   const formatCooldownTime = (cooldownEndsAt) => {
     if (!cooldownEndsAt) {
       return 'Unavailable';
@@ -428,7 +464,7 @@ const SettingsScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Theme</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Theme</Text>
         <Text style={styles.sectionSubtitle}>
           Choose how the app appearance behaves. Current resolved mode: {resolvedMode}.
         </Text>
@@ -441,6 +477,9 @@ const SettingsScreen = ({ navigation }) => {
                 key={mode}
                 style={[styles.option, isActive && styles.optionActive]}
                 onPress={() => setThemeMode(mode)}
+                accessibilityRole="button"
+                accessibilityLabel={`${THEME_OPTION_LABEL[mode]} theme`}
+                accessibilityState={{ selected: isActive }}
               >
                 <Text style={[styles.optionText, isActive && styles.optionTextActive]}>
                   {THEME_OPTION_LABEL[mode]}
@@ -455,7 +494,7 @@ const SettingsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Notification Preferences</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Notification Preferences</Text>
         <Text style={styles.sectionSubtitle}>
           Configure your reminder window and quiet-hours boundaries.
         </Text>
@@ -471,6 +510,8 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="Asia/Kolkata"
           placeholderTextColor={theme.colors.textTertiary}
+          accessibilityLabel="Timezone"
+          accessibilityHint="Enter your IANA timezone, for example Asia slash Kolkata."
         />
 
         <Text style={styles.inputLabel}>Reminder Time (HH:mm)</Text>
@@ -484,6 +525,8 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="21:00"
           placeholderTextColor={theme.colors.textTertiary}
+          accessibilityLabel="Reminder time"
+          accessibilityHint="Enter your reminder time in 24-hour format."
         />
 
         <Text style={styles.inputLabel}>Quiet-Hours Start (HH:mm)</Text>
@@ -497,6 +540,8 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="23:00"
           placeholderTextColor={theme.colors.textTertiary}
+          accessibilityLabel="Quiet hours start"
+          accessibilityHint="Enter when quiet hours begin in 24-hour format."
         />
 
         <Text style={styles.inputLabel}>Quiet-Hours End (HH:mm)</Text>
@@ -510,6 +555,8 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.input}
           placeholder="07:00"
           placeholderTextColor={theme.colors.textTertiary}
+          accessibilityLabel="Quiet hours end"
+          accessibilityHint="Enter when quiet hours end in 24-hour format."
         />
 
         <TouchableOpacity
@@ -517,17 +564,21 @@ const SettingsScreen = ({ navigation }) => {
           onPress={handleSavePreferences}
           disabled={isSavingPreferences}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel={isSavingPreferences ? 'Saving notification preferences' : 'Save notification preferences'}
+          accessibilityHint="Saves your reminder and quiet-hours settings."
+          accessibilityState={{ disabled: isSavingPreferences }}
         >
           <Text style={styles.saveButtonText}>
             {isSavingPreferences ? 'Saving...' : 'Save Preferences'}
           </Text>
         </TouchableOpacity>
-        {preferencesError ? <Text style={styles.errorText}>{preferencesError}</Text> : null}
-        {preferencesMessage ? <Text style={styles.successText}>{preferencesMessage}</Text> : null}
+        {preferencesError ? <Text style={styles.errorText} {...accessibilityAlertProps}>{preferencesError}</Text> : null}
+        {preferencesMessage ? <Text style={styles.successText} {...accessibilityAlertProps}>{preferencesMessage}</Text> : null}
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Relationship Controls</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Relationship Controls</Text>
         <Text style={styles.sectionSubtitle}>
           Manage unlink and cooldown recovery safely from one place.
         </Text>
@@ -557,6 +608,10 @@ const SettingsScreen = ({ navigation }) => {
                   onPress={beginUnlinkFlow}
                   disabled={isPreparingUnlink || isConfirmingUnlink}
                   activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={isPreparingUnlink ? 'Preparing unlink flow' : 'Unlink partner'}
+                  accessibilityHint="Starts the two-step unlink confirmation flow."
+                  accessibilityState={{ disabled: isPreparingUnlink || isConfirmingUnlink }}
                 >
                   <Text style={styles.dangerButtonText}>
                     {isPreparingUnlink ? 'Preparing...' : 'Unlink Partner'}
@@ -575,6 +630,10 @@ const SettingsScreen = ({ navigation }) => {
                   onPress={recoverCouple}
                   disabled={isRecoveringCouple}
                   activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel={isRecoveringCouple ? 'Recovering previous partner' : 'Recover previous partner'}
+                  accessibilityHint="Restores your previous linked partner during cooldown."
+                  accessibilityState={{ disabled: isRecoveringCouple }}
                 >
                   <Text style={styles.recoverButtonText}>
                     {isRecoveringCouple ? 'Recovering...' : 'Recover Previous Partner'}
@@ -593,7 +652,7 @@ const SettingsScreen = ({ navigation }) => {
 
         {unlinkFlowOpen && (
           <View style={styles.unlinkConfirmPanel}>
-            <Text style={styles.unlinkConfirmTitle}>Final Confirmation</Text>
+            <Text style={styles.unlinkConfirmTitle} accessibilityRole="header">Final Confirmation</Text>
             <Text style={styles.unlinkConfirmText}>
               This action unlinks your partner and starts a 24-hour cooldown.
             </Text>
@@ -603,6 +662,8 @@ const SettingsScreen = ({ navigation }) => {
               style={[styles.input, { marginTop: 10, marginBottom: 0 }]}
               placeholder="Optional reason (visible in internal logs)"
               placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Optional unlink reason"
+              accessibilityHint="Adds an optional internal note for the unlink action."
             />
             <View style={styles.unlinkActionRow}>
               <TouchableOpacity
@@ -614,6 +675,9 @@ const SettingsScreen = ({ navigation }) => {
                 }}
                 disabled={isConfirmingUnlink}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel="Cancel unlink"
+                accessibilityState={{ disabled: isConfirmingUnlink }}
               >
                 <Text style={styles.unlinkCancelText}>Cancel</Text>
               </TouchableOpacity>
@@ -622,6 +686,10 @@ const SettingsScreen = ({ navigation }) => {
                 onPress={confirmUnlink}
                 disabled={isConfirmingUnlink}
                 activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={isConfirmingUnlink ? 'Confirming unlink' : 'Confirm unlink'}
+                accessibilityHint="Finalizes unlinking and starts the cooldown."
+                accessibilityState={{ disabled: isConfirmingUnlink }}
               >
                 <Text style={styles.unlinkConfirmButtonText}>
                   {isConfirmingUnlink ? 'Unlinking...' : 'Confirm Unlink'}
@@ -631,11 +699,11 @@ const SettingsScreen = ({ navigation }) => {
           </View>
         )}
 
-        {unlinkError ? <Text style={styles.errorText}>{unlinkError}</Text> : null}
+        {unlinkError ? <Text style={styles.errorText} {...accessibilityAlertProps}>{unlinkError}</Text> : null}
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle}>Onboarding</Text>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Onboarding</Text>
         <Text style={styles.sectionSubtitle}>
           Replay onboarding anytime to revisit key game flow concepts.
         </Text>
@@ -643,6 +711,10 @@ const SettingsScreen = ({ navigation }) => {
           style={styles.replayButton}
           disabled={isReplayingOnboarding}
           onPress={handleReplayOnboarding}
+          accessibilityRole="button"
+          accessibilityLabel={isReplayingOnboarding ? 'Preparing onboarding replay' : 'Replay onboarding'}
+          accessibilityHint="Starts the onboarding flow again."
+          accessibilityState={{ disabled: isReplayingOnboarding }}
         >
           <Text style={styles.replayButtonText}>
             {isReplayingOnboarding ? 'Preparing...' : 'Replay Onboarding'}

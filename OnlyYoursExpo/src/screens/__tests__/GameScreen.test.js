@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { render } from '@testing-library/react-native';
 import GameScreen from '../GameScreen';
 import { AuthContext } from '../../state/AuthContext';
 import { GameProvider } from '../../state/GameContext';
@@ -34,8 +34,9 @@ describe('GameScreen', () => {
   });
 
   it('should show loading indicator when no current question', () => {
-    const { getByText } = renderWithProviders();
+    const { getByA11yRole, getByText } = renderWithProviders();
     expect(getByText('Loading question...')).toBeTruthy();
+    expect(getByA11yRole('status')).toBeTruthy();
   });
 
   it('should render Round 1 badge by default', () => {

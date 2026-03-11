@@ -10,6 +10,7 @@ import { AuthContext } from '../state/AuthContext';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 import useTheme from '../theme/useTheme';
 import createAuthFormStyles from '../theme/createAuthFormStyles';
+import { accessibilityAlertProps } from '../accessibility';
 
 const SignInScreen = ({ navigation }) => {
     const { login } = useContext(AuthContext);
@@ -47,7 +48,7 @@ const SignInScreen = ({ navigation }) => {
 
     return (
         <AuthFormScreenLayout>
-            <Text style={styles.title}>Only Yours</Text>
+            <Text style={styles.title} accessibilityRole="header">Only Yours</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
 
             <TextInput
@@ -58,6 +59,9 @@ const SignInScreen = ({ navigation }) => {
                 autoCapitalize="none"
                 style={styles.input}
                 placeholderTextColor={theme.colors.textTertiary}
+                accessibilityLabel="Email"
+                accessibilityHint="Enter the email address for your account."
+                textContentType="emailAddress"
             />
             <TextInput
                 value={password}
@@ -66,14 +70,21 @@ const SignInScreen = ({ navigation }) => {
                 secureTextEntry
                 style={styles.input}
                 placeholderTextColor={theme.colors.textTertiary}
+                accessibilityLabel="Password"
+                accessibilityHint="Enter your account password."
+                textContentType="password"
             />
 
-            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+            {errorMessage ? <Text style={styles.errorText} {...accessibilityAlertProps}>{errorMessage}</Text> : null}
 
             <TouchableOpacity
                 style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
                 onPress={handleSignIn}
                 disabled={isSubmitting}
+                accessibilityRole="button"
+                accessibilityLabel={isSubmitting ? 'Signing in' : 'Sign in'}
+                accessibilityHint="Signs in with your email and password."
+                accessibilityState={{ disabled: isSubmitting }}
             >
                 {isSubmitting ? (
                     <ActivityIndicator color={theme.colors.primaryContrast} />
@@ -82,15 +93,25 @@ const SignInScreen = ({ navigation }) => {
                 )}
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')}>
+            <TouchableOpacity
+                onPress={() => navigation.navigate('ForgotPassword')}
+                accessibilityRole="button"
+                accessibilityLabel="Forgot password"
+                accessibilityHint="Opens the password reset request screen."
+            >
                 <Text style={styles.linkText}>Forgot Password?</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity onPress={() => navigation.navigate('SignUp')}>
+            <TouchableOpacity
+                onPress={() => navigation.navigate('SignUp')}
+                accessibilityRole="button"
+                accessibilityLabel="Create a new account"
+                accessibilityHint="Opens the sign up screen."
+            >
                 <Text style={styles.linkText}>Don't have an account? Sign Up</Text>
             </TouchableOpacity>
         </AuthFormScreenLayout>
     );
 };
 
-export default SignInScreen; 
+export default SignInScreen;

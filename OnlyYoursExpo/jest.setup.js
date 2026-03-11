@@ -11,6 +11,14 @@ jest.mock('react-native/Libraries/Alert/Alert', () => ({
   alert: jest.fn(),
 }));
 
+const ReactNative = require('react-native');
+ReactNative.AccessibilityInfo = {
+  ...ReactNative.AccessibilityInfo,
+  announceForAccessibility: jest.fn(),
+  isScreenReaderEnabled: jest.fn(() => Promise.resolve(false)),
+  addEventListener: jest.fn(() => ({ remove: jest.fn() })),
+};
+
 if (typeof globalThis.__ExpoImportMetaRegistry === 'undefined') {
   globalThis.__ExpoImportMetaRegistry = {
     register: jest.fn(),

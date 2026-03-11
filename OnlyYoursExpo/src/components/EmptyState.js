@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
+import { accessibilityStatusProps, decorativeAccessibilityProps } from '../accessibility';
 
 /**
  * EmptyState — reusable component for when a list or resource is empty or failed to load.
@@ -83,12 +84,19 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
 
   return (
     <View style={styles.container} testID="empty-state">
-      <View style={styles.panel}>
-        {icon ? <Text style={styles.icon}>{icon}</Text> : null}
-        {title ? <Text style={styles.title}>{title}</Text> : null}
+      <View style={styles.panel} accessible={!actionLabel} {...(!actionLabel ? accessibilityStatusProps : {})}>
+        {icon ? <Text style={styles.icon} {...decorativeAccessibilityProps}>{icon}</Text> : null}
+        {title ? <Text style={styles.title} accessibilityRole="header">{title}</Text> : null}
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {actionLabel && onAction ? (
-          <TouchableOpacity style={styles.actionButton} onPress={onAction} activeOpacity={0.8}>
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={onAction}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={actionLabel}
+            accessibilityHint={title ? `${actionLabel}. ${title}.` : actionLabel}
+          >
             <Text style={styles.actionText}>{actionLabel}</Text>
           </TouchableOpacity>
         ) : null}

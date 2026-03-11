@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef } from 'react';
 import { Animated, View, Text, ActivityIndicator, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
+import { accessibilityAlertProps, announceForAccessibility } from '../accessibility';
 
 /**
  * ReconnectionBanner — slides down from the top when the WebSocket connection is lost.
@@ -31,6 +32,17 @@ const ReconnectionBanner = ({ connectionState }) => {
       useNativeDriver: true,
     }).start();
   }, [isVisible, translateY]);
+
+  useEffect(() => {
+    if (connectionState === 'reconnecting') {
+      announceForAccessibility('Disconnected. Trying to reconnect.');
+      return;
+    }
+
+    if (connectionState === 'disconnected') {
+      announceForAccessibility('No connection. Real-time updates may be delayed.');
+    }
+  }, [connectionState]);
 
   const bannerColor = connectionState === 'reconnecting'
     ? theme.colors.bannerWarning
@@ -88,7 +100,12 @@ const ReconnectionBanner = ({ connectionState }) => {
       testID="reconnection-banner"
       pointerEvents="none"
     >
-      <View style={styles.content}>
+      <View
+        style={styles.content}
+        accessible
+        accessibilityLabel={message}
+        {...accessibilityAlertProps}
+      >
         <ActivityIndicator size="small" color={theme.colors.textOnEmphasis} style={styles.spinner} />
         <Text style={styles.text}>{message}</Text>
       </View>

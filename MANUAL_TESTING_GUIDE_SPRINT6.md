@@ -2014,6 +2014,105 @@ Log each visual issue with:
 
 Run this matrix after pulling the Phase D patch (soft-unlink lifecycle, cooldown/recovery, profile/preferences persistence, and deep-link reliability updates).
 
+## 18) Phase F Verification (Accessibility Baseline Across Primary Flows)
+
+Use this section after Phase F implementation to run the deferred screen-reader validation pass.
+
+### Objective
+
+Verify that the active Expo app is usable at a baseline level with screen readers, with Android/TalkBack as the primary acceptance bar and iOS/VoiceOver as a secondary parity check.
+
+### Preconditions
+
+- Latest `OnlyYoursExpo/` Phase F build installed
+- Device screen reader available:
+  - TalkBack on Android
+  - VoiceOver on iOS if doing parity spot checks
+- One linked-couple account available so dashboard/game/history/results flows can be reached
+- One active or resumable game session available so gameplay announcements can be exercised
+- One completed game available so results and history semantics can be checked
+
+### Accessibility acceptance checklist
+
+- [ ] Primary interactive controls expose meaningful spoken labels
+- [ ] Buttons announce as buttons rather than unlabeled text blocks
+- [ ] Decorative emoji/illustrations are not read when they add no value
+- [ ] Form fields are discoverable in a sensible order on:
+  - sign in
+  - sign up
+  - forgot password
+  - reset password
+  - settings
+  - profile edit
+- [ ] Settings choice chips expose selected state clearly
+- [ ] Category filter chips and history filter chips expose selected state clearly
+- [ ] Game answer options expose selected/disabled state clearly
+- [ ] Progress/state is understandable without relying on layout or color alone
+- [ ] Critical runtime announcements are spoken clearly:
+  - reconnect/disconnect
+  - invitation pending / refresh path
+  - round transition into guessing
+  - guess result reveal
+  - results ready
+  - partner-code generated/copied
+  - unlink/recover outcomes
+- [ ] No major duplicate spoken output from nested wrappers and children
+
+### Required walkthrough matrix
+
+- Auth:
+  - Verify email/password/token inputs announce purpose correctly
+  - Verify validation and success messages are read when they appear
+  - Verify navigation links to sign up / forgot password / sign in are discoverable
+- Onboarding:
+  - Verify current step title is understandable without relying on emoji
+  - Verify onboarding progress is announced as progress
+  - Verify Next / Get Started / Skip are clear
+- Dashboard:
+  - Verify Start New Game / Continue Game / Link with Partner announce intent clearly
+  - Verify stat cards are understandable as spoken summaries
+  - Verify Game History and View Profile links are discoverable
+- Partner Link:
+  - Verify generated code is spoken intelligibly
+  - Verify Copy / Share / Connect actions announce correctly
+  - Verify entered partner code field has a clear label
+- Category Selection:
+  - Verify each category card speaks title + description + sensitive warning when applicable
+  - Verify invitation-in-flight state does not leave controls ambiguous
+- Game:
+  - Verify question progress is announced
+  - Verify each answer option speaks letter + content + selected state
+  - Verify submit button disabled/enabled state is understandable
+  - Verify waiting-for-partner and invite-pending states are spoken
+- Results:
+  - Verify completion summary and player scores are understandable without visual layout
+  - Verify Play Again / Back to Dashboard are discoverable
+- History:
+  - Verify sort and winner filters announce selected state
+  - Verify each history card speaks date, result, partner, and scores clearly
+- Profile + Settings:
+  - Verify edit/save/cancel/settings/logout controls announce correctly
+  - Verify unlink confirmation order is understandable
+  - Verify recover previous partner action is clear during cooldown
+
+### Evidence to capture
+
+Capture, at minimum:
+
+- device + OS version
+- screen reader used (`TalkBack` or `VoiceOver`)
+- whether the run covered `light`, `dark`, or `system`
+- pass/fail for each major flow
+- exact spoken-announcement defects or duplicate-read defects encountered
+
+### Deferred sign-off note
+
+Manual screen-reader validation for Phase F is currently deferred unless explicitly run. If not executed yet, record:
+
+- `Manual TalkBack validation: Pending`
+- `Manual VoiceOver spot check: Pending`
+- `Known accessibility limitations after automated pass: <list or none found yet>`
+
 Companion working artifact for real test execution:
 
 - `PHASE_D_MANUAL_VALIDATION_RUN.md`

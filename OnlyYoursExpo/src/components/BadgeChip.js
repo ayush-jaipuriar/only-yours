@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
+import { decorativeAccessibilityProps } from '../accessibility';
 
 const BADGE_THEME = {
   FIRST_GAME: { surface: 'badgeSurfaceGold', border: 'warning', icon: '✨' },
@@ -59,8 +60,13 @@ const BadgeChip = ({ badge }) => {
   const borderColor = theme.colors[badgeTheme.border] || theme.colors.borderStrong;
 
   return (
-    <View style={[styles.chip, { backgroundColor, borderColor }]}>
-      <Text style={styles.icon}>{badgeTheme.icon}</Text>
+    <View
+      style={[styles.chip, { backgroundColor, borderColor }]}
+      accessible
+      accessibilityRole="text"
+      accessibilityLabel={`${title}. ${description}`}
+    >
+      <Text style={styles.icon} {...decorativeAccessibilityProps}>{badgeTheme.icon}</Text>
       <View style={styles.textWrap}>
         <Text style={styles.title} numberOfLines={1}>
           {title}

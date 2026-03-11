@@ -12,6 +12,7 @@ import {
 import { useGame } from '../state/GameContext';
 import useTheme from '../theme/useTheme';
 import api from '../services/api';
+import { accessibilityAlertProps, announceForAccessibility, decorativeAccessibilityProps } from '../accessibility';
 
 // eslint-disable-next-line react/prop-types
 const ResultsScreen = ({ route, navigation }) => {
@@ -95,6 +96,14 @@ const ResultsScreen = ({ route, navigation }) => {
     }).start();
   }, [scores, fadeAnim, p1ScoreAnim, p2ScoreAnim, scaleAnim]);
 
+  useEffect(() => {
+    if (!scores) {
+      return;
+    }
+
+    announceForAccessibility(`Game complete. ${scores.message}. Combined score ${combinedScore} out of ${maxCombined}.`);
+  }, [combinedScore, maxCombined, scores]);
+
   const handlePlayAgain = () => {
     endGame();
     navigation.replace('CategorySelection');
@@ -170,7 +179,7 @@ const ResultsScreen = ({ route, navigation }) => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading results...</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} accessibilityRole="status">Loading results...</Text>
       </View>
     );
   }
@@ -178,14 +187,16 @@ const ResultsScreen = ({ route, navigation }) => {
   if (scoreLoadError || !scores) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Unavailable</Text>
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>
+        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]} accessibilityRole="header">Results Unavailable</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} {...accessibilityAlertProps}>
           This game result is no longer available.
         </Text>
         <TouchableOpacity
           style={[styles.dashboardButton, dynamicStyles.dashboardButton, { marginTop: 12 }]}
           onPress={handleBackToDashboard}
           activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Back to dashboard"
         >
           <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
         </TouchableOpacity>
@@ -204,12 +215,17 @@ const ResultsScreen = ({ route, navigation }) => {
           { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
         ]}>
         {/* Header */}
-        <Text style={styles.emoji}>{getHeaderEmoji()}</Text>
-        <Text style={[styles.title, dynamicStyles.title]}>Game Complete!</Text>
+        <Text style={styles.emoji} {...decorativeAccessibilityProps}>{getHeaderEmoji()}</Text>
+        <Text style={[styles.title, dynamicStyles.title]} accessibilityRole="header">Game Complete!</Text>
 
         {/* Score Cards */}
         <View style={styles.scoresRow}>
-          <View style={[styles.scoreCard, dynamicStyles.scoreCard]}>
+          <View
+            style={[styles.scoreCard, dynamicStyles.scoreCard]}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={`${scores.player1Name} scored ${scores.player1Score} out of ${scores.totalQuestions}.`}
+          >
             <Text style={[styles.playerName, dynamicStyles.playerName]} numberOfLines={1}>
               {scores.player1Name}
             </Text>
@@ -226,7 +242,12 @@ const ResultsScreen = ({ route, navigation }) => {
             <Text style={[styles.vsText, dynamicStyles.vsText]}>vs</Text>
           </View>
 
-          <View style={[styles.scoreCard, dynamicStyles.scoreCard]}>
+          <View
+            style={[styles.scoreCard, dynamicStyles.scoreCard]}
+            accessible
+            accessibilityRole="text"
+            accessibilityLabel={`${scores.player2Name} scored ${scores.player2Score} out of ${scores.totalQuestions}.`}
+          >
             <Text style={[styles.playerName, dynamicStyles.playerName]} numberOfLines={1}>
               {scores.player2Name}
             </Text>
@@ -241,7 +262,7 @@ const ResultsScreen = ({ route, navigation }) => {
         </View>
 
         {/* Result Message */}
-        <View style={[styles.messageContainer, dynamicStyles.messageContainer]}>
+        <View style={[styles.messageContainer, dynamicStyles.messageContainer]} accessible {...accessibilityAlertProps}>
           <Text style={[styles.messageText, dynamicStyles.messageText]}>{scores.message}</Text>
           <Text style={[styles.combinedScore, dynamicStyles.combinedScore]}>
             Combined: {combinedScore}/{maxCombined}
@@ -252,14 +273,20 @@ const ResultsScreen = ({ route, navigation }) => {
         <TouchableOpacity
           style={[styles.playAgainButton, dynamicStyles.playAgainButton]}
           onPress={handlePlayAgain}
-          activeOpacity={0.8}>
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Play again"
+          accessibilityHint="Starts a new game from category selection.">
           <Text style={[styles.playAgainText, dynamicStyles.playAgainText]}>Play Again</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
           style={[styles.dashboardButton, dynamicStyles.dashboardButton]}
           onPress={handleBackToDashboard}
-          activeOpacity={0.8}>
+          activeOpacity={0.8}
+          accessibilityRole="button"
+          accessibilityLabel="Back to dashboard"
+          accessibilityHint="Returns to the dashboard.">
           <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
         </TouchableOpacity>
       </Animated.View>

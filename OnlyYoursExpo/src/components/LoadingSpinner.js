@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
+import { accessibilityStatusProps } from '../accessibility';
 
 /**
  * LoadingSpinner — reusable full-screen loading indicator.
@@ -51,7 +52,13 @@ const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
 
   return (
     <View style={styles.container} testID="loading-spinner">
-      <View style={styles.panel}>
+      <View
+        style={styles.panel}
+        accessible
+        {...accessibilityStatusProps}
+        accessibilityRole="progressbar"
+        accessibilityLabel={message || 'Loading'}
+      >
         <ActivityIndicator size={size} color={spinnerColor} />
         {message ? <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text> : null}
       </View>

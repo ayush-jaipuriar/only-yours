@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import api from '../services/api';
 import useTheme from '../theme/useTheme';
+import { announceForAccessibility } from '../accessibility';
 
 const HeartIllustration = ({ primaryColor, linkColor }) => {
   const pulse = useRef(new Animated.Value(1)).current;
@@ -106,6 +107,7 @@ const PartnerLinkScreen = ({ navigation }) => {
     try {
       const res = await api.post('/couple/generate-code');
       setGeneratedCode(res.data.code);
+      announceForAccessibility(`Partner code generated. ${res.data.code.split('').join(' ')}`);
     } catch {
       Alert.alert('Oops', 'Could not generate a code right now. Please try again.');
     } finally {
@@ -130,6 +132,7 @@ const PartnerLinkScreen = ({ navigation }) => {
       Clipboard.setString(generatedCode);
     }
     setCopied(true);
+    announceForAccessibility('Partner code copied.');
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -142,6 +145,7 @@ const PartnerLinkScreen = ({ navigation }) => {
     setLoadingLink(true);
     try {
       await api.post('/couple/link', { code: trimmed });
+      announceForAccessibility('Partner code accepted. You are now connected.');
       Alert.alert(
         'You\'re Connected!',
         'You and your partner are now linked. Time to start playing!',
@@ -247,13 +251,13 @@ const PartnerLinkScreen = ({ navigation }) => {
       >
         <HeartIllustration primaryColor={theme.colors.primary} linkColor={theme.colors.border} />
 
-        <Text style={[styles.heading, dynamicStyles.heading]}>Link with Partner</Text>
+        <Text style={[styles.heading, dynamicStyles.heading]} accessibilityRole="header">Link with Partner</Text>
         <Text style={[styles.subheading, dynamicStyles.subheading]}>
           Share your code or enter theirs to connect
         </Text>
 
         {/* --- Generate & Share Section --- */}
-        <View style={[styles.card, dynamicStyles.card]}>
+        <View style={[styles.card, dynamicStyles.card]} accessible={false}>
           <View style={styles.cardHeader}>
             <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
               <Text style={[styles.stepText, dynamicStyles.stepText]}>1</Text>
@@ -274,7 +278,12 @@ const PartnerLinkScreen = ({ navigation }) => {
                 },
               ]}
             >
-              <View style={[styles.codeBadge, dynamicStyles.codeBadge]}>
+              <View
+                style={[styles.codeBadge, dynamicStyles.codeBadge]}
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel={`Generated partner code ${generatedCode.split('').join(' ')}`}
+              >
                 <Text style={[styles.codeText, dynamicStyles.codeText]}>{generatedCode}</Text>
               </View>
 
@@ -283,6 +292,9 @@ const PartnerLinkScreen = ({ navigation }) => {
                   style={[styles.actionButton, dynamicStyles.actionButton]}
                   onPress={copyCode}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel={copied ? 'Partner code copied' : 'Copy partner code'}
+                  accessibilityHint="Copies the generated partner code to your clipboard."
                 >
                   <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText]}>
                     {copied ? 'Copied!' : 'Copy'}
@@ -293,6 +305,9 @@ const PartnerLinkScreen = ({ navigation }) => {
                   style={[styles.actionButton, dynamicStyles.actionButton, styles.shareButton, dynamicStyles.shareButton]}
                   onPress={shareCode}
                   activeOpacity={0.7}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share partner code"
+                  accessibilityHint="Opens the native share sheet with your generated partner code."
                 >
                   <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText, styles.shareButtonText, dynamicStyles.shareButtonText]}>
                     Share
@@ -306,6 +321,10 @@ const PartnerLinkScreen = ({ navigation }) => {
               onPress={generateCode}
               disabled={loadingGen}
               activeOpacity={0.8}
+              accessibilityRole="button"
+              accessibilityLabel={loadingGen ? 'Generating partner code' : 'Generate partner code'}
+              accessibilityHint="Requests a new partner code that you can share."
+              accessibilityState={{ disabled: loadingGen }}
             >
               {loadingGen ? (
                 <ActivityIndicator color={theme.colors.primaryContrast} size="small" />
@@ -324,7 +343,7 @@ const PartnerLinkScreen = ({ navigation }) => {
         </View>
 
         {/* --- Enter Code Section --- */}
-        <View style={[styles.card, dynamicStyles.card]}>
+        <View style={[styles.card, dynamicStyles.card]} accessible={false}>
           <View style={styles.cardHeader}>
             <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
               <Text style={[styles.stepText, dynamicStyles.stepText]}>2</Text>
@@ -342,6 +361,8 @@ const PartnerLinkScreen = ({ navigation }) => {
             placeholderTextColor={theme.colors.textTertiary}
             autoCapitalize="characters"
             style={[styles.input, dynamicStyles.input]}
+            accessibilityLabel="Partner code"
+            accessibilityHint="Enter the code your partner shared with you."
           />
 
           <TouchableOpacity
@@ -353,6 +374,10 @@ const PartnerLinkScreen = ({ navigation }) => {
             onPress={link}
             disabled={!code.trim() || loadingLink}
             activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel={loadingLink ? 'Connecting to partner' : 'Connect with partner code'}
+            accessibilityHint="Links your account with your partner using the entered code."
+            accessibilityState={{ disabled: !code.trim() || loadingLink }}
           >
             {loadingLink ? (
               <ActivityIndicator color={theme.colors.accentContrast} size="small" />

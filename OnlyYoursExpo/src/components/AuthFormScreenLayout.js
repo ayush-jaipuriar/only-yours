@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useTheme from '../theme/useTheme';
+import { decorativeAccessibilityProps } from '../accessibility';
 
 const MAX_FORM_WIDTH = 560;
 
@@ -73,9 +74,9 @@ const AuthFormScreenLayout = ({ children }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.atmosphere} pointerEvents="none">
-        <View style={styles.atmosphereGlowTop} />
-        <View style={styles.atmosphereGlowBottom} />
+      <View style={styles.atmosphere} pointerEvents="none" {...decorativeAccessibilityProps}>
+        <View style={styles.atmosphereGlowTop} {...decorativeAccessibilityProps} />
+        <View style={styles.atmosphereGlowBottom} {...decorativeAccessibilityProps} />
       </View>
       <KeyboardAvoidingView
         style={styles.keyboardRoot}
@@ -87,7 +88,7 @@ const AuthFormScreenLayout = ({ children }) => {
           keyboardShouldPersistTaps="handled"
           alwaysBounceVertical={false}
         >
-          <View style={[styles.formContainer, { width: formWidth }]}>
+          <View style={[styles.formContainer, { width: formWidth }]} accessible={false}>
             {children}
           </View>
         </ScrollView>

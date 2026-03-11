@@ -60,7 +60,7 @@ describe('SettingsScreen flow', () => {
     const replayOnboarding = jest.fn(() => Promise.resolve());
     const navigation = { replace: jest.fn() };
 
-    const { getByText } = render(
+    const { getByA11yLabel, getByText } = render(
       <ThemeProvider>
         <AuthContext.Provider value={{ replayOnboarding }}>
           <SettingsScreen navigation={navigation} />
@@ -74,12 +74,13 @@ describe('SettingsScreen flow', () => {
       expect(replayOnboarding).toHaveBeenCalledTimes(1);
       expect(navigation.replace).toHaveBeenCalledWith('Onboarding');
     });
+    expect(getByA11yLabel('Replay onboarding')).toBeTruthy();
   });
 
   it('prepares two-step unlink flow from linked status', async () => {
     const navigation = { replace: jest.fn() };
 
-    const { getByText } = render(
+    const { getByA11yLabel, getByText } = render(
       <ThemeProvider>
         <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
           <SettingsScreen navigation={navigation} />
@@ -98,12 +99,13 @@ describe('SettingsScreen flow', () => {
       expect(getByText('Final Confirmation')).toBeTruthy();
       expect(getByText('Confirm Unlink')).toBeTruthy();
     });
+    expect(getByA11yLabel('Unlink partner')).toBeTruthy();
   });
 
   it('saves notification preferences through backend contract', async () => {
     const navigation = { replace: jest.fn() };
 
-    const { getByDisplayValue, getByText } = render(
+    const { getByA11yLabel, getByDisplayValue, getByText } = render(
       <ThemeProvider>
         <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
           <SettingsScreen navigation={navigation} />
@@ -127,5 +129,7 @@ describe('SettingsScreen flow', () => {
       });
       expect(getByText('Notification preferences saved.')).toBeTruthy();
     });
+    expect(getByA11yLabel('Timezone')).toBeTruthy();
+    expect(getByA11yLabel('Save notification preferences')).toBeTruthy();
   });
 });

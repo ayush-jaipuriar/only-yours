@@ -30,13 +30,15 @@ describe('SignInScreen', () => {
   });
 
   it('shows validation error when fields are empty', async () => {
-    const { getByText } = renderScreen();
+    const { getByA11yLabel, getByText } = renderScreen();
 
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => {
       expect(getByText('Please enter both email and password.')).toBeTruthy();
     });
+    expect(getByA11yLabel('Email')).toBeTruthy();
+    expect(getByA11yLabel('Password')).toBeTruthy();
     expect(api.post).not.toHaveBeenCalled();
   });
 
@@ -48,10 +50,10 @@ describe('SignInScreen', () => {
     };
     api.post.mockResolvedValue({ data: authPayload });
 
-    const { getByPlaceholderText, getByText, login } = renderScreen();
+    const { getByA11yLabel, getByText, login } = renderScreen();
 
-    fireEvent.changeText(getByPlaceholderText('Email'), 'Alice@Example.com');
-    fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
+    fireEvent.changeText(getByA11yLabel('Email'), 'Alice@Example.com');
+    fireEvent.changeText(getByA11yLabel('Password'), 'password123');
     fireEvent.press(getByText('Sign In'));
 
     await waitFor(() => {
@@ -64,12 +66,14 @@ describe('SignInScreen', () => {
   });
 
   it('navigates to SignUp and ForgotPassword', async () => {
-    const { getByText, navigation } = renderScreen();
+    const { getByA11yLabel, getByText, navigation } = renderScreen();
 
     fireEvent.press(getByText("Don't have an account? Sign Up"));
     fireEvent.press(getByText('Forgot Password?'));
 
     expect(navigation.navigate).toHaveBeenCalledWith('SignUp');
     expect(navigation.navigate).toHaveBeenCalledWith('ForgotPassword');
+    expect(getByA11yLabel('Create a new account')).toBeTruthy();
+    expect(getByA11yLabel('Forgot password')).toBeTruthy();
   });
 });

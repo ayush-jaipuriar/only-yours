@@ -202,7 +202,7 @@ const DashboardScreen = ({ navigation }) => {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Loading...</Text>
+        <Text style={styles.loadingText} accessibilityRole="status">Loading...</Text>
       </View>
     );
   }
@@ -222,7 +222,7 @@ const DashboardScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title}>Welcome, {user?.name}!</Text>
+        <Text style={styles.title} accessibilityRole="header">Welcome, {user?.name}!</Text>
 
         {couple ? (
           <>
@@ -235,12 +235,24 @@ const DashboardScreen = ({ navigation }) => {
                   {activeGame.round || activeGame.status} • Question {activeGame.currentQuestionNumber || 1}
                   /{activeGame.totalQuestions || 8}
                 </Text>
-                <TouchableOpacity style={styles.primaryButton} onPress={handleContinueGame}>
+                <TouchableOpacity
+                  style={styles.primaryButton}
+                  onPress={handleContinueGame}
+                  accessibilityRole="button"
+                  accessibilityLabel="Continue active game"
+                  accessibilityHint="Opens your current game session."
+                >
                   <Text style={styles.buttonText}>Continue Game</Text>
                 </TouchableOpacity>
               </View>
             ) : (
-              <TouchableOpacity style={styles.primaryButton} onPress={handleStartGame}>
+              <TouchableOpacity
+                style={styles.primaryButton}
+                onPress={handleStartGame}
+                accessibilityRole="button"
+                accessibilityLabel="Start new game"
+                accessibilityHint="Opens category selection to invite your partner to a new game."
+              >
                 <Text style={styles.buttonText}>Start New Game</Text>
               </TouchableOpacity>
             )}
@@ -251,6 +263,9 @@ const DashboardScreen = ({ navigation }) => {
             <TouchableOpacity
               style={styles.secondaryButton}
               onPress={() => navigation.navigate('PartnerLink')}
+              accessibilityRole="button"
+              accessibilityLabel="Link with partner"
+              accessibilityHint="Opens the partner linking screen."
             >
               <Text style={styles.buttonText}>Link with Partner</Text>
             </TouchableOpacity>
@@ -258,10 +273,16 @@ const DashboardScreen = ({ navigation }) => {
         )}
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Your Stats</Text>
+          <Text style={styles.sectionTitle} accessibilityRole="header">Your Stats</Text>
           <View style={styles.metricsGrid}>
             {metricCards.map((item) => (
-              <View key={item.label} style={styles.metricItem}>
+              <View
+                key={item.label}
+                style={styles.metricItem}
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel={`${item.label}: ${item.value}`}
+              >
                 <Text style={styles.metricValue}>{item.value}</Text>
                 <Text style={styles.metricLabel}>{item.label}</Text>
               </View>
@@ -270,7 +291,7 @@ const DashboardScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle}>Badges</Text>
+          <Text style={styles.sectionTitle} accessibilityRole="header">Badges</Text>
           {badges?.length ? (
             <View style={styles.badgeList}>
               {badges.map((badge) => (
@@ -286,12 +307,18 @@ const DashboardScreen = ({ navigation }) => {
           <TouchableOpacity
             style={styles.tertiaryButton}
             onPress={() => navigation.navigate('GameHistory')}
+            accessibilityRole="button"
+            accessibilityLabel="Open game history"
+            accessibilityHint="Shows your previous games and filters."
           >
             <Text style={styles.linkText}>Game History</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.tertiaryButton}
             onPress={() => navigation.navigate('Profile')}
+            accessibilityRole="button"
+            accessibilityLabel="Open profile"
+            accessibilityHint="Shows your profile and account details."
           >
             <Text style={styles.linkText}>View Profile</Text>
           </TouchableOpacity>
@@ -302,4 +329,3 @@ const DashboardScreen = ({ navigation }) => {
 };
 
 export default DashboardScreen;
-

@@ -1338,3 +1338,69 @@ The React Native upgrade has been successfully completed:
     - [ ] Confirm logs show one `Waiting for partner` and one `Both players answered ... Advancing...` for the same question.
     - [ ] Capture evidence in `PHASE_D_MANUAL_VALIDATION_RUN.md` under runtime defect retest notes.
 
+---
+
+## P2 Phase F Planning Kickoff (Mar 11, 2026)
+
+**Goal:** Start the next roadmap phase with an implementation-gated plan for baseline screen-reader accessibility across the active Expo app.
+
+- [x] **Created in-depth Phase F sprint planning document:**
+    - [x] Added `P2_PHASE_F_SPRINT_PLAN.md`.
+    - [x] Defined the scope as a baseline accessibility pass across primary Expo flows, not a full compliance overhaul.
+    - [x] Locked the workflow gate so implementation cannot begin before explicit approval.
+
+- [x] **Captured the technical approach before coding:**
+    - [x] Broke Phase F into `F1` shared accessibility contract, `F2` screen-reader baseline pass, and `F3` validation/docs.
+    - [x] Defined a shared-rule-first rollout to reduce semantic drift across buttons, inputs, cards, banners, and dynamic game states.
+    - [x] Added an announcement policy for critical runtime events so future accessibility and haptics use the same state taxonomy.
+    - [x] **Why this change:** accessibility work sprawls easily; a contract-first sprint plan keeps the pass teachable, testable, and bounded to shippable baseline improvements.
+
+- [ ] **Pending before Phase F implementation starts:**
+    - [ ] Review and approve `P2_PHASE_F_SPRINT_PLAN.md`.
+    - [ ] Confirm whether any additional accessibility priorities should be pulled into this phase before coding.
+
+---
+
+## P2 Phase F Core Implementation (Mar 11, 2026)
+
+**Goal:** Ship the baseline TalkBack-first accessibility pass across `OnlyYoursExpo/` while keeping product behavior unchanged and documenting deferred manual screen-reader validation.
+
+- [x] **Established a shared Expo accessibility layer:**
+    - [x] Added `OnlyYoursExpo/src/accessibility/index.js` with:
+        - [x] shared alert/status semantics,
+        - [x] decorative-element suppression props,
+        - [x] a small `announceForAccessibility(...)` helper for runtime state announcements.
+    - [x] Updated `OnlyYoursExpo/jest.setup.js` to stub `AccessibilityInfo` for tests.
+    - [x] **Why this change:** repeated accessibility behavior belongs in one small local utility so labels and announcements stay consistent instead of drifting screen-by-screen.
+
+- [x] **Applied shared-component baseline semantics:**
+    - [x] Updated auth layout and shared feedback surfaces:
+        - [x] `AuthFormScreenLayout`
+        - [x] `BadgeChip`
+        - [x] `EmptyState`
+        - [x] `LoadingSpinner`
+        - [x] `LoadingScreen`
+        - [x] `ReconnectionBanner`
+        - [x] `AppErrorBoundary`
+    - [x] Hid decorative visuals from assistive tech where they do not add meaning.
+    - [x] Added semantic status/alert treatment to reusable loading, error, and empty patterns.
+    - [x] Follow-up review fix: kept `LoadingSpinner` and `LoadingScreen` announced as live regions without overriding their intended `progressbar` role.
+
+- [x] **Applied primary-flow semantics and targeted announcements across Expo screens:**
+    - [x] Auth screens now expose labeled inputs, button roles, and alert-style error/success feedback.
+    - [x] Dashboard, onboarding, category selection, partner linking, history, profile, settings, gameplay, and results now expose clearer button labels, progress/state semantics, and reduced duplicate spoken output.
+    - [x] Follow-up review fix: removed the grouped accessibility wrapper around the dashboard active-session card so the nested `Continue Game` button stays focusable for screen-reader users.
+    - [x] Added TalkBack-oriented announcements for critical dynamic states such as:
+        - [x] reconnect/disconnect banner changes,
+        - [x] invitation-pending gameplay recovery,
+        - [x] round transition into guessing,
+        - [x] guess outcome reveal,
+        - [x] results ready summary,
+        - [x] partner-code generated/copied/accepted,
+        - [x] unlink/recover state outcomes and settings save/error feedback.
+    - [x] **Why this change:** the biggest accessibility gap was not static labels alone, but silent state changes that were only visible on-screen.
+
+- [ ] **Validation and documentation follow-up:**
+    - [ ] Complete focused + full automated validation for touched Expo flows.
+    - [x] Add a deferred manual Phase F screen-reader matrix to `MANUAL_TESTING_GUIDE_SPRINT6.md`.
+    - [ ] Record final automated validation evidence in `P2_PHASE_F_SPRINT_PLAN.md` after the Jest runs complete.

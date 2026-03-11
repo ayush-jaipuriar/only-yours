@@ -9,6 +9,7 @@ import api from '../services/api';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
 import useTheme from '../theme/useTheme';
 import createAuthFormStyles from '../theme/createAuthFormStyles';
+import { accessibilityAlertProps } from '../accessibility';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -48,7 +49,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
-      <Text style={styles.title}>Forgot Password</Text>
+      <Text style={styles.title} accessibilityRole="header">Forgot Password</Text>
       <Text style={styles.subtitle}>Enter your email to request a reset code.</Text>
 
       <TextInput
@@ -59,15 +60,21 @@ const ForgotPasswordScreen = ({ navigation }) => {
         autoCapitalize="none"
         style={styles.input}
         placeholderTextColor={theme.colors.textTertiary}
+        accessibilityLabel="Email"
+        accessibilityHint="Enter your account email to request a password reset."
       />
 
-      {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-      {successMessage ? <Text style={styles.successText}>{successMessage}</Text> : null}
+      {errorMessage ? <Text style={styles.errorText} {...accessibilityAlertProps}>{errorMessage}</Text> : null}
+      {successMessage ? <Text style={styles.successText} {...accessibilityAlertProps}>{successMessage}</Text> : null}
 
       <TouchableOpacity
         style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
         onPress={handleForgotPassword}
         disabled={isSubmitting}
+        accessibilityRole="button"
+        accessibilityLabel={isSubmitting ? 'Sending reset link' : 'Send reset link'}
+        accessibilityHint="Requests a password reset email or code for this account."
+        accessibilityState={{ disabled: isSubmitting }}
       >
         {isSubmitting ? (
           <ActivityIndicator color={theme.colors.primaryContrast} />
@@ -76,11 +83,21 @@ const ForgotPasswordScreen = ({ navigation }) => {
         )}
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('ResetPassword')}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('ResetPassword')}
+        accessibilityRole="button"
+        accessibilityLabel="Reset password with token"
+        accessibilityHint="Opens the screen for entering a reset token and new password."
+      >
         <Text style={styles.linkText}>Already have a reset token? Reset Password</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate('SignIn')}>
+      <TouchableOpacity
+        onPress={() => navigation.navigate('SignIn')}
+        accessibilityRole="button"
+        accessibilityLabel="Back to sign in"
+        accessibilityHint="Returns to the sign in screen."
+      >
         <Text style={styles.linkText}>Back to Sign In</Text>
       </TouchableOpacity>
     </AuthFormScreenLayout>
