@@ -34,8 +34,15 @@ function setupDefaultClient() {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  jest.useRealTimers();
   setupDefaultClient();
   service = createServiceInstance();
+});
+
+afterEach(() => {
+  service?.disconnect?.();
+  jest.clearAllTimers();
+  jest.useRealTimers();
 });
 
 describe('WebSocketService', () => {
@@ -78,13 +85,22 @@ describe('WebSocketService', () => {
         subscribe: jest.fn(),
         publish: jest.fn(),
       }));
+      const originalSetTimeout = global.setTimeout;
+      const originalClearTimeout = global.clearTimeout;
+      global.setTimeout = jest.fn((callback) => {
+        callback();
+        return 1;
+      });
+      global.clearTimeout = jest.fn();
 
-      const svc = createServiceInstance();
-
-      const connectPromise = svc.connect('http://localhost:8080');
-
-      await expect(connectPromise).rejects.toThrow('WebSocket connection timed out');
-    }, 22000);
+      try {
+        const svc = createServiceInstance();
+        await expect(svc.connect('http://localhost:8080')).rejects.toThrow('WebSocket connection timed out');
+      } finally {
+        global.setTimeout = originalSetTimeout;
+        global.clearTimeout = originalClearTimeout;
+      }
+    });
 
     it('should build correct broker URL from http base', async () => {
       await service.connect('http://192.168.1.101:8080');

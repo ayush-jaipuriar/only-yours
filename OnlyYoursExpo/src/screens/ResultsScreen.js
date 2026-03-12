@@ -67,7 +67,7 @@ const ResultsScreen = ({ route, navigation }) => {
       return;
     }
 
-    Animated.parallel([
+    const entryAnimation = Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 600,
@@ -79,21 +79,31 @@ const ResultsScreen = ({ route, navigation }) => {
         friction: 7,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]);
 
-    Animated.timing(p1ScoreAnim, {
+    const playerOneAnimation = Animated.timing(p1ScoreAnim, {
       toValue: scores.player1Score,
       duration: 1200,
       delay: 400,
       useNativeDriver: false,
-    }).start();
+    });
 
-    Animated.timing(p2ScoreAnim, {
+    const playerTwoAnimation = Animated.timing(p2ScoreAnim, {
       toValue: scores.player2Score,
       duration: 1200,
       delay: 400,
       useNativeDriver: false,
-    }).start();
+    });
+
+    entryAnimation.start();
+    playerOneAnimation.start();
+    playerTwoAnimation.start();
+
+    return () => {
+      entryAnimation.stop();
+      playerOneAnimation.stop();
+      playerTwoAnimation.stop();
+    };
   }, [scores, fadeAnim, p1ScoreAnim, p2ScoreAnim, scaleAnim]);
 
   useEffect(() => {

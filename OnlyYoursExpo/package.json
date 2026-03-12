@@ -24,8 +24,7 @@
       "./jest.setup.js"
     ],
     "testPathIgnorePatterns": [
-      "/node_modules/",
-      "src/screens/__tests__/"
+      "/node_modules/"
     ]
   },
   "dependencies": {

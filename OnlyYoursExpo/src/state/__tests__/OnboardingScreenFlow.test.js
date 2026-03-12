@@ -9,7 +9,7 @@ describe('OnboardingScreen flow', () => {
     const completeOnboarding = jest.fn(() => Promise.resolve());
     const navigation = { replace: jest.fn() };
 
-    const { getByText } = render(
+    const { getByText, unmount } = render(
       <AuthContext.Provider
         value={{
           startOnboarding,
@@ -32,5 +32,7 @@ describe('OnboardingScreen flow', () => {
       expect(completeOnboarding).toHaveBeenCalledTimes(1);
       expect(navigation.replace).toHaveBeenCalledWith('Dashboard');
     });
+
+    unmount();
   });
 });

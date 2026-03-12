@@ -348,7 +348,8 @@ Task IDs use `PF-*` format.
 - [ ] Run focused frontend tests for touched flows.
 - [ ] Run full Expo frontend regression after accessibility edits stabilize.
 - [x] Validation note (Mar 11, 2026): Jest startup was hanging under Watchman in this local Expo workspace; use Node `24.x` from `.nvmrc` and disable Watchman for stable local runs.
-- [x] Validation note (Mar 11, 2026): `src/screens/__tests__/` remains excluded by package Jest config, so focused screen-test validation currently requires an explicit `--testPathIgnorePatterns=/node_modules/` override when running those files directly.
+- [x] Validation note (Mar 11, 2026): removed the package-level ignore for `src/screens/__tests__/` so focused screen-test validation now works with normal Jest path targeting.
+- [x] Validation note (Mar 11, 2026): added global Expo notifications/device/constants Jest mocks so AuthContext-linked suites no longer import the real Expo push module during UI and service tests.
 
 #### PF-F3.2 Manual accessibility walkthrough docs
 

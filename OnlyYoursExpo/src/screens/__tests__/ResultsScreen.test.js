@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react-native';
+import { cleanup, fireEvent, render } from '@testing-library/react-native';
 import ResultsScreen from '../ResultsScreen';
 import { AuthContext } from '../../state/AuthContext';
 import { GameProvider } from '../../state/GameContext';
@@ -40,6 +40,10 @@ const renderResults = (scores = mockScores, navigation = {}) => {
 describe('ResultsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+  });
+
+  afterEach(() => {
+    cleanup();
   });
 
   it('should render both player names', () => {
