@@ -1,7 +1,7 @@
 # Only Yours - P2 Implementation Plan (Detailed)
 
 Date: Feb 22, 2026  
-Status: Drafted from finalized user clarifications; ready for implementation
+Status: Active implementation plan; current repo audit aligned through `Phase F` on Mar 14, 2026
 
 ---
 
@@ -433,20 +433,20 @@ Phase D completion notes (implementation references):
 
 #### E1) Dark token expansion checklist
 
-- [ ] Expand the theme token system beyond baseline parity into premium dark-mode semantic tokens.
-- [ ] Define dark-specific treatment for:
+- [x] Expand the theme token system beyond baseline parity into premium dark-mode semantic tokens.
+- [x] Define dark-specific treatment for:
   - cards
   - overlays
   - banners
   - gradients
   - celebratory states
   - form surfaces
-- [ ] Audit and remove remaining hardcoded light-biased colors from shared components and critical screens.
-- [ ] Preserve `system` / `light` / `dark` preference support as a stable contract.
+- [x] Audit and remove remaining hardcoded light-biased colors from shared components and critical screens.
+- [x] Preserve `system` / `light` / `dark` preference support as a stable contract.
 
 #### E2) Screen-level redesign pass checklist
 
-- [ ] Redesign dark mode for all primary screens:
+- [x] Redesign dark mode for all primary screens:
   - auth
   - onboarding
   - dashboard
@@ -457,20 +457,24 @@ Phase D completion notes (implementation references):
   - history
   - profile
   - settings
-- [ ] Ensure dark-mode treatments remain consistent with the romantic premium direction.
-- [ ] Refine badges, empty states, loading states, reconnect banners, and modal surfaces for dark mode.
+- [x] Ensure dark-mode treatments remain consistent with the romantic premium direction.
+- [x] Refine badges, empty states, loading states, reconnect banners, and modal surfaces for dark mode.
 
 #### E3) Visual QA and regression hardening checklist
 
-- [ ] Add focused rendering/regression coverage for theme mode switching on priority screens.
+- [x] Add focused rendering/regression coverage for theme mode switching on priority screens.
 - [ ] Execute manual visual QA for `system`, `light`, and `dark` modes on phone and tablet form factors.
 - [ ] Verify no unreadable contrast, clipped text, or light-only visual artifacts remain.
 
 #### E4) Documentation and acceptance closure checklist
 
-- [ ] Update the manual guide with dark-mode acceptance criteria and evidence capture guidance.
-- [ ] Document any intentionally deferred dark-only polish items.
-- [ ] Record final screen parity checklist before moving to accessibility phase.
+- [x] Update the manual guide with dark-mode acceptance criteria and evidence capture guidance.
+- [x] Document any intentionally deferred dark-only polish items.
+- [x] Record final screen parity checklist before moving to accessibility phase.
+
+Phase E status update (Mar 14, 2026):
+- `E1`, `E2`, and `E4` are implemented in the active Expo app and reflected in `P2_PHASE_E_SPRINT_PLAN.md`.
+- `E3` automated regression coverage is in place, but manual visual QA and final sign-off are still pending.
 
 Definition of done:
 - Dark mode feels intentional and premium across all primary flows.
@@ -489,17 +493,17 @@ Definition of done:
 
 #### F1) Shared accessibility contract checklist
 
-- [ ] Define baseline accessibility rules for interactive components:
+- [x] Define baseline accessibility rules for interactive components:
   - labels
   - roles
   - hints
   - state/value announcements
-- [ ] Add shared component guidance for icon-only, decorative, loading, error, and modal patterns.
-- [ ] Define which dynamic state changes require accessibility announcements.
+- [x] Add shared component guidance for icon-only, decorative, loading, error, and modal patterns.
+- [x] Define which dynamic state changes require accessibility announcements.
 
 #### F2) Screen-reader baseline pass checklist
 
-- [ ] Apply accessibility labels and hints across all primary flows:
+- [x] Apply accessibility labels and hints across all primary flows:
   - auth
   - onboarding
   - dashboard
@@ -510,7 +514,7 @@ Definition of done:
   - profile
   - settings
 - [ ] Fix focus order and focus traps for dialogs, banners, forms, and navigation transitions.
-- [ ] Add announcements for critical gameplay and reliability events:
+- [x] Add announcements for critical gameplay and reliability events:
   - invite received
   - reconnect/disconnect
   - round transition
@@ -523,7 +527,11 @@ Definition of done:
 
 - [ ] Add component/screen coverage for baseline accessibility props where practical.
 - [ ] Run manual screen-reader walkthroughs across all primary flows.
-- [ ] Update the manual guide with accessibility acceptance criteria and known limitations.
+- [x] Update the manual guide with accessibility acceptance criteria and known limitations.
+
+Phase F status update (Mar 14, 2026):
+- Shared accessibility helpers, baseline semantic props, and runtime announcements are implemented across the primary Expo flows.
+- Manual TalkBack/VoiceOver walkthroughs and final validation closure remain pending, so `Phase F` should be treated as implemented-in-code but not fully signed off.
 
 Definition of done:
 - All primary flows are screen-reader usable at a baseline level.
@@ -889,7 +897,7 @@ Definition of done:
 
 ---
 
-## 8) Immediate Next Implementation Slice
+## 8) Current Next Slice
 
 - [x] Start `A1 + A2` core path: server-side single-active-session enforcement + 7-day expiry model.  
   `Priority: Critical | Estimate: 2.5-3.5 days | Depends on: none`
@@ -900,7 +908,26 @@ Definition of done:
 - [x] Add current-question progression contract (one-question-at-a-time resume-safe flow).  
   `Priority: Critical | Estimate: 4-6 hours | Depends on: A2`
 
-This slice is complete and automatedly validated; Phase B history/metrics implementation is now complete and waiting on manual validation/sign-off.
+Historical note:
+- This original kickoff slice is complete and automatedly validated.
+
+Current next-slice options (as of Mar 14, 2026):
+- Close deferred manual validation for already-built phases:
+  - `Phase A` two-device continuation matrix
+  - `Phase C` responsive/theme visual QA
+  - `Phase D` two-device notification deep-link validation
+  - `Phase E` manual dark-mode visual sign-off
+  - `Phase F` manual screen-reader walkthroughs
+- Continue net-new implementation from the next unfinished roadmap blocks:
+  - `Phase G` haptics
+  - `Phase H` custom questions
+  - `Phase J` progression expansion
+  - `Phase I` sharing
+  - `Phase K` release-safety hardening
+
+Recommended tracker interpretation:
+- Weeks `0` through `6` below are now partly historical checkpoints.
+- Weeks `7` through `9` are the remaining forward roadmap, but they should be read alongside the still-open manual closure gates from earlier weeks.
 
 ---
 
@@ -908,6 +935,11 @@ This slice is complete and automatedly validated; Phase B history/metrics implem
 
 This schedule is a recommended cadence for sequencing work and validation.
 It is **checkpoint-driven**, not deadline-driven. If a gate is not satisfied, do not move forward.
+
+Current reading guide (Mar 14, 2026):
+- Weeks `0` through `4` are historical and mostly implemented, with some manual acceptance gates still open.
+- Week `5` and Week `6` are partially historical: implementation is present, but manual closure is still pending for `Phase E` and `Phase F`.
+- Weeks `7` through `9` remain the forward-looking roadmap for not-yet-implemented phases.
 
 ### Week 0 - Planning and Readiness Gate
 
@@ -1002,14 +1034,18 @@ Checklist:
 - [x] Complete `D2` profile/settings edits and reminder controls.
 - [x] Complete `D3` notification deep-link paths and fan-out correctness.
 - [x] Complete `D4` validation + docs.
-- [ ] Create and review detailed Phase E sprint plan document before coding starts.
-- [ ] Complete `E1` dark token expansion.
-- [ ] Complete `E2` screen-level dark redesign pass.
+- [x] Create and review detailed Phase E sprint plan document before coding starts.
+- [x] Complete `E1` dark token expansion.
+- [x] Complete `E2` screen-level dark redesign pass.
 - [ ] Complete `E3` visual QA and regression hardening.
-- [ ] Complete `E4` dark-mode docs and acceptance closure.
+- [x] Complete `E4` dark-mode docs and acceptance closure.
+
+Status note (Mar 14, 2026):
+- `Phase E` implementation landed and its dedicated sprint artifact is marked implemented.
+- Remaining open work for Week 5 is manual dark-mode visual QA and final user sign-off.
 
 Gate to exit Week 5:
-- [ ] Manual Phase D device validation completed or explicitly deferred with rationale.
+- [x] Manual Phase D device validation completed or explicitly deferred with rationale.
 - [ ] Dark mode visually coherent across all primary flows.
 - [ ] User sign-off on dark-mode direction fidelity.
 
@@ -1019,14 +1055,18 @@ Focus:
 - Establish accessibility baseline across primary flows, then layer subtle haptics on top of stable UX states.
 
 Checklist:
-- [ ] Create and review detailed Phase F sprint plan document before coding starts.
-- [ ] Complete `F1` shared accessibility contract.
-- [ ] Complete `F2` screen-reader baseline pass.
+- [x] Create and review detailed Phase F sprint plan document before coding starts.
+- [x] Complete `F1` shared accessibility contract.
+- [x] Complete `F2` screen-reader baseline pass.
 - [ ] Complete `F3` validation + docs.
 - [ ] Create and review detailed Phase G sprint plan document before coding starts.
 - [ ] Complete `G1` haptic design map + preferences.
 - [ ] Complete `G2` runtime integration.
 - [ ] Complete `G3` validation + docs.
+
+Status note (Mar 14, 2026):
+- `Phase F` implementation is present in code across the primary Expo flows.
+- Remaining open work for Week 6 is manual screen-reader validation, final validation closure, and all of `Phase G`.
 
 Gate to exit Week 6:
 - [ ] Primary flows are usable with screen-reader baseline support.
@@ -1045,6 +1085,10 @@ Checklist:
 - [ ] Complete `H3` frontend custom library surfaces.
 - [ ] Complete `H4` dedicated custom-deck gameplay integration.
 - [ ] Complete `H5` validation + docs.
+
+Status note (Mar 14, 2026):
+- `Phase H` has not started in code.
+- If release-safety hardening (`Phase K`) is prioritized ahead of more product expansion, this week may intentionally slide later.
 
 Gate to exit Week 7:
 - [ ] Linked couples can manage and play from a private custom deck.
@@ -1069,6 +1113,11 @@ Checklist:
 - [ ] Complete `I3` native share flow integration.
 - [ ] Complete `I4` validation + docs.
 
+Status note (Mar 14, 2026):
+- `Phase J` is still pending beyond the existing badge MVP from `Phase B`.
+- `Phase I` is still pending for its planned scope; partner-code sharing does not count as this phase.
+- The dependency order still matters here: progression metadata should stabilize before milestone-sharing UX is treated as complete.
+
 Gate to exit Week 8:
 - [ ] Progression model is stable, understandable, and validated.
 - [ ] Result and milestone sharing works with privacy-safe defaults.
@@ -1085,6 +1134,10 @@ Checklist:
 - [ ] Complete `K2` release-branch deploy gating.
 - [ ] Complete `K3` rollback strategy runbook + rollback drill.
 - [ ] Complete `K4` release-safety validation.
+
+Status note (Mar 14, 2026):
+- The repo already has a generic CI workflow, but the specific `Phase K` deliverables are still open.
+- Remaining work here includes real GCP Secret Manager integration, release-only deployment gating, and rollback drill evidence.
 
 Gate to exit Week 9:
 - [ ] Critical flows across `A` through `J` pass full automated + manual validation suite.

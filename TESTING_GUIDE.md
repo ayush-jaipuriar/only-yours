@@ -1,10 +1,79 @@
-# Only Yours - End-to-End Setup and Testing Guide (Sprints 0 → 3)
+# Only Yours - End-to-End Setup and Testing Guide (Historical Sprints 0 → 3 Reference)
 
-This guide walks you through setting up the environment and thoroughly testing the app from the foundation (Sprint 0) through Authentication (Sprint 1), Profile/Couple Linking (Sprint 2), and Categories/WebSocket foundation (Sprint 3). Tests are ordered to build on one another.
+This guide primarily documents the earlier pre-Expo, Google-auth, `OnlyYoursApp/` testing flow from the initial project buildout. It still contains useful historical setup and debugging context, but it is not the best starting point for validating the current repo state.
+
+## Current-State Notice
+
+Use these docs first for the current app:
+
+- `README.md` for current repo structure and active app targets
+- `MANUAL_TESTING_GUIDE_SPRINT6.md` for the current manual validation runbooks
+- `P2_IMPLEMENTATION_PLAN.md` for live phase/checklist status
+- `P2_PROGRESS_AUDIT.md` for the latest code-vs-plan audit
+- `CODEBASE_EXPERT_GUIDE.md` for the current architecture and feature map
+
+Current repo reality:
+
+- Active mobile client: `OnlyYoursExpo/`
+- Legacy mobile client: `OnlyYoursApp/`
+- Active auth path: email/password, not Google Sign-In
+- Current implemented product surface goes well beyond Sprints `0` to `3`, including gameplay through results, continuation, history/stats/badges, onboarding/theme, dark mode, settings/profile flows, and baseline accessibility
+
+## Current Testing Entry Points (Mar 14, 2026)
+
+### Backend automated validation
+
+```bash
+cd backend
+./gradlew test
+```
+
+### Expo automated validation
+
+Use the active client, not `OnlyYoursApp/`:
+
+```bash
+cd OnlyYoursExpo
+npm ci --legacy-peer-deps
+npm test -- --runInBand
+```
+
+Current Expo tooling expectations:
+
+- Node `>=24 <25`
+- npm `>=11 <12`
+
+### Current manual validation
+
+Prefer the current manual guide:
+
+- `MANUAL_TESTING_GUIDE_SPRINT6.md`
+
+Use that guide for:
+
+- email/password auth flows
+- couple linking and gameplay
+- continuation / reconnect / results
+- history / stats / badges
+- responsive checks
+- dark-mode visual QA
+- TalkBack / VoiceOver walkthroughs
+
+## Historical Scope Of This Guide
+
+The sections below preserve the original Sprints `0` to `3` setup/testing flow:
+
+- backend foundation
+- legacy `OnlyYoursApp/` setup
+- Google Sign-In testing
+- early profile/linking checks
+- early categories/WebSocket checks
+
+Treat the remaining sections as historical reference unless they clearly still apply.
 
 ---
 
-## 0) Quickstart Test Flow (Sprints 0–3)
+## 0) Historical Quickstart Test Flow (Sprints 0–3)
 
 1. Backend: configure `application.properties`, create DB, start backend.
 2. Frontend: set `API_URL`, install deps, run app on emulator/device.
@@ -831,4 +900,3 @@ cd OnlyYoursApp/android && ./gradlew signingReport
 ## Changelog
 
 - 2025-10-09: Expanded macOS + Android emulator setup (Section 11), Google OAuth steps (12), required running services checklist (13), single- and two-emulator end-to-end runbooks (14–15), Postman usage expansion (16), advanced diagnostics (17), and command cheat sheet (18).
-

@@ -1,8 +1,28 @@
-# Only Yours - End-to-End Implementation Status
+# Only Yours - End-to-End Implementation Status (Historical Reference)
 
-**Document Purpose**: Comprehensive single-source-of-truth for the entire implementation journey of the "Only Yours" couples game app. Covers everything built, everything pending, architecture, tech stack, file inventory, and roadmap.
+**Document Purpose**: Historical implementation reference for the earlier pre-P2 / pre-Expo project journey. It still contains useful architecture and history context, but it is no longer the best top-level source of truth for current product status.
 
-**Last Updated**: February 21, 2026
+**Last Updated**: March 14, 2026
+
+## Current-State Notice
+
+This file now serves as a historical reference, not the primary live status tracker.
+
+Current source-of-truth docs:
+
+- `README.md` for current repo structure and active app targets
+- `CODEBASE_EXPERT_GUIDE.md` for current architecture and feature coverage
+- `P2_IMPLEMENTATION_PLAN.md` for live P2 checklist status
+- `P2_PROGRESS_AUDIT.md` for the latest code-vs-plan audit
+
+Current repo reality at a glance:
+
+- Active mobile client: `OnlyYoursExpo/`
+- Legacy mobile client: `OnlyYoursApp/`
+- Backend remains the gameplay/business-logic source of truth
+- Core gameplay, Round 2, scoring/results, continuation, history/stats/badges, onboarding/theme, settings/profile, unlink/recovery, dark mode, and baseline accessibility are implemented in code
+- Main remaining P2 implementation work: haptics, custom questions, progression expansion, social sharing, and release-safety hardening
+- Main remaining closure work for already-built phases: manual validation/sign-off for some Phase A/C/D/E/F checkpoints
 
 ---
 
@@ -35,24 +55,30 @@ User A selects a category  →  Partner B receives invitation  →  Both answer 
    →  Both guess partner's answers  →  Scores calculated  →  See how well you know each other
 ```
 
-### Planned MVP Feature Set
+### Current Product Snapshot
 
 | Feature | Status | Sprint |
 |---------|--------|--------|
-| Google Sign-In authentication | ✅ Complete | Sprint 1 |
-| Email/password authentication migration (Phase 1) | 🚧 In Progress (core implementation complete, manual sign-off pending) | Auth Migration |
+| Legacy Google Sign-In authentication | Historical / no longer active path | Sprint 1 |
+| Email/password authentication | ✅ Implemented in current app/backend | Auth Migration |
 | JWT-based stateless security | ✅ Complete | Sprint 1 |
-| User profile viewing | ✅ Complete | Sprint 2 |
+| User profile viewing/editing | ✅ Implemented | Sprint 2 + Phase D |
 | Couple linking (invite code) | ✅ Complete | Sprint 2 |
 | Question categories & content seeding | ✅ Complete | Sprint 3 |
 | WebSocket infrastructure (STOMP/SockJS) | ✅ Complete | Sprint 3 |
-| React Native modernization (0.72→0.75.4) | ✅ Complete | RN Upgrade |
+| Legacy React Native modernization (0.72→0.75.4) | Historical milestone | RN Upgrade |
+| Expo migration / active client runtime | ✅ Implemented | P2 migration path |
 | Game invitation system | ✅ Complete | Sprint 4 |
 | Round 1: Answering questions | ✅ Complete | Sprint 4 |
-| Round 2: Guessing partner's answers | ❌ Not started | Sprint 5 |
-| Scoring & results display | ❌ Not started | Sprint 5 |
-| UI/UX polish & error handling | ❌ Not started | Sprint 6 |
-| Production deployment (Docker, HTTPS, CI) | ❌ Not started | Sprint 6 |
+| Round 2: Guessing partner's answers | ✅ Implemented | Sprint 5 / P2 foundation |
+| Scoring & results display | ✅ Implemented | Sprint 5 / P2 foundation |
+| Async continuation / resume / expiry | ✅ Implemented in code; manual sign-off pending | Phase A |
+| History, stats, badges | ✅ Implemented | Phase B |
+| Onboarding + tokenized theming + responsive expansion | ✅ Implemented; some manual visual QA pending | Phase C |
+| Settings/profile/unlink recovery/deep-link reliability | ✅ Implemented; some manual validation pending | Phase D |
+| Premium dark mode pass | ✅ Implemented in code; manual visual sign-off pending | Phase E |
+| Accessibility baseline | ✅ Implemented in code; manual screen-reader sign-off pending | Phase F |
+| Production deployment / release-safety hardening | 🚧 Partial foundation only (generic CI exists; Phase K still open) | Sprint 6 / Phase K |
 
 ---
 
@@ -357,6 +383,9 @@ CREATE TABLE game_answers (
 
 ### Overall Progress
 
+Historical progress snapshot below is preserved for the earlier RN-era buildout.
+For the current live status, use the P2 plan and audit docs listed in the notice above.
+
 ```
 Sprint 0: Project Setup          ████████████████████ 100%  ✅
 Sprint 1: Authentication         ████████████████████ 100%  ✅
@@ -364,9 +393,25 @@ Sprint 2: Profile & Linking      ███████████████�
 Sprint 3: Game Setup & WebSocket ████████████████████ 100%  ✅
 RN Upgrade: 0.72 → 0.75.4       ████████████████████ 100%  ✅
 Sprint 4: Round 1 (Answering)    ████████████████████  98%  ✅
-Sprint 5: Round 2 (Guessing)     ░░░░░░░░░░░░░░░░░░░░   0%  ❌
-Sprint 6: Polish & Release       ░░░░░░░░░░░░░░░░░░░░   0%  ❌
+Sprint 5: Round 2 (Guessing)     Historical snapshot only   ⚠️
+Sprint 6: Polish & Release       Historical snapshot only   ⚠️
 ```
+
+### Current P2 Snapshot (Mar 14, 2026)
+
+| Area | Current State |
+|------|---------------|
+| `Phase A` | Implemented in code; manual two-device continuation sign-off pending |
+| `Phase B` | Complete |
+| `Phase C` | Implemented; manual responsive/theme QA pending |
+| `Phase D` | Implemented; manual notification deep-link validation pending |
+| `Phase E` | Implemented in code; manual dark-mode visual sign-off pending |
+| `Phase F` | Implemented in code; manual screen-reader sign-off pending |
+| `Phase G` | Not started |
+| `Phase H` | Not started |
+| `Phase I` | Not started for planned share-card scope |
+| `Phase J` | Not started beyond badge MVP prerequisite |
+| `Phase K` | Generic CI exists, but Secret Manager / release gating / rollback drill remain open |
 
 ### Sprint-by-Sprint Summary
 
@@ -937,6 +982,10 @@ User B: Enters code ──► POST /api/couple/link
 
 ### C. Sprint 6: Testing, Polish & MVP Release ❌
 
+Historical note:
+- This section reflects the pre-P2 MVP-release plan and is not an accurate summary of the current repo state.
+- Many items listed here were later delivered through the P2 phases, while release-safety work still remains open in a different shape than originally planned.
+
 **Backend Polish** (Estimated: 2-3 days):
 - [ ] Integration tests for auth flow (`@SpringBootTest`)
 - [ ] Integration tests for REST controllers
@@ -968,6 +1017,10 @@ User B: Enters code ──► POST /api/couple/link
 ---
 
 ### D. Not Yet Planned (Post-MVP)
+
+Historical note:
+- Several items listed below are no longer "not yet planned" in the current repo and should be interpreted as legacy roadmap context only.
+- Current remaining roadmap should be read from `P2_IMPLEMENTATION_PLAN.md`.
 
 | Feature | Description | Priority |
 |---------|-------------|----------|
@@ -1149,7 +1202,10 @@ yarn ios
 | [`SPRINT_4_IMPLEMENTATION.md`](SPRINT_4_IMPLEMENTATION.md) | Sprint 4 detailed report (gameplay Round 1) | In progress |
 | [`RN_UPGRADE_PRD.md`](RN_UPGRADE_PRD.md) | React Native upgrade specification | Final |
 | [`FRONTEND_DECISION.md`](FRONTEND_DECISION.md) | Frontend stack evaluation | Final |
-| [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | This document (comprehensive status) | Living document |
+| [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | Historical status reference | Historical reference |
+| [`CODEBASE_EXPERT_GUIDE.md`](CODEBASE_EXPERT_GUIDE.md) | Current codebase architecture and feature guide | Current |
+| [`P2_IMPLEMENTATION_PLAN.md`](P2_IMPLEMENTATION_PLAN.md) | Current P2 execution tracker | Current |
+| [`P2_PROGRESS_AUDIT.md`](P2_PROGRESS_AUDIT.md) | Current P2 code-vs-plan audit | Current |
 | [`TESTING_GUIDE.md`](TESTING_GUIDE.md) | Testing instructions | Needs update |
 | [`FLYWAY_STUDY_GUIDE.md`](FLYWAY_STUDY_GUIDE.md) | Flyway deep-dive reference | Final |
 | [`COMPREHENSIVE_STUDY_GUIDE.md`](COMPREHENSIVE_STUDY_GUIDE.md) | Overall technology study guide | Final |
@@ -1158,6 +1214,10 @@ yarn ios
 ---
 
 ## Summary: Where We Stand
+
+Historical note:
+- The numeric summary below reflects the earlier project snapshot captured by this document, not the full current P2/Expo-era repo state.
+- For current implementation status, use `README.md`, `CODEBASE_EXPERT_GUIDE.md`, `P2_IMPLEMENTATION_PLAN.md`, and `P2_PROGRESS_AUDIT.md`.
 
 ### By the Numbers
 
@@ -1178,7 +1238,22 @@ yarn ios
 | **Lines of code (estimated)** | ~5,000+ (backend + frontend) |
 | **Lines of documentation** | ~10,000+ |
 
-### What Works End-to-End Today
+### Current High-Level Status (Mar 14, 2026)
+
+| Area | Status |
+|------|--------|
+| Active app target | `OnlyYoursExpo/` |
+| Core gameplay | Implemented through results/history/stats/badges |
+| Current major UX additions | Onboarding, tokenized theming, dark mode, accessibility baseline |
+| Current reliability additions | Continuation/resume, reconnect UX, unlink recovery, notification deep-linking |
+| Biggest remaining product work | Haptics, custom questions, progression expansion, sharing |
+| Biggest remaining operational work | Secret Manager, release gating, rollback drill, manual phase sign-offs |
+
+### What Worked End-to-End In This Historical Snapshot
+
+Historical note:
+- The checklist below describes the older point-in-time snapshot captured by this document.
+- In the current repo, Round 2, results, history/stats/badges, dark mode, and baseline accessibility are implemented, and the active auth path is email/password in the Expo app.
 
 A user can:
 1. ✅ Open the app and sign in with Google
@@ -1193,7 +1268,22 @@ A user can:
 10. ❌ **Cannot yet** play Round 2 (guessing)
 11. ❌ **Cannot yet** see scores or results
 
+### What Works In The Current Repo (Mar 14, 2026)
+
+A user can:
+1. ✅ Create an account and sign in with email/password
+2. ✅ Link with a partner using invite codes
+3. ✅ Start and complete games through Round 1, Round 2, and results
+4. ✅ Resume active sessions with continuation/reconnect support
+5. ✅ View history, stats, and badges
+6. ✅ Edit profile, manage settings, and use unlink/recovery flows
+7. ✅ Use the app with current dark mode and baseline accessibility support
+
 ### What's Needed to Ship MVP
+
+Historical note:
+- The estimates below are obsolete and reflect the pre-P2 roadmap state.
+- Use `P2_IMPLEMENTATION_PLAN.md` and `P2_PROGRESS_AUDIT.md` for the current remaining work picture.
 
 | Remaining Work | Estimated Effort |
 |----------------|-----------------|
@@ -1202,12 +1292,20 @@ A user can:
 | Sprint 6 (Polish + Production Deploy) | 7-10 days |
 | **Total to MVP** | **~15-21 days** |
 
-### Immediate Next Steps
+### Immediate Next Steps (Historical)
+
+Historical sequence at the time:
 
 1. **Seed more questions** for categories with <8 (Getting to Know You, Daily Habits, Memories, Intimacy)
 2. **E2E test** the current implementation with 2 devices
 3. **Fix any bugs** found during testing
 4. **Begin Sprint 5** (Round 2 guessing and scoring)
+
+Current next steps are now:
+
+1. Close deferred manual validation for already-built `Phase A/C/D/E/F` work
+2. Choose whether `Phase K` release-safety hardening should happen before more product expansion
+3. Continue with unfinished implementation phases: `G`, `H`, `J`, and `I`
 
 ---
 
