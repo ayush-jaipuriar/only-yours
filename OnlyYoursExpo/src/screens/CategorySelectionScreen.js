@@ -40,6 +40,7 @@ const CategorySelectionScreen = ({ navigation }) => {
   const isTablet = width >= 768;
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [customDeckSummary, setCustomDeckSummary] = useState(null);
   const [loadError, setLoadError] = useState(false);
   const [isInviteInFlight, setIsInviteInFlight] = useState(false);
 
@@ -95,6 +96,17 @@ const CategorySelectionScreen = ({ navigation }) => {
           color: theme.colors.warning,
           fontWeight: '600',
         },
+        customDeckCard: {
+          borderWidth: 2,
+          borderColor: theme.colors.accent,
+          backgroundColor: theme.colors.badgeSurfaceMint,
+        },
+        customDeckLabel: {
+          marginTop: 10,
+          fontSize: 12,
+          color: theme.colors.accentContrast,
+          fontWeight: '700',
+        },
         disabledCard: {
           opacity: 0.6,
         },
@@ -119,12 +131,17 @@ const CategorySelectionScreen = ({ navigation }) => {
     setLoading(true);
     setLoadError(false);
     try {
-      const response = await api.get('/content/categories');
+      const [response, customSummaryResponse] = await Promise.all([
+        api.get('/content/categories'),
+        api.get('/custom-questions/summary').catch(() => ({ data: null })),
+      ]);
       setCategories(response.data);
+      setCustomDeckSummary(customSummaryResponse.data);
     } catch (error) {
       console.error('Error loading categories:', error);
       setLoadError(true);
       setCategories([]);
+      setCustomDeckSummary(null);
     } finally {
       setLoading(false);
     }
@@ -135,6 +152,23 @@ const CategorySelectionScreen = ({ navigation }) => {
    * Shows confirmation for sensitive categories, then sends invitation.
    */
   const handleCategorySelect = (category) => {
+    if (category.isCustomDeck) {
+      if (!customDeckSummary?.playable) {
+        const questionsNeeded = customDeckSummary?.questionsNeededToPlay ?? 8;
+        Alert.alert(
+          'Custom Deck Not Ready Yet',
+          `Your couple needs ${questionsNeeded} more custom question${questionsNeeded === 1 ? '' : 's'} before you can start a custom game.`,
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Manage Questions', onPress: () => navigation.navigate('CustomQuestions') },
+          ]
+        );
+        return;
+      }
+      sendInvitation(category);
+      return;
+    }
+
     if (category.sensitive) {
       Alert.alert(
         'Sensitive Content',
@@ -182,9 +216,10 @@ const CategorySelectionScreen = ({ navigation }) => {
       }
 
       // Send invitation via WebSocket
-      const sent = WebSocketService.sendMessage('/app/game.invite', {
-        categoryId: category.id.toString(),
-      });
+      const payload = category.isCustomDeck
+        ? { deckType: 'CUSTOM_COUPLE' }
+        : { categoryId: category.id.toString() };
+      const sent = WebSocketService.sendMessage('/app/game.invite', payload);
       if (!sent) {
         throw new Error('WebSocket not connected');
       }
@@ -205,10 +240,24 @@ const CategorySelectionScreen = ({ navigation }) => {
   /**
    * Render a single category card.
    */
+  const customDeckCard = {
+    id: 'custom-deck',
+    name: customDeckSummary?.deckName || 'Custom Couple Questions',
+    description: customDeckSummary
+      ? customDeckSummary.playable
+        ? `${customDeckSummary.deckDescription} Your deck is ready to play.`
+        : `${customDeckSummary.deckDescription} Add ${customDeckSummary.questionsNeededToPlay} more question${customDeckSummary.questionsNeededToPlay === 1 ? '' : 's'} to unlock play.`
+      : 'Create private questions that become part of a shared couple deck when played.',
+    isCustomDeck: true,
+    sensitive: false,
+  };
+  const displayItems = [customDeckCard, ...categories];
+
   const renderCategory = ({ item }) => (
     <TouchableOpacity
       style={[
         styles.categoryCard,
+        item.isCustomDeck && styles.customDeckCard,
         item.sensitive && styles.sensitiveCard,
         isInviteInFlight && styles.disabledCard,
       ]}
@@ -216,11 +265,18 @@ const CategorySelectionScreen = ({ navigation }) => {
       disabled={isInviteInFlight}
       activeOpacity={0.7}
       accessibilityRole="button"
-      accessibilityLabel={`${item.name}. ${item.description}${item.sensitive ? '. Mature content.' : ''}`}
-      accessibilityHint="Double tap to send a game invitation with this category."
+      accessibilityLabel={`${item.name}. ${item.description}${item.sensitive ? '. Mature content.' : ''}${item.isCustomDeck ? '. Custom couple deck.' : ''}`}
+      accessibilityHint={item.isCustomDeck
+        ? 'Double tap to start a custom-deck invitation if your deck is ready, or manage your custom questions if it is not.'
+        : 'Double tap to send a game invitation with this category.'}
       accessibilityState={{ disabled: isInviteInFlight }}>
       <Text style={styles.categoryName}>{item.name}</Text>
       <Text style={styles.categoryDescription}>{item.description}</Text>
+      {item.isCustomDeck ? (
+        <Text style={styles.customDeckLabel}>
+          {customDeckSummary?.playable ? 'Custom Deck Ready' : 'Build Your Private Deck'}
+        </Text>
+      ) : null}
       {item.sensitive && (
         <Text style={styles.sensitiveLabel}>Mature Content</Text>
       )}
@@ -243,7 +299,7 @@ const CategorySelectionScreen = ({ navigation }) => {
     );
   }
 
-  if (categories.length === 0) {
+  if (displayItems.length === 0) {
     return (
       <EmptyState
         icon="📂"
@@ -257,7 +313,7 @@ const CategorySelectionScreen = ({ navigation }) => {
     <View style={styles.container}>
       <Text style={styles.title} accessibilityRole="header">What do you want to explore?</Text>
       <FlatList
-        data={categories}
+        data={displayItems}
         renderItem={renderCategory}
         keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContent}

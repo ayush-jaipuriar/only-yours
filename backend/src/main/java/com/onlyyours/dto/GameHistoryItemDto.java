@@ -18,5 +18,7 @@ public class GameHistoryItemDto {
     private Integer partnerScore;
     private String partnerName;
     private Integer categoryId;
+    private String deckType;
+    private String deckName;
     private String result;
 }

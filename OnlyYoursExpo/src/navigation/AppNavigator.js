@@ -13,6 +13,8 @@ import OnboardingScreen from '../screens/OnboardingScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import PartnerLinkScreen from '../screens/PartnerLinkScreen';
 import CategorySelectionScreen from '../screens/CategorySelectionScreen';
+import CustomQuestionsScreen from '../screens/CustomQuestionsScreen';
+import CustomQuestionEditorScreen from '../screens/CustomQuestionEditorScreen';
 import GameScreen from '../screens/GameScreen';
 import ResultsScreen from '../screens/ResultsScreen';
 
@@ -81,6 +83,16 @@ const AppNavigator = () => {
               component={CategorySelectionScreen}
               options={{ title: 'Select Category' }}
             />
+            <Stack.Screen
+              name="CustomQuestions"
+              component={CustomQuestionsScreen}
+              options={{ title: 'Custom Questions' }}
+            />
+            <Stack.Screen
+              name="CustomQuestionEditor"
+              component={CustomQuestionEditorScreen}
+              options={{ title: 'Edit Custom Question' }}
+            />
             <Stack.Screen 
               name="Game" 
               component={GameScreen}
@@ -129,4 +141,4 @@ const AppNavigator = () => {
   );
 };
 
-export default AppNavigator; 
+export default AppNavigator;

@@ -16,6 +16,8 @@ public class ActiveGameSessionDto {
     private String status;
     private String round;
     private Integer categoryId;
+    private String deckType;
+    private String deckName;
     private Integer currentQuestionNumber;
     private Integer totalQuestions;
     private String partnerName;

@@ -169,6 +169,21 @@ const GameScreen = ({ route, navigation }) => {
         guessPromptText: {
           color: theme.colors.textOnEmphasis,
         },
+        customBadge: {
+          alignSelf: 'center',
+          marginBottom: 10,
+          paddingHorizontal: 12,
+          paddingVertical: 6,
+          borderRadius: 999,
+          backgroundColor: theme.colors.badgeSurfaceMint,
+          borderWidth: 1,
+          borderColor: theme.colors.accent,
+        },
+        customBadgeText: {
+          color: theme.colors.accentContrast,
+          fontSize: 12,
+          fontWeight: '700',
+        },
         questionContainer: {
           backgroundColor: theme.colors.surfaceOverlay,
           borderColor: theme.colors.border,
@@ -473,6 +488,16 @@ const GameScreen = ({ route, navigation }) => {
 
           {/* Question */}
           <View style={[styles.questionContainer, dynamicStyles.questionContainer]}>
+            {currentQuestion.customQuestion ? (
+              <View
+                style={dynamicStyles.customBadge}
+                accessible
+                accessibilityRole="text"
+                accessibilityLabel="Custom couple question"
+              >
+                <Text style={dynamicStyles.customBadgeText}>Custom Couple Question</Text>
+              </View>
+            ) : null}
             <Text style={[styles.questionText, dynamicStyles.questionText]} accessibilityRole="header">
               {currentQuestion.questionText}
             </Text>

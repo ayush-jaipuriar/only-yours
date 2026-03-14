@@ -53,6 +53,10 @@ jest.mock('expo-haptics', () => ({
 }));
 
 const ReactNative = require('react-native');
+ReactNative.Alert = {
+  ...ReactNative.Alert,
+  alert: jest.fn(),
+};
 ReactNative.AccessibilityInfo = {
   ...ReactNative.AccessibilityInfo,
   announceForAccessibility: jest.fn(),

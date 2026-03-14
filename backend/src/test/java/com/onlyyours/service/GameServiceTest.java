@@ -126,6 +126,19 @@ class GameServiceTest {
         return sessionRepo.save(session);
     }
 
+    private Question createCustomQuestion(User author, String text) {
+        Question question = new Question();
+        question.setSourceType(Question.SourceType.CUSTOM_COUPLE);
+        question.setCouple(couple);
+        question.setCreatedBy(author);
+        question.setText(text);
+        question.setOptionA("A");
+        question.setOptionB("B");
+        question.setOptionC("C");
+        question.setOptionD("D");
+        return questionRepo.save(question);
+    }
+
     @Test
     void testCreateInvitation_Success() {
         GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
@@ -198,6 +211,25 @@ class GameServiceTest {
         assertNotNull(session.getQuestionIds());
         assertEquals(0, session.getCurrentQuestionIndex());
         assertNotNull(session.getStartedAt());
+    }
+
+    @Test
+    void testCreateAndAcceptCustomInvitation_Success() {
+        for (int i = 0; i < 4; i++) {
+            createCustomQuestion(user1, "Custom question A" + i + "?");
+            createCustomQuestion(user2, "Custom question B" + i + "?");
+        }
+
+        GameInvitationDto invitation = gameService.createCustomInvitation(user1.getId());
+
+        assertEquals("CUSTOM_COUPLE", invitation.getDeckType());
+        assertEquals("Custom Couple Questions", invitation.getCategoryName());
+
+        QuestionPayloadDto firstQuestion = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+
+        assertTrue(firstQuestion.getCustomQuestion());
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.DeckType.CUSTOM_COUPLE, session.getDeckType());
     }
 
     @Test

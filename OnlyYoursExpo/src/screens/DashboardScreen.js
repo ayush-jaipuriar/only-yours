@@ -304,6 +304,17 @@ const DashboardScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.linksRow}>
+          {couple ? (
+            <TouchableOpacity
+              style={styles.tertiaryButton}
+              onPress={() => navigation.navigate('CustomQuestions')}
+              accessibilityRole="button"
+              accessibilityLabel="Open custom questions"
+              accessibilityHint="Shows the custom questions you created for your couple deck."
+            >
+              <Text style={styles.linkText}>Custom Questions</Text>
+            </TouchableOpacity>
+          ) : null}
           <TouchableOpacity
             style={styles.tertiaryButton}
             onPress={() => navigation.navigate('GameHistory')}

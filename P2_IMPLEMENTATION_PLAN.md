@@ -617,49 +617,54 @@ Definition of done:
 
 #### H1) Data model and backend contracts checklist
 
-- [ ] Add backend model(s) for couple-private custom questions with:
+- [x] Add backend model(s) for couple-private custom questions with:
   - couple ownership
   - authorship tracking
   - active/archived lifecycle state
-- [ ] Keep custom question format aligned with current gameplay:
+- [x] Keep custom question format aligned with current gameplay:
   - question text
   - four answer options
-- [ ] Define API contracts for create/read/update/archive operations.
-- [ ] Define minimum playable-deck rules for starting a custom-question session.
+- [x] Define API contracts for create/read/update/archive operations.
+- [x] Define minimum playable-deck rules for starting a custom-question session.
 
 #### H2) Library management API and validation checklist
 
-- [ ] Implement CRUD endpoints for the couple-private question library.
-- [ ] Enforce that only linked partners within the same couple can access or manage the shared library.
-- [ ] Add validation for:
+- [x] Implement CRUD endpoints for the couple-private question library.
+- [x] Enforce that only linked partners within the same couple can access or manage the shared library.
+- [x] Add validation for:
   - required fields
-  - reasonable length limits
   - empty/duplicate options
   - duplicate-question protection rules
-  - basic safety placeholder checks
+
+Status note (Mar 14, 2026):
+- `Phase H` follows the clarified product model captured in the dedicated sprint plan:
+  - custom questions are shared at the couple gameplay-deck level,
+  - outside gameplay each user only sees and manages questions they personally authored,
+  - only the original creator can edit/delete their own question.
+- No first-release product length cap or moderation/safety policy layer was added in this phase because that was explicitly excluded during planning.
 
 #### H3) Frontend custom library surfaces checklist
 
-- [ ] Create custom-question management UI for listing, creating, editing, and archiving questions.
-- [ ] Make both partners equally able to manage the shared library.
-- [ ] Add empty/loading/error states and clear guidance when the deck is not yet playable.
+- [x] Create custom-question management UI for listing, creating, editing, and archiving questions.
+- [x] Expose author-only management while still surfacing couple-wide deck readiness.
+- [x] Add empty/loading/error states and clear guidance when the deck is not yet playable.
 
 #### H4) Dedicated custom-deck gameplay integration checklist
 
-- [ ] Add a dedicated custom deck/category entry point instead of blending custom questions into standard categories by default.
-- [ ] Extend game-start flow so users can explicitly launch a session from the custom deck.
-- [ ] Ensure custom sessions reuse the existing game engine without breaking standard category sessions.
-- [ ] Decide and document how history/results distinguish custom-deck sessions, if needed for UX clarity.
+- [x] Add a dedicated custom deck/category entry point instead of blending custom questions into standard categories by default.
+- [x] Extend game-start flow so users can explicitly launch a session from the custom deck.
+- [x] Ensure custom sessions reuse the existing game engine without breaking standard category sessions.
+- [x] Decide and document how history/results distinguish custom-deck sessions, if needed for UX clarity.
 
 #### H5) Validation and docs checklist
 
-- [ ] Add backend tests for CRUD, validation, and couple-isolation behavior.
-- [ ] Add integration coverage for starting and completing a game from a custom deck.
-- [ ] Add frontend tests for library management and custom-deck entry flow.
-- [ ] Update manual testing documentation for custom-question lifecycle and gameplay scenarios.
+- [x] Add backend tests for CRUD, validation, and couple-isolation behavior.
+- [x] Add integration coverage for starting and completing a game from a custom deck.
+- [x] Add frontend tests for library management and custom-deck entry flow.
+- [x] Update manual testing documentation for custom-question lifecycle and gameplay scenarios.
 
 Definition of done:
-- A linked couple can manage a shared private question library.
+- Each linked partner can manage their own authored custom questions while contributing to a shared couple gameplay deck.
 - Users can explicitly start and complete a game from the custom deck.
 - Standard category gameplay remains unaffected.
 
@@ -1103,20 +1108,24 @@ Focus:
 - Deliver the couple-private question library and dedicated custom-deck gameplay path.
 
 Checklist:
-- [ ] Create and review detailed Phase H sprint plan document before coding starts.
-- [ ] Complete `H1` data model + backend contracts.
-- [ ] Complete `H2` library management API + validation.
-- [ ] Complete `H3` frontend custom library surfaces.
-- [ ] Complete `H4` dedicated custom-deck gameplay integration.
-- [ ] Complete `H5` validation + docs.
+- [x] Create and review detailed Phase H sprint plan document before coding starts.
+- [x] Complete `H1` data model + backend contracts.
+- [x] Complete `H2` library management API + validation.
+- [x] Complete `H3` frontend custom library surfaces.
+- [x] Complete `H4` dedicated custom-deck gameplay integration.
+- [x] Complete `H5` validation + docs.
 
 Status note (Mar 14, 2026):
-- `Phase H` has not started in code.
-- If release-safety hardening (`Phase K`) is prioritized ahead of more product expansion, this week may intentionally slide later.
+- `Phase H` is implemented in code across backend and the active Expo app.
+- The shipped product model is the clarified one from the sprint plan, not the older draft assumption of equal shared-library management.
+- Automated validation passed:
+  - Expo Jest: `22` suites, `96` tests
+  - Backend Gradle/JUnit: `29` suites, `152` tests
+- Manual product/device sign-off is still pending for later execution.
 
 Gate to exit Week 7:
-- [ ] Linked couples can manage and play from a private custom deck.
-- [ ] Standard category gameplay remains regression-free.
+- [x] Linked couples can manage and play from a private custom deck.
+- [x] Standard category gameplay remains regression-free.
 - [ ] User sign-off on custom-question UX and scope boundaries.
 
 ### Week 8 - Phase J Gamification Expansion + Phase I Sharing

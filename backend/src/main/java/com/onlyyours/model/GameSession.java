@@ -42,6 +42,10 @@ public class GameSession {
      */
     @Column(name = "category_id")
     private Integer categoryId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deck_type", nullable = false, length = 32)
+    private DeckType deckType = DeckType.STANDARD_CATEGORY;
     
     /**
      * Comma-separated list of question IDs for this game session.
@@ -110,4 +114,9 @@ public class GameSession {
         /** Game finished, scores calculated */
         COMPLETED
     }
-} 
+
+    public enum DeckType {
+        STANDARD_CATEGORY,
+        CUSTOM_COUPLE
+    }
+}

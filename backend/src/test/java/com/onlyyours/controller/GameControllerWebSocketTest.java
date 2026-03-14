@@ -227,6 +227,81 @@ class GameControllerWebSocketTest {
     }
 
     @Test
+    void testCustomDeckInvitationFlow_UsesCustomQuestions() throws Exception {
+        for (int i = 0; i < 4; i++) {
+            Question customA = new Question();
+            customA.setSourceType(Question.SourceType.CUSTOM_COUPLE);
+            customA.setCouple(coupleRepo.findByUserIdAndStatusOrderByCreatedAtDesc(inviter.getId(), Couple.RelationshipStatus.ACTIVE).get(0));
+            customA.setCreatedBy(inviter);
+            customA.setText("Custom WS A " + UUID.randomUUID());
+            customA.setOptionA("A");
+            customA.setOptionB("B");
+            customA.setOptionC("C");
+            customA.setOptionD("D");
+            questionRepo.save(customA);
+
+            Question customB = new Question();
+            customB.setSourceType(Question.SourceType.CUSTOM_COUPLE);
+            customB.setCouple(coupleRepo.findByUserIdAndStatusOrderByCreatedAtDesc(inviter.getId(), Couple.RelationshipStatus.ACTIVE).get(0));
+            customB.setCreatedBy(invitee);
+            customB.setText("Custom WS B " + UUID.randomUUID());
+            customB.setOptionA("A");
+            customB.setOptionB("B");
+            customB.setOptionC("C");
+            customB.setOptionD("D");
+            questionRepo.save(customB);
+        }
+
+        StompSession inviterSession = connectWithToken(inviterToken);
+        StompSession inviteeSession = connectWithToken(inviteeToken);
+
+        BlockingQueue<Map> inviteeMessages = new LinkedBlockingQueue<>();
+        inviteeSession.subscribe("/user/queue/game-events", new StompFrameHandler() {
+            @Override
+            public Type getPayloadType(StompHeaders headers) {
+                return Map.class;
+            }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                inviteeMessages.add((Map) payload);
+            }
+        });
+
+        Thread.sleep(500);
+
+        inviterSession.send("/app/game.invite", Map.of("deckType", "CUSTOM_COUPLE"));
+
+        Map invitation = inviteeMessages.poll(5, TimeUnit.SECONDS);
+        assertNotNull(invitation, "Invitee should receive custom deck invitation");
+        assertEquals("Custom Couple Questions", invitation.get("categoryName"));
+        assertEquals("CUSTOM_COUPLE", invitation.get("deckType"));
+
+        String sessionId = invitation.get("sessionId").toString();
+        BlockingQueue<Map> gameTopicMessages = new LinkedBlockingQueue<>();
+        inviterSession.subscribe("/topic/game/" + sessionId, new StompFrameHandler() {
+            @Override
+            public Type getPayloadType(StompHeaders headers) { return Map.class; }
+
+            @Override
+            public void handleFrame(StompHeaders headers, Object payload) {
+                gameTopicMessages.add((Map) payload);
+            }
+        });
+
+        Thread.sleep(500);
+
+        inviteeSession.send("/app/game.accept", Map.of("sessionId", sessionId));
+
+        Map question = gameTopicMessages.poll(5, TimeUnit.SECONDS);
+        assertNotNull(question);
+        assertEquals(Boolean.TRUE, question.get("customQuestion"));
+
+        inviterSession.disconnect();
+        inviteeSession.disconnect();
+    }
+
+    @Test
     void testDeclineFlow_InviterReceivesDeclineNotification() throws Exception {
         StompSession inviterSession = connectWithToken(inviterToken);
         StompSession inviteeSession = connectWithToken(inviteeToken);

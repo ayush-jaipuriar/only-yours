@@ -2390,3 +2390,97 @@ Use this template as the official pass/fail artifact for sign-off.
 - Ready for Phase D sign-off: Yes/No
 - Notes:
 ```
+
+## 20) Phase H Verification (Custom Couple Questions)
+
+Use this section after Phase H implementation to run the deferred manual validation pass for the custom-question authoring and gameplay flow.
+
+### Objective
+
+Verify that custom couple questions follow the shipped hybrid privacy model correctly:
+
+- each author can manage only their own authored questions outside gameplay,
+- both partners contribute to one shared playable custom deck,
+- only the original creator can edit/delete their own authored question,
+- custom gameplay works end-to-end without regressing the standard category path.
+
+### Preconditions
+
+- Latest `OnlyYoursExpo/` Phase H build installed
+- Latest backend with `V12__PhaseH_Custom_Questions.sql` applied
+- Two linked accounts:
+  - `Account A`
+  - `Account B`
+- Active couple state confirmed before starting
+- At least one device per account, or a reliable dual-session test setup
+- Access to `Dashboard`, `Custom Questions`, `Category Selection`, and gameplay screens
+
+### Acceptance checklist
+
+- [ ] `Account A` can create, edit, and delete only questions authored by `Account A`
+- [ ] `Account B` can create, edit, and delete only questions authored by `Account B`
+- [ ] Outside gameplay, neither partner can browse the other partner’s authored custom questions
+- [ ] Duplicate question text is blocked across the combined couple deck
+- [ ] The custom deck stays unplayable until the couple reaches `8` active custom questions
+- [ ] Once playable, the custom deck can be selected and started explicitly from category/start flow
+- [ ] During gameplay, custom questions are labeled as custom couple questions
+- [ ] Gameplay does not reveal which partner authored a custom question
+- [ ] Standard category gameplay still works after custom-question activity
+
+### Required walkthrough matrix
+
+- Author management:
+  - On `Account A`, open `Custom Questions`
+  - Create a new question with four valid options
+  - Verify it appears in `Account A`'s authored list
+  - Edit the same question and verify the update persists
+  - Delete the same question and verify it disappears from the authored list
+- Private author visibility:
+  - Have `Account A` create one or more custom questions
+  - Open `Custom Questions` on `Account B`
+  - Verify `Account B` cannot browse or manage `Account A`'s authored list
+  - Repeat the same in reverse for `Account B` authored questions
+- Duplicate protection:
+  - Create a custom question as `Account A`
+  - Attempt to create the same question text as `Account B`
+  - Verify duplicate protection blocks the second create even though the author differs
+- Deck readiness:
+  - Keep the combined active question count below `8`
+  - Verify `Category Selection` shows the custom deck as not yet ready and displays remaining-question guidance
+  - Add questions until the combined active count reaches `8`
+  - Verify the deck becomes playable immediately without relogin or stale state
+- Custom gameplay:
+  - Start a game from `Custom Couple Questions`
+  - Accept the invite on the partner account
+  - Play through at least one question created by each partner if available
+  - Verify the gameplay badge/label identifies the question as custom
+  - Verify no authorship indicator is shown
+  - Complete the full game and confirm results/history remain stable
+- Standard regression:
+  - Start a normal category-based game after custom gameplay completes
+  - Verify invite, accept, play, results, and history still behave normally
+
+### Evidence to capture
+
+Capture, at minimum:
+
+- build/commit under test
+- device(s) and OS version(s)
+- which account authored which question
+- screenshots or recordings for:
+  - authored list visibility on each account
+  - duplicate rejection message
+  - not-playable custom deck guidance
+  - playable custom deck start
+  - in-game custom-question indicator
+  - post-game results/history state
+
+### Deferred sign-off note
+
+Manual Phase H validation is currently deferred unless explicitly run. If not executed yet, record:
+
+- `Manual author-visibility validation: Pending`
+- `Manual creator-only edit/delete validation: Pending`
+- `Manual duplicate-protection validation: Pending`
+- `Manual custom-deck gameplay validation: Pending`
+- `Manual standard-category regression validation: Pending`

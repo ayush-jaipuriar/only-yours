@@ -45,7 +45,19 @@ public class GameService {
 
     @Transactional
     public GameInvitationDto createInvitation(UUID inviterId, Integer categoryId) {
-        log.info("Creating game invitation: inviter={}, category={}", inviterId, categoryId);
+        log.info("Creating standard game invitation: inviter={}, category={}", inviterId, categoryId);
+
+        return createInvitation(inviterId, GameSession.DeckType.STANDARD_CATEGORY, categoryId);
+    }
+
+    @Transactional
+    public GameInvitationDto createCustomInvitation(UUID inviterId) {
+        log.info("Creating custom game invitation: inviter={}", inviterId);
+        return createInvitation(inviterId, GameSession.DeckType.CUSTOM_COUPLE, null);
+    }
+
+    @Transactional
+    private GameInvitationDto createInvitation(UUID inviterId, GameSession.DeckType deckType, Integer categoryId) {
 
         User inviter = userRepository.findById(inviterId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + inviterId));
@@ -53,18 +65,24 @@ public class GameService {
         Couple couple = findActiveCoupleForUser(inviterId)
                 .orElseThrow(() -> new IllegalStateException("User must be in a couple to play"));
 
-        QuestionCategory category = categoryRepository.findById(categoryId)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
-
         Optional<GameSession> existingActiveSession = findLatestActiveSessionForCouple(couple.getId());
         if (existingActiveSession.isPresent()) {
             throw new ActiveGameSessionExistsException(existingActiveSession.get().getId());
+        }
+
+        QuestionCategory category = null;
+        if (deckType == GameSession.DeckType.STANDARD_CATEGORY) {
+            category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new IllegalArgumentException("Category not found: " + categoryId));
+        } else {
+            ensureCustomDeckPlayable(couple);
         }
 
         GameSession session = new GameSession();
         session.setCouple(couple);
         session.setStatus(GameSession.GameStatus.INVITED);
         session.setCategoryId(categoryId);
+        session.setDeckType(deckType);
         Date now = new Date();
         session.setCreatedAt(now);
         session.setExpiresAt(new Date(now.getTime() + SESSION_TTL_MILLIS));
@@ -86,9 +104,10 @@ public class GameService {
         return GameInvitationDto.builder()
                 .sessionId(session.getId())
                 .categoryId(categoryId)
-                .categoryName(category.getName())
-                .categoryDescription(category.getDescription())
-                .isSensitive(category.isSensitive())
+                .categoryName(resolveDeckName(session, category))
+                .categoryDescription(resolveDeckDescription(session, category))
+                .deckType(deckType.name())
+                .isSensitive(category != null && category.isSensitive())
                 .inviterId(inviterId)
                 .inviterName(inviter.getName())
                 .timestamp(System.currentTimeMillis())
@@ -115,12 +134,15 @@ public class GameService {
             throw new IllegalStateException("Accepter is not part of this couple");
         }
 
-        List<Question> allQuestions = questionRepository.findByCategory_Id(session.getCategoryId());
+        List<Question> allQuestions = loadQuestionsForSessionStart(session);
         
         if (allQuestions.size() < QUESTIONS_PER_GAME) {
+            String sourceLabel = (session.getDeckType() == GameSession.DeckType.CUSTOM_COUPLE)
+                    ? "custom deck"
+                    : "category";
             throw new IllegalStateException(
-                String.format("Not enough questions in category. Required: %d, Available: %d", 
-                    QUESTIONS_PER_GAME, allQuestions.size())
+                    String.format("Not enough questions in %s. Required: %d, Available: %d",
+                            sourceLabel, QUESTIONS_PER_GAME, allQuestions.size())
             );
         }
 
@@ -541,6 +563,8 @@ public class GameService {
                         .status(session.getStatus().name())
                         .round(round)
                         .categoryId(session.getCategoryId())
+                        .deckType(session.getDeckType() == null ? GameSession.DeckType.STANDARD_CATEGORY.name() : session.getDeckType().name())
+                        .deckName(resolveDeckName(session, null))
                         .currentQuestionNumber(currentQuestionNumber)
                         .totalQuestions(totalQuestions)
                         .partnerName(partner.getName())
@@ -944,6 +968,8 @@ public class GameService {
                 .partnerScore(partnerScore)
                 .partnerName(partnerName)
                 .categoryId(session.getCategoryId())
+                .deckType(session.getDeckType() == null ? GameSession.DeckType.STANDARD_CATEGORY.name() : session.getDeckType().name())
+                .deckName(resolveDeckName(session, null))
                 .result(result)
                 .build();
     }
@@ -1041,6 +1067,72 @@ public class GameService {
         return value == null ? null : value.getTime();
     }
 
+    private List<Question> loadQuestionsForSessionStart(GameSession session) {
+        GameSession.DeckType deckType = session.getDeckType() == null
+                ? GameSession.DeckType.STANDARD_CATEGORY
+                : session.getDeckType();
+
+        if (deckType == GameSession.DeckType.CUSTOM_COUPLE) {
+            ensureCustomDeckPlayable(session.getCouple());
+            return questionRepository.findByCouple_IdAndSourceTypeAndArchivedFalse(
+                    session.getCouple().getId(),
+                    Question.SourceType.CUSTOM_COUPLE
+            );
+        }
+
+        return questionRepository.findByCategory_Id(session.getCategoryId());
+    }
+
+    private void ensureCustomDeckPlayable(Couple couple) {
+        long customQuestionCount = questionRepository.countByCouple_IdAndSourceTypeAndArchivedFalse(
+                couple.getId(),
+                Question.SourceType.CUSTOM_COUPLE
+        );
+        if (customQuestionCount < CustomQuestionDeckMetadata.MINIMUM_PLAYABLE_QUESTIONS) {
+            throw new IllegalStateException(String.format(
+                    "Your custom couple deck needs at least %d active questions to play. Current count: %d",
+                    CustomQuestionDeckMetadata.MINIMUM_PLAYABLE_QUESTIONS,
+                    customQuestionCount
+            ));
+        }
+    }
+
+    private String resolveDeckName(GameSession session, QuestionCategory category) {
+        GameSession.DeckType deckType = session.getDeckType() == null
+                ? GameSession.DeckType.STANDARD_CATEGORY
+                : session.getDeckType();
+        if (deckType == GameSession.DeckType.CUSTOM_COUPLE) {
+            return CustomQuestionDeckMetadata.DECK_NAME;
+        }
+        if (category != null) {
+            return category.getName();
+        }
+        if (session.getCategoryId() == null) {
+            return "Category Game";
+        }
+        return categoryRepository.findById(session.getCategoryId())
+                .map(QuestionCategory::getName)
+                .orElse("Category Game");
+    }
+
+    private String resolveDeckDescription(GameSession session, QuestionCategory category) {
+        GameSession.DeckType deckType = session.getDeckType() == null
+                ? GameSession.DeckType.STANDARD_CATEGORY
+                : session.getDeckType();
+        if (deckType == GameSession.DeckType.CUSTOM_COUPLE) {
+            return CustomQuestionDeckMetadata.DECK_DESCRIPTION;
+        }
+        if (category != null) {
+            return category.getDescription();
+        }
+        if (session.getCategoryId() == null) {
+            return null;
+        }
+        return categoryRepository.findById(session.getCategoryId())
+                .map(QuestionCategory::getDescription)
+                .orElse(null);
+    }
+
     private QuestionPayloadDto buildQuestionPayload(
             GameSession session,
             Question question,
@@ -1058,6 +1150,7 @@ public class GameService {
                 .optionC(question.getOptionC())
                 .optionD(question.getOptionD())
                 .round(round)
+                .customQuestion(question.getSourceType() == Question.SourceType.CUSTOM_COUPLE)
                 .build();
     }
 }

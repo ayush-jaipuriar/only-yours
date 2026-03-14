@@ -63,8 +63,7 @@ public class GameController {
     @MessageMapping("/game.invite")
     public void handleInvitation(@Payload Map<String, String> payload, Principal principal) {
         try {
-            String categoryIdStr = payload.get("categoryId");
-            Integer categoryId = Integer.parseInt(categoryIdStr);
+            String deckType = payload.get("deckType");
 
             // Get inviter user from principal
             String inviterEmail = principal.getName();
@@ -72,7 +71,14 @@ public class GameController {
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + inviterEmail));
 
             // Create invitation
-            GameInvitationDto invitation = gameService.createInvitation(inviter.getId(), categoryId);
+            GameInvitationDto invitation;
+            if (GameSession.DeckType.CUSTOM_COUPLE.name().equalsIgnoreCase(deckType)) {
+                invitation = gameService.createCustomInvitation(inviter.getId());
+            } else {
+                String categoryIdStr = payload.get("categoryId");
+                Integer categoryId = Integer.parseInt(categoryIdStr);
+                invitation = gameService.createInvitation(inviter.getId(), categoryId);
+            }
 
             // Get partner
             Couple couple = requireActiveCoupleForUser(inviter.getId());

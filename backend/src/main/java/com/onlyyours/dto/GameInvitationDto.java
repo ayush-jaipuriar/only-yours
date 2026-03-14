@@ -40,6 +40,11 @@ public class GameInvitationDto {
      * Human-readable category name (e.g., "Getting to Know You")
      */
     private String categoryName;
+
+    /**
+     * Deck type selected for this game session.
+     */
+    private String deckType;
     
     /**
      * Category description for context

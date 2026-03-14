@@ -66,4 +66,27 @@ describe('GameScreen', () => {
     expect(queryByText('Round 1: Answer')).toBeNull();
     expect(queryByText('Loading question...')).toBeTruthy();
   });
+
+  it('shows a custom question badge for custom deck payloads', async () => {
+    const api = require('../../services/api').default;
+    api.get.mockResolvedValueOnce({
+      data: {
+        type: 'QUESTION',
+        sessionId: 'test-session',
+        questionId: 77,
+        questionNumber: 1,
+        totalQuestions: 8,
+        questionText: 'Custom prompt?',
+        optionA: 'A',
+        optionB: 'B',
+        optionC: 'C',
+        optionD: 'D',
+        round: 'ROUND1',
+        customQuestion: true,
+      },
+    });
+
+    const { findByText } = renderWithProviders();
+    expect(await findByText('Custom Couple Question')).toBeTruthy();
+  });
 });

@@ -76,4 +76,9 @@ public class QuestionPayloadDto {
      * Current round: "ROUND1" (answering) or "ROUND2" (guessing)
      */
     private String round;
+
+    /**
+     * Whether the question came from the custom couple deck.
+     */
+    private Boolean customQuestion;
 }
