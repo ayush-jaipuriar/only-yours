@@ -52,6 +52,15 @@ jest.mock('expo-haptics', () => ({
   },
 }));
 
+jest.mock('expo-sharing', () => ({
+  isAvailableAsync: jest.fn(() => Promise.resolve(true)),
+  shareAsync: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock('react-native-view-shot', () => ({
+  captureRef: jest.fn(() => Promise.resolve('file:///tmp/only-yours-share-card.png')),
+}));
+
 const ReactNative = require('react-native');
 ReactNative.Alert = {
   ...ReactNative.Alert,

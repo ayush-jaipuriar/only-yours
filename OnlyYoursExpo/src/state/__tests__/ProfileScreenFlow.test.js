@@ -48,8 +48,18 @@ describe('ProfileScreen flow', () => {
               achievementsUnlocked: 1,
             },
             coupleProgression: null,
-            achievements: [],
-            recentMilestones: [],
+            achievements: [
+              { code: 'FIRST_GAME', title: 'First Spark', description: 'Complete your first game.' },
+            ],
+            recentMilestones: [
+              {
+                type: 'ACHIEVEMENT_UNLOCK',
+                scope: 'USER',
+                ownerLabel: 'You',
+                title: 'First Spark',
+                description: 'Complete your first game.',
+              },
+            ],
           },
         });
       }
@@ -83,6 +93,9 @@ describe('ProfileScreen flow', () => {
     await waitFor(() => {
       expect(getByText('@phase_user')).toBeTruthy();
     });
+
+    expect(getByText('Share Achievement Snapshot')).toBeTruthy();
+    expect(getByText('Share Latest Celebration')).toBeTruthy();
 
     fireEvent.press(getByText('Edit Profile'));
     fireEvent.changeText(getByDisplayValue('phase_user'), 'updated_user');

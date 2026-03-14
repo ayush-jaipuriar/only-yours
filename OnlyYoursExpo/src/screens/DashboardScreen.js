@@ -13,6 +13,11 @@ import BadgeChip from '../components/BadgeChip';
 import MilestoneHighlights from '../components/MilestoneHighlights';
 import ProgressionCard from '../components/ProgressionCard';
 import useTheme from '../theme/useTheme';
+import {
+  buildMilestoneShareCard,
+  buildProgressionShareCard,
+  useShareCardComposer,
+} from '../sharing';
 
 /**
  * DashboardScreen is the main landing page after login.
@@ -30,6 +35,7 @@ const DashboardScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
+  const { isSharing, shareCard, shareHost } = useShareCardComposer();
   const {
     user,
     couple,
@@ -191,6 +197,21 @@ const DashboardScreen = ({ navigation }) => {
           marginTop: 6,
           marginHorizontal: 10,
         },
+        shareInlineButton: {
+          marginTop: 4,
+          borderWidth: 1,
+          borderColor: theme.colors.borderStrong,
+          borderRadius: 999,
+          alignSelf: 'flex-start',
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          backgroundColor: theme.colors.surfaceMuted,
+        },
+        shareInlineText: {
+          color: theme.colors.textPrimary,
+          fontSize: 13,
+          fontWeight: '700',
+        },
         buttonText: {
           color: theme.colors.primaryContrast,
           fontSize: 18,
@@ -222,6 +243,7 @@ const DashboardScreen = ({ navigation }) => {
     { label: 'Acceptance', value: `${stats?.invitationAcceptanceRate ?? 0}%` },
     { label: 'Avg Accept Time', value: `${stats?.avgInvitationResponseSeconds ?? 0}s` },
   ];
+  const latestMilestone = progression?.recentMilestones?.[0] || null;
 
   return (
     <View style={styles.container}>
@@ -285,6 +307,20 @@ const DashboardScreen = ({ navigation }) => {
             <>
               <ProgressionCard snapshot={progression?.coupleProgression} />
               <ProgressionCard snapshot={progression?.individualProgression} compact />
+              {progression?.coupleProgression ? (
+                <TouchableOpacity
+                  style={styles.shareInlineButton}
+                  onPress={() => shareCard(buildProgressionShareCard(progression.coupleProgression))}
+                  disabled={isSharing}
+                  accessibilityRole="button"
+                  accessibilityLabel="Share couple progression"
+                  accessibilityHint="Generates a branded image card for your couple progression."
+                >
+                  <Text style={styles.shareInlineText}>
+                    {isSharing ? 'Preparing Share...' : 'Share Couple Progress'}
+                  </Text>
+                </TouchableOpacity>
+              ) : null}
             </>
           ) : (
             <Text style={styles.emptyProgressionText}>Progression is loading or unavailable right now.</Text>
@@ -292,6 +328,20 @@ const DashboardScreen = ({ navigation }) => {
         </View>
 
         <MilestoneHighlights milestones={progression?.recentMilestones} />
+        {latestMilestone ? (
+          <TouchableOpacity
+            style={styles.shareInlineButton}
+            onPress={() => shareCard(buildMilestoneShareCard(latestMilestone))}
+            disabled={isSharing}
+            accessibilityRole="button"
+            accessibilityLabel="Share latest celebration"
+            accessibilityHint="Generates a branded image card for the newest milestone or streak."
+          >
+            <Text style={styles.shareInlineText}>
+              {isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
         <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle} accessibilityRole="header">Your Stats</Text>
@@ -355,6 +405,7 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.linkText}>View Profile</Text>
           </TouchableOpacity>
         </View>
+        {shareHost}
       </ScrollView>
     </View>
   );

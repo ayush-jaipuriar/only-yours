@@ -1,5 +1,7 @@
 import React from 'react';
-import { cleanup, fireEvent, render } from '@testing-library/react-native';
+import { cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
+import * as Sharing from 'expo-sharing';
+import { captureRef } from 'react-native-view-shot';
 import ResultsScreen from '../ResultsScreen';
 import { AuthContext } from '../../state/AuthContext';
 import { GameProvider } from '../../state/GameContext';
@@ -103,6 +105,16 @@ describe('ResultsScreen', () => {
   it('should render Back to Dashboard button', () => {
     const { getByText } = renderResults();
     expect(getByText('Back to Dashboard')).toBeTruthy();
+  });
+
+  it('shares a branded result card', async () => {
+    const { getByText } = renderResults();
+    fireEvent.press(getByText('Share Result Card'));
+
+    await waitFor(() => {
+      expect(captureRef).toHaveBeenCalled();
+      expect(Sharing.shareAsync).toHaveBeenCalled();
+    });
   });
 
   it('should navigate to CategorySelection on Play Again', () => {

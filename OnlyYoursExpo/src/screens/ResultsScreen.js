@@ -15,6 +15,7 @@ import api from '../services/api';
 import { accessibilityAlertProps, announceForAccessibility, decorativeAccessibilityProps } from '../accessibility';
 import MilestoneHighlights from '../components/MilestoneHighlights';
 import ProgressionCard from '../components/ProgressionCard';
+import { buildMilestoneShareCard, buildResultShareCard, useShareCardComposer } from '../sharing';
 
 // eslint-disable-next-line react/prop-types
 const ResultsScreen = ({ route, navigation }) => {
@@ -27,6 +28,7 @@ const ResultsScreen = ({ route, navigation }) => {
   const [scores, setScores] = useState(incomingScores);
   const [isLoadingScores, setIsLoadingScores] = useState(!incomingScores && Boolean(sessionId));
   const [scoreLoadError, setScoreLoadError] = useState(false);
+  const { isSharing, shareCard, shareHost } = useShareCardComposer();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -126,6 +128,14 @@ const ResultsScreen = ({ route, navigation }) => {
     navigation.replace('Dashboard');
   };
 
+  const handleShareResult = () => {
+    shareCard(buildResultShareCard(scores));
+  };
+
+  const handleShareMilestone = () => {
+    shareCard(buildMilestoneShareCard(scores?.recentMilestones?.[0]));
+  };
+
   const combinedScore = (scores?.player1Score || 0) + (scores?.player2Score || 0);
   const maxCombined = (scores?.totalQuestions || 0) * 2;
   const dynamicStyles = useMemo(
@@ -175,6 +185,13 @@ const ResultsScreen = ({ route, navigation }) => {
         },
         dashboardText: {
           color: theme.colors.primary,
+        },
+        shareButton: {
+          backgroundColor: theme.colors.accent,
+          shadowColor: theme.colors.glowAccent,
+        },
+        shareButtonText: {
+          color: theme.colors.primaryContrast,
         },
       }),
     [theme]
@@ -286,6 +303,36 @@ const ResultsScreen = ({ route, navigation }) => {
 
         {/* Buttons */}
         <TouchableOpacity
+          style={[styles.playAgainButton, dynamicStyles.shareButton]}
+          onPress={handleShareResult}
+          activeOpacity={0.8}
+          disabled={isSharing}
+          accessibilityRole="button"
+          accessibilityLabel="Share result card"
+          accessibilityHint="Generates a branded image card for this game result."
+        >
+          <Text style={[styles.playAgainText, dynamicStyles.shareButtonText]}>
+            {isSharing ? 'Preparing Share...' : 'Share Result Card'}
+          </Text>
+        </TouchableOpacity>
+
+        {scores?.recentMilestones?.length ? (
+          <TouchableOpacity
+            style={[styles.dashboardButton, dynamicStyles.dashboardButton]}
+            onPress={handleShareMilestone}
+            activeOpacity={0.8}
+            disabled={isSharing}
+            accessibilityRole="button"
+            accessibilityLabel="Share latest celebration"
+            accessibilityHint="Generates a branded image card for the latest unlocked celebration."
+          >
+            <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>
+              {isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
+
+        <TouchableOpacity
           style={[styles.playAgainButton, dynamicStyles.playAgainButton]}
           onPress={handlePlayAgain}
           activeOpacity={0.8}
@@ -304,6 +351,7 @@ const ResultsScreen = ({ route, navigation }) => {
           accessibilityHint="Returns to the dashboard.">
           <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
         </TouchableOpacity>
+        {shareHost}
       </Animated.View>
     </ScrollView>
   );

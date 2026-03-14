@@ -10,6 +10,11 @@ import ProgressionCard from '../components/ProgressionCard';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { accessibilityAlertProps } from '../accessibility';
+import {
+  buildAchievementsShareCard,
+  buildMilestoneShareCard,
+  useShareCardComposer,
+} from '../sharing';
 
 /**
  * ProfileScreen — displays the current user's profile and logout option.
@@ -22,6 +27,7 @@ const ProfileScreen = ({ navigation }) => {
   const { logout } = useContext(AuthContext);
   const { triggerHaptic } = useHaptics();
   const { theme } = useTheme();
+  const { isSharing, shareCard, shareHost } = useShareCardComposer();
   const [profile, setProfile] = useState(null);
   const [progression, setProgression] = useState(null);
   const [badges, setBadges] = useState([]);
@@ -117,6 +123,22 @@ const ProfileScreen = ({ navigation }) => {
         progressionSection: {
           width: '100%',
           marginBottom: 20,
+        },
+        shareInlineButton: {
+          marginTop: 4,
+          marginBottom: 10,
+          borderWidth: 1,
+          borderColor: theme.colors.borderStrong,
+          borderRadius: 999,
+          alignSelf: 'flex-start',
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          backgroundColor: theme.colors.surfaceMuted,
+        },
+        shareInlineText: {
+          color: theme.colors.textPrimary,
+          fontSize: 13,
+          fontWeight: '700',
         },
         profileFormSection: {
           width: '100%',
@@ -339,6 +361,8 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
+  const latestMilestone = progression?.recentMilestones?.[0] || null;
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
@@ -361,6 +385,20 @@ const ProfileScreen = ({ navigation }) => {
         </View>
 
         <MilestoneHighlights milestones={progression?.recentMilestones} title="Latest Celebrations" />
+        {latestMilestone ? (
+          <TouchableOpacity
+            style={styles.shareInlineButton}
+            onPress={() => shareCard(buildMilestoneShareCard(latestMilestone))}
+            disabled={isSharing}
+            accessibilityRole="button"
+            accessibilityLabel="Share latest celebration"
+            accessibilityHint="Generates a branded image card for your latest milestone, level-up, or streak."
+          >
+            <Text style={styles.shareInlineText}>
+              {isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
+            </Text>
+          </TouchableOpacity>
+        ) : null}
 
         {isEditingProfile && (
           <View style={styles.profileFormSection}>
@@ -396,7 +434,24 @@ const ProfileScreen = ({ navigation }) => {
         <View style={styles.badgesSection}>
           <Text style={styles.badgesTitle}>Achievements</Text>
           {badges.length ? (
-            badges.map((badge) => <BadgeChip key={badge.code} badge={badge} />)
+            <>
+              <TouchableOpacity
+                style={styles.shareInlineButton}
+                onPress={() => shareCard(buildAchievementsShareCard({
+                  ownerLabel: profile.name,
+                  achievements: badges,
+                }))}
+                disabled={isSharing}
+                accessibilityRole="button"
+                accessibilityLabel="Share achievements snapshot"
+                accessibilityHint="Generates a branded image card for your achievement collection."
+              >
+                <Text style={styles.shareInlineText}>
+                  {isSharing ? 'Preparing Share...' : 'Share Achievement Snapshot'}
+                </Text>
+              </TouchableOpacity>
+              {badges.map((badge) => <BadgeChip key={badge.code} badge={badge} />)}
+            </>
           ) : (
             <Text style={styles.emptyBadgesText}>No achievements yet. Keep playing to unlock milestones.</Text>
           )}
@@ -460,6 +515,7 @@ const ProfileScreen = ({ navigation }) => {
             <Text style={styles.logoutText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
+        {shareHost}
       </View>
     </ScrollView>
   );

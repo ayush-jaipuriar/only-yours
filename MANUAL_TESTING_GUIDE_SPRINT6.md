@@ -2572,3 +2572,87 @@ Manual Phase J validation is currently deferred unless explicitly run. If not ex
 - `Manual progression idempotency validation: Pending`
 - `Manual daily-login/profile reward validation: Pending`
 - `Manual standard-flow regression validation: Pending`
+
+## 22) Phase I Verification (Branded Sharing)
+
+### Objective
+
+Verify that the new branded sharing system exports the intended image cards cleanly and safely by checking:
+
+- result-card sharing,
+- milestone and level-up sharing,
+- achievements snapshot sharing,
+- couple progression snapshot sharing,
+- fallback behavior when share support is unavailable or capture fails.
+
+### Preconditions
+
+- Latest `OnlyYoursExpo/` Phase I build installed on a real device where native sharing is supported
+- Latest backend running with the current Phase J progression data available
+- A linked couple with enough recent gameplay/progression activity to surface:
+  - at least one completed result,
+  - at least one recent milestone if possible,
+  - at least one achievement badge,
+  - visible couple progression data
+- Access to `Results`, `Dashboard`, and `Profile`
+
+### Acceptance checklist
+
+- [ ] Results screen can export a branded result card image through the native share sheet
+- [ ] Dashboard can export a branded couple progression card image
+- [ ] Dashboard or Profile can export the latest celebration/milestone card when milestone data exists
+- [ ] Profile can export an achievement snapshot card when achievement data exists
+- [ ] Shared output includes allowed names/scores where expected but excludes raw answers, per-question breakdowns, and sensitive custom-question text
+- [ ] Exported images look intentional and correctly cropped, with no hidden off-screen artifacts or UI controls leaking into the card
+- [ ] Share-entry failure states behave sensibly if native sharing is unavailable or capture fails
+- [ ] Standard results/dashboard/profile behavior remains stable after using the share actions
+
+### Required walkthrough matrix
+
+- Results share:
+  - Complete a game and open `Results`
+  - Tap `Share Result Card`
+  - Verify the native share sheet opens
+  - Verify the generated image contains the expected names, score summary, and branded layout
+  - Confirm the image does not include answer-level detail or sensitive custom-question content
+- Milestone share:
+  - Use a state where a recent milestone is visible on `Results`, `Dashboard`, or `Profile`
+  - Tap `Share Latest Celebration`
+  - Verify the generated image clearly represents the milestone/level-up/streak moment
+  - Confirm the copy matches the observed milestone and does not imply the wrong owner/scope
+- Progression share:
+  - Open `Dashboard`
+  - Tap `Share Couple Progress`
+  - Verify the exported image reflects the current couple progression state and brand treatment
+- Achievement snapshot share:
+  - Open `Profile`
+  - Tap `Share Achievement Snapshot`
+  - Verify the exported image shows the achievement snapshot cleanly and does not expose hidden/private gameplay internals
+- Failure/regression:
+  - If possible, test on a device or simulator state where sharing is unavailable
+  - Verify the app shows a graceful failure message instead of crashing
+  - Return to normal navigation and confirm `Results`, `Dashboard`, and `Profile` still behave correctly after attempted sharing
+
+### Evidence to capture
+
+Capture, at minimum:
+
+- build/commit under test
+- device(s) and OS version(s)
+- account pairing used
+- screenshots or recordings for:
+  - result share card preview/export
+  - milestone share card preview/export
+  - couple progression share card preview/export
+  - achievement snapshot share card preview/export
+  - any failure-state alert if tested
+
+### Deferred sign-off note
+
+Manual Phase I validation is currently deferred unless explicitly run. If not executed yet, record:
+
+- `Manual result-share validation: Pending`
+- `Manual milestone-share validation: Pending`
+- `Manual progression-share validation: Pending`
+- `Manual achievement-share validation: Pending`
+- `Manual share-failure fallback validation: Pending`
