@@ -1,7 +1,7 @@
 import React from 'react';
 import { cleanup, fireEvent, render, waitFor } from '@testing-library/react-native';
 import * as Sharing from 'expo-sharing';
-import { captureRef } from 'react-native-view-shot';
+import { captureRef, releaseCapture } from 'react-native-view-shot';
 import ResultsScreen from '../ResultsScreen';
 import { AuthContext } from '../../state/AuthContext';
 import { GameProvider } from '../../state/GameContext';
@@ -114,6 +114,7 @@ describe('ResultsScreen', () => {
     await waitFor(() => {
       expect(captureRef).toHaveBeenCalled();
       expect(Sharing.shareAsync).toHaveBeenCalled();
+      expect(releaseCapture).toHaveBeenCalledWith('file:///tmp/only-yours-share-card.png');
     });
   });
 

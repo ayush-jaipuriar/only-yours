@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 import * as Sharing from 'expo-sharing';
-import { captureRef } from 'react-native-view-shot';
+import { captureRef, releaseCapture } from 'react-native-view-shot';
 import useTheme from '../theme/useTheme';
 import ShareCardCanvas from './ShareCardCanvas';
 
@@ -46,6 +46,8 @@ const useShareCardComposer = () => {
     let cancelled = false;
 
     const runShare = async () => {
+      let imageUri = null;
+
       try {
         await waitForNextPaint();
         const sharingAvailable = await Sharing.isAvailableAsync();
@@ -54,7 +56,7 @@ const useShareCardComposer = () => {
           return;
         }
 
-        const imageUri = await captureRef(captureTargetRef, {
+        imageUri = await captureRef(captureTargetRef, {
           format: 'png',
           quality: 1,
           result: 'tmpfile',
@@ -68,6 +70,9 @@ const useShareCardComposer = () => {
       } catch (error) {
         Alert.alert('Share failed', 'Unable to prepare this share card right now.');
       } finally {
+        if (imageUri) {
+          releaseCapture(imageUri);
+        }
         if (!cancelled) {
           setPendingCard(null);
           setIsSharing(false);

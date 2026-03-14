@@ -498,6 +498,7 @@ This plan is ready for approval if you agree that:
 - Dedicated share cards are safer than screen screenshots because they explicitly whitelist what can appear in the exported image.
 - Frontend-owned rendering keeps this first release fast to iterate on because the branded output is presentation-heavy and built from data already present in current screens.
 - A reusable composer hook prevents sharing logic from being duplicated across results, dashboard, and profile flows.
+- The capture pipeline now explicitly releases temporary share images after use so repeated sharing sessions do not leave unnecessary temp artifacts behind.
 
 ### Automated validation run
 

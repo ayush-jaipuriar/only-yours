@@ -59,6 +59,7 @@ jest.mock('expo-sharing', () => ({
 
 jest.mock('react-native-view-shot', () => ({
   captureRef: jest.fn(() => Promise.resolve('file:///tmp/only-yours-share-card.png')),
+  releaseCapture: jest.fn(),
 }));
 
 const ReactNative = require('react-native');
