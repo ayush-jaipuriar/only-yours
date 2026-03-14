@@ -15,6 +15,7 @@ import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { announceForAccessibility } from '../accessibility';
 
@@ -34,6 +35,7 @@ import { announceForAccessibility } from '../accessibility';
  */
 const CategorySelectionScreen = ({ navigation }) => {
   const { theme } = useTheme();
+  const { triggerHaptic } = useHaptics();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const [loading, setLoading] = useState(true);
@@ -162,6 +164,7 @@ const CategorySelectionScreen = ({ navigation }) => {
           Alert.alert('Invitation Pending', 'Please wait for your partner to respond.');
         }
         announceForAccessibility('Invitation already pending. Please wait for your partner to respond.');
+        triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
         return;
       }
 
@@ -173,6 +176,7 @@ const CategorySelectionScreen = ({ navigation }) => {
           'Cannot send invitation right now because realtime connection is not ready. Please wait a few seconds and try again.'
         );
         announceForAccessibility('Realtime disconnected. Cannot send invitation right now.');
+        triggerHaptic(HAPTIC_EVENTS.REALTIME_UNAVAILABLE);
         setIsInviteInFlight(false);
         return;
       }
@@ -189,9 +193,11 @@ const CategorySelectionScreen = ({ navigation }) => {
         ToastAndroid.show('Invitation sent. Waiting for your partner...', ToastAndroid.SHORT);
       }
       announceForAccessibility(`Invitation sent for ${category.name}. Waiting for your partner to respond.`);
+      triggerHaptic(HAPTIC_EVENTS.INVITATION_SENT);
     } catch (error) {
       console.error('[CategorySelection] Error sending invitation:', error);
       Alert.alert('Error', 'Failed to send invitation. Please try again.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
       setIsInviteInFlight(false);
     }
   };

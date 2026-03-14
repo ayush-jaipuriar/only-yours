@@ -1,5 +1,8 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ExpoHaptics from 'expo-haptics';
 import React from 'react';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { HapticsProvider } from '../../haptics';
 import { ThemeProvider } from '../../theme';
 import SettingsScreen from '../../screens/SettingsScreen';
 import { AuthContext } from '../AuthContext';
@@ -75,9 +78,11 @@ describe('SettingsScreen flow', () => {
 
     const { getByLabelText, getByText } = render(
       <ThemeProvider>
-        <AuthContext.Provider value={{ replayOnboarding }}>
-          <SettingsScreen navigation={navigation} />
-        </AuthContext.Provider>
+        <HapticsProvider>
+          <AuthContext.Provider value={{ replayOnboarding }}>
+            <SettingsScreen navigation={navigation} />
+          </AuthContext.Provider>
+        </HapticsProvider>
       </ThemeProvider>
     );
 
@@ -95,9 +100,11 @@ describe('SettingsScreen flow', () => {
 
     const { getByLabelText, getByText } = render(
       <ThemeProvider>
-        <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
-          <SettingsScreen navigation={navigation} />
-        </AuthContext.Provider>
+        <HapticsProvider>
+          <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
+            <SettingsScreen navigation={navigation} />
+          </AuthContext.Provider>
+        </HapticsProvider>
       </ThemeProvider>
     );
 
@@ -120,9 +127,11 @@ describe('SettingsScreen flow', () => {
 
     const { getByLabelText, getByDisplayValue, getByText } = render(
       <ThemeProvider>
-        <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
-          <SettingsScreen navigation={navigation} />
-        </AuthContext.Provider>
+        <HapticsProvider>
+          <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
+            <SettingsScreen navigation={navigation} />
+          </AuthContext.Provider>
+        </HapticsProvider>
       </ThemeProvider>
     );
 
@@ -142,7 +151,29 @@ describe('SettingsScreen flow', () => {
       });
       expect(getByText('Notification preferences saved.')).toBeTruthy();
     });
+    expect(ExpoHaptics.impactAsync).toHaveBeenCalled();
     expect(getByLabelText('Timezone')).toBeTruthy();
     expect(getByLabelText('Save notification preferences')).toBeTruthy();
+  });
+
+  it('persists haptics preference locally from Settings', async () => {
+    const navigation = { replace: jest.fn() };
+
+    const { getByText, getByLabelText } = render(
+      <ThemeProvider>
+        <HapticsProvider>
+          <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
+            <SettingsScreen navigation={navigation} />
+          </AuthContext.Provider>
+        </HapticsProvider>
+      </ThemeProvider>
+    );
+
+    fireEvent.press(getByText('Off'));
+
+    await waitFor(() => {
+      expect(AsyncStorage.setItem).toHaveBeenCalledWith('haptics_enabled_v1', 'false');
+    });
+    expect(getByLabelText('Haptics Off')).toBeTruthy();
   });
 });

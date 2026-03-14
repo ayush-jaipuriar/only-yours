@@ -15,6 +15,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import api from '../services/api';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { announceForAccessibility } from '../accessibility';
 
@@ -63,6 +64,7 @@ const HeartIllustration = ({ primaryColor, linkColor }) => {
 
 const PartnerLinkScreen = ({ navigation }) => {
   const { theme } = useTheme();
+  const { triggerHaptic } = useHaptics();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const [code, setCode] = useState('');
@@ -108,8 +110,10 @@ const PartnerLinkScreen = ({ navigation }) => {
       const res = await api.post('/couple/generate-code');
       setGeneratedCode(res.data.code);
       announceForAccessibility(`Partner code generated. ${res.data.code.split('').join(' ')}`);
+      triggerHaptic(HAPTIC_EVENTS.PARTNER_CODE_GENERATED);
     } catch {
       Alert.alert('Oops', 'Could not generate a code right now. Please try again.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setLoadingGen(false);
     }
@@ -121,6 +125,7 @@ const PartnerLinkScreen = ({ navigation }) => {
       await Share.share({
         message: `Hey! Let's connect on Only Yours \u2764\uFE0F\nUse my partner code: ${generatedCode}`,
       });
+      triggerHaptic(HAPTIC_EVENTS.PARTNER_CODE_SHARED);
     } catch {}
   };
 
@@ -133,6 +138,7 @@ const PartnerLinkScreen = ({ navigation }) => {
     }
     setCopied(true);
     announceForAccessibility('Partner code copied.');
+    triggerHaptic(HAPTIC_EVENTS.PARTNER_CODE_COPIED);
     setTimeout(() => setCopied(false), 2000);
   };
 
@@ -146,6 +152,7 @@ const PartnerLinkScreen = ({ navigation }) => {
     try {
       await api.post('/couple/link', { code: trimmed });
       announceForAccessibility('Partner code accepted. You are now connected.');
+      triggerHaptic(HAPTIC_EVENTS.INVITATION_ACCEPTED);
       Alert.alert(
         'You\'re Connected!',
         'You and your partner are now linked. Time to start playing!',
@@ -153,6 +160,7 @@ const PartnerLinkScreen = ({ navigation }) => {
       );
     } catch {
       Alert.alert('Invalid Code', 'That code didn\'t work. Ask your partner for a new one.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setLoadingLink(false);
     }

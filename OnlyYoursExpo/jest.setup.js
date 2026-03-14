@@ -34,6 +34,24 @@ jest.mock('expo-constants', () => ({
   easConfig: { projectId: 'jest-project-id' },
 }));
 
+jest.mock('expo-haptics', () => ({
+  selectionAsync: jest.fn(() => Promise.resolve()),
+  impactAsync: jest.fn(() => Promise.resolve()),
+  notificationAsync: jest.fn(() => Promise.resolve()),
+  ImpactFeedbackStyle: {
+    Light: 'Light',
+    Medium: 'Medium',
+    Heavy: 'Heavy',
+    Soft: 'Soft',
+    Rigid: 'Rigid',
+  },
+  NotificationFeedbackType: {
+    Success: 'Success',
+    Warning: 'Warning',
+    Error: 'Error',
+  },
+}));
+
 const ReactNative = require('react-native');
 ReactNative.AccessibilityInfo = {
   ...ReactNative.AccessibilityInfo,

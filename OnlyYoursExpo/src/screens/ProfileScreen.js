@@ -5,6 +5,7 @@ import { AuthContext } from '../state/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import BadgeChip from '../components/BadgeChip';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { accessibilityAlertProps } from '../accessibility';
 
@@ -17,6 +18,7 @@ import { accessibilityAlertProps } from '../accessibility';
 // eslint-disable-next-line react/prop-types
 const ProfileScreen = ({ navigation }) => {
   const { logout } = useContext(AuthContext);
+  const { triggerHaptic } = useHaptics();
   const { theme } = useTheme();
   const [profile, setProfile] = useState(null);
   const [badges, setBadges] = useState([]);
@@ -257,12 +259,15 @@ const ProfileScreen = ({ navigation }) => {
   const validateProfileDraft = () => {
     const username = profileDraft.username.trim().toLowerCase();
     if (!username) {
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
       return 'Username is required.';
     }
     if (!/^[a-z0-9_]{3,20}$/.test(username)) {
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
       return 'Username must be 3-20 chars and use only letters, numbers, or _.';
     }
     if (profileDraft.bio.trim().length > 280) {
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
       return 'Bio must be at most 280 characters.';
     }
     return null;
@@ -297,9 +302,11 @@ const ProfileScreen = ({ navigation }) => {
         bio: response.data.bio || '',
       });
       setIsEditingProfile(false);
+      triggerHaptic(HAPTIC_EVENTS.PROFILE_SAVED);
     } catch (error) {
       const serverMessage = error?.response?.data?.message || error?.response?.data?.error;
       setProfileFormError(serverMessage || 'Unable to save profile right now.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setIsSavingProfile(false);
     }

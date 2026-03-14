@@ -8,6 +8,7 @@ import AppNavigator from './src/navigation/AppNavigator';
 import AppErrorBoundary from './src/components/AppErrorBoundary';
 import ReconnectionBanner from './src/components/ReconnectionBanner';
 import LoadingScreen from './src/components/LoadingScreen';
+import { HapticsProvider } from './src/haptics';
 import { ThemeProvider, useTheme } from './src/theme';
 
 const AppShell = () => {
@@ -34,9 +35,11 @@ export default function App() {
     <AppErrorBoundary>
       <GestureHandlerRootView style={styles.root}>
         <ThemeProvider>
-          <AuthProvider>
-            <AppShell />
-          </AuthProvider>
+          <HapticsProvider>
+            <AuthProvider>
+              <AppShell />
+            </AuthProvider>
+          </HapticsProvider>
         </ThemeProvider>
       </GestureHandlerRootView>
     </AppErrorBoundary>

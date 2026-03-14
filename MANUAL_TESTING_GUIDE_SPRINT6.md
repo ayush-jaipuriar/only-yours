@@ -2117,6 +2117,87 @@ Companion working artifact for real test execution:
 
 - `PHASE_D_MANUAL_VALIDATION_RUN.md`
 
+## 19) Phase G Verification (Haptic Feedback System)
+
+Use this section after Phase G implementation to run the deferred manual haptics validation pass on real devices and supported simulator/emulator paths.
+
+### Objective
+
+Verify that the active Expo app delivers subtle-but-noticeable, semantically consistent haptic feedback in the approved high-value moments, while still degrading safely when haptics are disabled or unavailable.
+
+### Preconditions
+
+- Latest `OnlyYoursExpo/` Phase G build installed
+- Haptics-enabled physical device available for primary validation
+- Optional simulator/emulator available for unsupported/no-op confirmation
+- One linked-couple account available so invitation, gameplay, settings, and partner-link flows can be reached
+- One active or resumable game session available so gameplay haptics can be exercised
+- Local Settings access available to toggle haptics on and off during the run
+
+### Haptics acceptance checklist
+
+- [ ] Haptics are enabled by default on a fresh install unless the user has already disabled them locally
+- [ ] Settings exposes an in-app haptics preference with clear wording
+- [ ] Toggling haptics off stops future feedback without breaking surrounding UX
+- [ ] Toggling haptics back on restores feedback immediately
+- [ ] Success/confirmation moments feel lighter than milestone moments like round transition or game completion
+- [ ] Error/invalid-action feedback is distinguishable from success feedback
+- [ ] No major interaction moment produces repeated or spammy duplicate haptics
+- [ ] Unsupported-device or simulator paths do not crash, hang, or surface confusing errors
+
+### Required walkthrough matrix
+
+- Enabled mode on physical device:
+  - Verify invitation sent feedback
+  - Verify invitation accepted feedback
+  - Verify answer submitted feedback
+  - Verify guess submitted feedback
+  - Verify correct guess feedback
+  - Verify incorrect guess feedback
+  - Verify round transition/unlock feedback
+  - Verify game completion feedback
+  - Verify partner code generate/copy/share feedback
+  - Verify settings save, profile save, unlink, and recover feedback
+  - Verify invalid-action or realtime-unavailable feedback where reachable
+- Disabled mode on physical device:
+  - Turn haptics off in `Settings`
+  - Repeat a representative subset:
+    - answer submit
+    - guess submit
+    - settings save
+    - partner code copy/share
+    - unlink/recover if safe to exercise
+  - Confirm no haptic feedback fires while visible/app-state behavior still works normally
+- Unsupported/no-op path:
+  - Run the app on simulator/emulator or another no-haptics environment if available
+  - Exercise representative flows and confirm no crash or runtime degradation occurs
+- Repeated gameplay-loop sanity:
+  - Play through multiple submissions and at least one full round transition
+  - Confirm haptics feel intentional rather than noisy during repeated use
+
+### Evidence to capture
+
+Capture, at minimum:
+
+- device model + OS version
+- whether the run used physical device, simulator, or emulator
+- whether haptics were enabled or disabled
+- pass/fail by major flow:
+  - gameplay
+  - invitation/linking
+  - partner-code actions
+  - settings/profile actions
+- any moments that felt too weak, too strong, duplicated, delayed, or missing
+
+### Deferred sign-off note
+
+Manual Phase G haptics validation is currently deferred unless explicitly run. If not executed yet, record:
+
+- `Manual physical-device haptics validation: Pending`
+- `Manual disabled-mode validation: Pending`
+- `Manual unsupported-device/simulator check: Pending`
+- `Known tuning issues after automated pass: none confirmed yet`
+
 ### Phase D Preconditions
 
 - Latest app/backend build includes:

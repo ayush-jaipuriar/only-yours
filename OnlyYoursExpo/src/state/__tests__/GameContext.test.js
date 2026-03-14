@@ -1,6 +1,8 @@
+import * as ExpoHaptics from 'expo-haptics';
 import React from 'react';
 import { renderHook, act } from '@testing-library/react-hooks/native';
 import { Alert } from 'react-native';
+import { HapticsProvider } from '../../haptics';
 import { GameProvider, useGame } from '../GameContext';
 import { AuthContext } from '../AuthContext';
 import WebSocketService from '../../services/WebSocketService';
@@ -30,7 +32,9 @@ const MockAuthProvider = ({ children }) => (
 
 const wrapper = ({ children }) => (
   <MockAuthProvider>
-    <GameProvider>{children}</GameProvider>
+    <HapticsProvider>
+      <GameProvider>{children}</GameProvider>
+    </HapticsProvider>
   </MockAuthProvider>
 );
 
@@ -38,6 +42,7 @@ describe('GameContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     WebSocketService.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
+    WebSocketService.sendMessage.mockReturnValue(true);
     api.get.mockResolvedValue({ data: null });
   });
 
@@ -104,6 +109,7 @@ describe('GameContext', () => {
       questionId: 1,
       answer: 'B',
     });
+    expect(ExpoHaptics.selectionAsync).toHaveBeenCalled();
   });
 
   it('should clean up subscriptions when ending game', () => {
@@ -144,6 +150,7 @@ describe('GameContext', () => {
 
     expect(result.current.isTransitioning).toBe(true);
     expect(result.current.currentQuestion).toBeNull();
+    expect(ExpoHaptics.impactAsync).toHaveBeenCalledWith('Medium');
   });
 
   it('should switch to round2 on ROUND2 question', () => {
@@ -230,6 +237,7 @@ describe('GameContext', () => {
     expect(result.current.guessResult.correct).toBe(true);
     expect(result.current.correctCount).toBe(3);
     expect(result.current.waitingForPartner).toBe(true);
+    expect(ExpoHaptics.notificationAsync).toHaveBeenCalledWith('Success');
   });
 
   it('should set completed status on GAME_RESULTS', () => {
@@ -257,6 +265,7 @@ describe('GameContext', () => {
     expect(result.current.scores).toBeTruthy();
     expect(result.current.scores.player1Score).toBe(6);
     expect(result.current.scores.player2Score).toBe(5);
+    expect(ExpoHaptics.notificationAsync).toHaveBeenCalledWith('Success');
   });
 
   it('should handle submit answer without active session gracefully', () => {
@@ -268,6 +277,7 @@ describe('GameContext', () => {
 
     expect(Alert.alert).toHaveBeenCalledWith('Error', 'No active game or question');
     expect(WebSocketService.sendMessage).not.toHaveBeenCalled();
+    expect(ExpoHaptics.notificationAsync).toHaveBeenCalledWith('Warning');
   });
 
   it('should handle submit guess without active session gracefully', () => {
@@ -279,5 +289,6 @@ describe('GameContext', () => {
 
     expect(Alert.alert).toHaveBeenCalledWith('Error', 'No active game or question');
     expect(WebSocketService.sendMessage).not.toHaveBeenCalled();
+    expect(ExpoHaptics.notificationAsync).toHaveBeenCalledWith('Warning');
   });
 });

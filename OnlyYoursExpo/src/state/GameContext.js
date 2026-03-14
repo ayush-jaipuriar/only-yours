@@ -3,6 +3,7 @@ import WebSocketService from '../services/WebSocketService';
 import api from '../services/api';
 import { Alert } from 'react-native';
 import { AuthContext } from './AuthContext';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 
 const GameContext = createContext();
 
@@ -16,6 +17,7 @@ export const useGame = () => {
 
 export const GameProvider = ({ children }) => {
   const { setGameContextRef } = useContext(AuthContext);
+  const { triggerHaptic } = useHaptics();
 
   const [activeSession, setActiveSession] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -50,6 +52,7 @@ export const GameProvider = ({ children }) => {
       setIsInvitationPending(false);
     } else if (payload.type === 'STATUS' && payload.status === 'ROUND1_COMPLETE') {
       console.log('[GameContext] Round 1 complete, transitioning...');
+      triggerHaptic(HAPTIC_EVENTS.ROUND_UNLOCKED);
       setIsTransitioning(true);
       setCurrentQuestion(null);
       setMyAnswer(null);
@@ -58,6 +61,7 @@ export const GameProvider = ({ children }) => {
       setIsInvitationPending(false);
     } else if (payload.type === 'GAME_RESULTS') {
       console.log('[GameContext] Game completed:', payload);
+      triggerHaptic(HAPTIC_EVENTS.GAME_COMPLETED);
       setScores(payload);
       setGameStatus('completed');
       setIsTransitioning(false);
@@ -152,6 +156,7 @@ export const GameProvider = ({ children }) => {
       (payload) => {
         if (payload.type === 'GUESS_RESULT') {
           console.log('[GameContext] Guess result:', payload.correct ? 'CORRECT' : 'WRONG');
+          triggerHaptic(payload.correct ? HAPTIC_EVENTS.GUESS_CORRECT : HAPTIC_EVENTS.GUESS_INCORRECT);
           setGuessResult(payload);
           setCorrectCount(payload.correctCount || 0);
           setWaitingForPartner(true);
@@ -171,6 +176,7 @@ export const GameProvider = ({ children }) => {
     if (!activeSession || !currentQuestion) {
       console.error('[GameContext] No active session or question');
       Alert.alert('Error', 'No active game or question');
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
       return;
     }
 
@@ -180,14 +186,19 @@ export const GameProvider = ({ children }) => {
     setWaitingForPartner(true);
 
     try {
-      WebSocketService.sendMessage('/app/game.answer', {
+      const sent = WebSocketService.sendMessage('/app/game.answer', {
         sessionId: activeSession,
         questionId: currentQuestion.questionId,
         answer: answer,
       });
+      if (!sent) {
+        throw new Error('Realtime unavailable');
+      }
+      triggerHaptic(HAPTIC_EVENTS.ANSWER_SUBMITTED);
     } catch (error) {
       console.error('[GameContext] Error sending answer:', error);
       Alert.alert('Error', 'Failed to submit answer. Please try again.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
       setWaitingForPartner(false);
     }
   };
@@ -196,6 +207,7 @@ export const GameProvider = ({ children }) => {
     if (!activeSession || !currentQuestion) {
       console.error('[GameContext] No active session or question');
       Alert.alert('Error', 'No active game or question');
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
       return;
     }
 
@@ -205,14 +217,19 @@ export const GameProvider = ({ children }) => {
     setWaitingForPartner(true);
 
     try {
-      WebSocketService.sendMessage('/app/game.guess', {
+      const sent = WebSocketService.sendMessage('/app/game.guess', {
         sessionId: activeSession,
         questionId: currentQuestion.questionId,
         guess: guess,
       });
+      if (!sent) {
+        throw new Error('Realtime unavailable');
+      }
+      triggerHaptic(HAPTIC_EVENTS.GUESS_SUBMITTED);
     } catch (error) {
       console.error('[GameContext] Error sending guess:', error);
       Alert.alert('Error', 'Failed to submit guess. Please try again.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
       setWaitingForPartner(false);
     }
   };
@@ -232,6 +249,7 @@ export const GameProvider = ({ children }) => {
         'Realtime Disconnected',
         'Cannot accept invitation right now because realtime connection is not ready. Please retry in a few seconds.'
       );
+      triggerHaptic(HAPTIC_EVENTS.REALTIME_UNAVAILABLE);
       return false;
     }
 
@@ -241,9 +259,11 @@ export const GameProvider = ({ children }) => {
         'Realtime Disconnected',
         'Unable to send invitation acceptance. Please retry once connection is restored.'
       );
+      triggerHaptic(HAPTIC_EVENTS.REALTIME_UNAVAILABLE);
       return false;
     }
 
+    triggerHaptic(HAPTIC_EVENTS.INVITATION_ACCEPTED);
     setGameStatus('joining');
     setIsInvitationPending(false);
     return true;
@@ -257,7 +277,7 @@ export const GameProvider = ({ children }) => {
     hydrateCurrentQuestion(sessionId);
   };
 
-  const endGame = () => {
+  const endGame = useCallback(() => {
     console.log('[GameContext] Ending game');
 
     if (topicSubRef.current) {
@@ -287,7 +307,7 @@ export const GameProvider = ({ children }) => {
     setCorrectCount(0);
     setIsTransitioning(false);
     setIsInvitationPending(false);
-  };
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -313,7 +333,7 @@ export const GameProvider = ({ children }) => {
     if (setGameContextRef) {
       setGameContextRef({ startGame, endGame, submitAnswer });
     }
-  }, [setGameContextRef]);
+  }, [endGame, setGameContextRef, startGame, submitAnswer]);
 
   const value = {
     activeSession,

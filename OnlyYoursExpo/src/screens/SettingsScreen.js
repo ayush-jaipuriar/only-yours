@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useAuth } from '../state/AuthContext';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import api from '../services/api';
 import { accessibilityAlertProps, announceForAccessibility } from '../accessibility';
@@ -21,8 +22,14 @@ const THEME_OPTION_LABEL = {
   dark: 'Dark',
 };
 
+const HAPTICS_OPTION_LABEL = {
+  enabled: 'On',
+  disabled: 'Off',
+};
+
 const SettingsScreen = ({ navigation }) => {
   const { theme, themeMode, setThemeMode, resolvedMode } = useTheme();
+  const { isHapticsEnabled, setHapticsEnabled, triggerHaptic } = useHaptics();
   const { replayOnboarding } = useAuth();
   const [isReplayingOnboarding, setIsReplayingOnboarding] = useState(false);
   const [preferencesDraft, setPreferencesDraft] = useState({
@@ -273,6 +280,7 @@ const SettingsScreen = ({ navigation }) => {
   );
 
   const themeModes = ['system', 'light', 'dark'];
+  const hapticsModes = ['enabled', 'disabled'];
   const timeRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
 
   useEffect(() => {
@@ -378,6 +386,7 @@ const SettingsScreen = ({ navigation }) => {
     if (validationError) {
       setPreferencesError(validationError);
       setPreferencesMessage('');
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
       return;
     }
 
@@ -393,9 +402,11 @@ const SettingsScreen = ({ navigation }) => {
       });
       setPreferencesDraft(response.data);
       setPreferencesMessage('Notification preferences saved.');
+      triggerHaptic(HAPTIC_EVENTS.SETTINGS_SAVED);
     } catch (error) {
       const message = error?.response?.data?.message || error?.response?.data?.error;
       setPreferencesError(message || 'Unable to save preferences right now.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setIsSavingPreferences(false);
     }
@@ -411,6 +422,7 @@ const SettingsScreen = ({ navigation }) => {
     } catch (error) {
       const message = error?.response?.data?.message || error?.response?.data?.error;
       setUnlinkError(message || 'Unable to prepare unlink flow.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setIsPreparingUnlink(false);
     }
@@ -427,9 +439,11 @@ const SettingsScreen = ({ navigation }) => {
       setCoupleStatus(response.data);
       setUnlinkFlowOpen(false);
       setUnlinkReason('');
+      triggerHaptic(HAPTIC_EVENTS.UNLINK_CONFIRMED);
     } catch (error) {
       const message = error?.response?.data?.message || error?.response?.data?.error;
       setUnlinkError(message || 'Unable to unlink right now.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setIsConfirmingUnlink(false);
     }
@@ -443,9 +457,11 @@ const SettingsScreen = ({ navigation }) => {
       setCoupleStatus(response.data);
       setUnlinkFlowOpen(false);
       setUnlinkReason('');
+      triggerHaptic(HAPTIC_EVENTS.COUPLE_RECOVERED);
     } catch (error) {
       const message = error?.response?.data?.message || error?.response?.data?.error;
       setUnlinkError(message || 'Unable to recover this relationship right now.');
+      triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setIsRecoveringCouple(false);
     }
@@ -490,6 +506,37 @@ const SettingsScreen = ({ navigation }) => {
         </View>
         <Text style={styles.hint}>
           System follows your OS setting. Light and dark lock the app to that mode.
+        </Text>
+      </View>
+
+      <View style={styles.card}>
+        <Text style={styles.sectionTitle} accessibilityRole="header">Haptics</Text>
+        <Text style={styles.sectionSubtitle}>
+          Add subtle device feedback for key actions like submits, results, and relationship controls.
+        </Text>
+
+        <View style={styles.optionsRow}>
+          {hapticsModes.map((mode) => {
+            const nextEnabled = mode === 'enabled';
+            const isActive = isHapticsEnabled === nextEnabled;
+            return (
+              <TouchableOpacity
+                key={mode}
+                style={[styles.option, isActive && styles.optionActive]}
+                onPress={() => setHapticsEnabled(nextEnabled)}
+                accessibilityRole="button"
+                accessibilityLabel={`Haptics ${HAPTICS_OPTION_LABEL[mode]}`}
+                accessibilityState={{ selected: isActive }}
+              >
+                <Text style={[styles.optionText, isActive && styles.optionTextActive]}>
+                  {HAPTICS_OPTION_LABEL[mode]}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={styles.hint}>
+          Haptics are enabled by default and apply only on this device.
         </Text>
       </View>
 

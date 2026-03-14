@@ -1,5 +1,7 @@
+import * as ExpoHaptics from 'expo-haptics';
 import React from 'react';
 import { fireEvent, render, waitFor } from '@testing-library/react-native';
+import { HapticsProvider } from '../../haptics';
 import ProfileScreen from '../../screens/ProfileScreen';
 import { ThemeProvider } from '../../theme';
 import { AuthContext } from '../AuthContext';
@@ -51,9 +53,11 @@ describe('ProfileScreen flow', () => {
 
     const { getByText, getByDisplayValue } = render(
       <ThemeProvider>
-        <AuthContext.Provider value={{ logout }}>
-          <ProfileScreen navigation={navigation} />
-        </AuthContext.Provider>
+        <HapticsProvider>
+          <AuthContext.Provider value={{ logout }}>
+            <ProfileScreen navigation={navigation} />
+          </AuthContext.Provider>
+        </HapticsProvider>
       </ThemeProvider>
     );
 
@@ -74,5 +78,6 @@ describe('ProfileScreen flow', () => {
       expect(getByText('@updated_user')).toBeTruthy();
       expect(getByText('Updated bio')).toBeTruthy();
     });
+    expect(ExpoHaptics.impactAsync).toHaveBeenCalled();
   });
 });

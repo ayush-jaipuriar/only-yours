@@ -548,15 +548,20 @@ Definition of done:
 | G2 Runtime integration | High | 1-1.5 days | G1 |
 | G3 Validation and docs | Medium | 0.5-1 day | G2 |
 
+Status note (Mar 14, 2026):
+- `Phase G` implementation is present in the active Expo app.
+- Automated validation is complete across focused Expo suites, full Expo Jest regression, and backend safety regression.
+- Manual device haptics validation and product sign-off remain pending.
+
 #### G1) Haptic design map and preferences checklist
 
-- [ ] Define a centralized semantic haptic map for key app moments.
-- [ ] Add in-app preference support for enabling/disabling haptics.
-- [ ] Keep first-release haptics intentionally subtle and sparse.
+- [x] Define a centralized semantic haptic map for key app moments.
+- [x] Add in-app preference support for enabling/disabling haptics.
+- [x] Keep first-release haptics intentionally subtle and sparse.
 
 #### G2) Runtime integration checklist
 
-- [ ] Implement haptic cues for major interaction moments:
+- [x] Implement haptic cues for major interaction moments:
   - important submit/confirm
   - invite sent/accepted
   - answer submitted
@@ -566,14 +571,32 @@ Definition of done:
   - game completed
   - invalid action/error
   - unlink confirmation/recovery
-- [ ] Centralize dispatch through a reusable service/helper rather than per-screen ad hoc calls.
-- [ ] Ensure graceful no-op behavior on unsupported devices/platform conditions.
+- [x] Centralize dispatch through a reusable service/helper rather than per-screen ad hoc calls.
+- [x] Ensure graceful no-op behavior on unsupported devices/platform conditions.
 
 #### G3) Validation and docs checklist
 
-- [ ] Add unit coverage for event-to-haptic mapping.
+- [x] Add unit coverage for event-to-haptic mapping.
 - [ ] Run manual device validation for enabled, disabled, and unsupported-device behavior.
-- [ ] Update the settings and manual guide documentation for haptic preferences.
+- [x] Update the settings and manual guide documentation for haptic preferences.
+
+Implementation references:
+- Runtime/provider layer:
+  - `OnlyYoursExpo/src/haptics/HapticsProvider.js`
+  - `OnlyYoursExpo/src/haptics/constants.js`
+  - `OnlyYoursExpo/src/haptics/useHaptics.js`
+- App wiring:
+  - `OnlyYoursExpo/App.js`
+  - `OnlyYoursExpo/src/screens/SettingsScreen.js`
+  - `OnlyYoursExpo/src/state/GameContext.js`
+  - `OnlyYoursExpo/src/state/AuthContext.js`
+  - `OnlyYoursExpo/src/screens/CategorySelectionScreen.js`
+  - `OnlyYoursExpo/src/screens/PartnerLinkScreen.js`
+  - `OnlyYoursExpo/src/screens/ProfileScreen.js`
+- Automated validation:
+  - focused Expo suites for provider/settings/profile/gameplay flows
+  - full Expo Jest regression
+  - backend `./gradlew test` safety regression
 
 Definition of done:
 - Haptics feel consistent and intentional across key flows.
@@ -1059,14 +1082,15 @@ Checklist:
 - [x] Complete `F1` shared accessibility contract.
 - [x] Complete `F2` screen-reader baseline pass.
 - [ ] Complete `F3` validation + docs.
-- [ ] Create and review detailed Phase G sprint plan document before coding starts.
-- [ ] Complete `G1` haptic design map + preferences.
-- [ ] Complete `G2` runtime integration.
+- [x] Create and review detailed Phase G sprint plan document before coding starts.
+- [x] Complete `G1` haptic design map + preferences.
+- [x] Complete `G2` runtime integration.
 - [ ] Complete `G3` validation + docs.
 
 Status note (Mar 14, 2026):
 - `Phase F` implementation is present in code across the primary Expo flows.
-- Remaining open work for Week 6 is manual screen-reader validation, final validation closure, and all of `Phase G`.
+- `Phase G` implementation is present in code in the active Expo app, including local preference persistence and centralized semantic dispatch.
+- Remaining open work for Week 6 is manual screen-reader validation, manual device haptics validation, and final sign-off closure for `F3` / `G3`.
 
 Gate to exit Week 6:
 - [ ] Primary flows are usable with screen-reader baseline support.

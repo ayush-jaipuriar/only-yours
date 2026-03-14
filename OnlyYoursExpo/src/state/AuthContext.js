@@ -5,6 +5,7 @@ import WebSocketService from '../services/WebSocketService';
 import NotificationService from '../services/NotificationService';
 import api, { setLogoutHandler } from '../services/api';
 import { API_BASE_URL } from '../config';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import {
   ONBOARDING_STATUS,
   getOnboardingState,
@@ -41,6 +42,7 @@ export const useAuth = () => {
  * - Handles invitation responses via WebSocket
  */
 export const AuthProvider = ({ children }) => {
+  const { triggerHaptic } = useHaptics();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -176,9 +178,11 @@ export const AuthProvider = ({ children }) => {
                   'Realtime Disconnected',
                   'Unable to decline invitation right now. Please retry once the connection is restored.'
                 );
+                triggerHaptic(HAPTIC_EVENTS.REALTIME_UNAVAILABLE);
               }
             } catch (error) {
               console.error('[AuthContext] Error declining invitation:', error);
+              triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
             }
           },
         },
@@ -196,8 +200,10 @@ export const AuthProvider = ({ children }) => {
                   'Realtime Disconnected',
                   'Unable to accept invitation right now. Please retry once the connection is restored.'
                 );
+                triggerHaptic(HAPTIC_EVENTS.REALTIME_UNAVAILABLE);
                 return;
               }
+              triggerHaptic(HAPTIC_EVENTS.INVITATION_ACCEPTED);
               
               // Start game in GameContext
               if (gameContextRef.current) {
@@ -213,6 +219,7 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
               console.error('[AuthContext] Error accepting invitation:', error);
               Alert.alert('Error', 'Failed to accept invitation. Please try again.');
+              triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
             }
           },
         },
@@ -247,17 +254,22 @@ export const AuthProvider = ({ children }) => {
     switch (status.status) {
       case 'INVITATION_DECLINED':
         Alert.alert('Invitation Declined', status.message);
+        triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
         break;
       case 'INVITATION_SENT':
       case 'INVITATION_ACCEPTED':
       case 'ACTIVE_SESSION_EXISTS':
       case 'CONTINUE_GAME_AVAILABLE':
+        if (status.status === 'INVITATION_ACCEPTED') {
+          triggerHaptic(HAPTIC_EVENTS.INVITATION_ACCEPTED);
+        }
         openGameSession(status.sessionId);
         break;
       case 'SESSION_EXPIRED':
         if (gameContextRef.current) {
           gameContextRef.current.endGame();
         }
+        triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
         Alert.alert(
           'Session Expired',
           status.message || 'This game session has expired. Please start a new game.'
@@ -608,4 +620,4 @@ export const AuthProvider = ({ children }) => {
       {children}
     </AuthContext.Provider>
   );
-}; 
+};
