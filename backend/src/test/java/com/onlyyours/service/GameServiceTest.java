@@ -746,6 +746,10 @@ class GameServiceTest {
         assertEquals(8, results.getPlayer1Score());
         assertEquals(8, results.getPlayer2Score());
         assertEquals("Soulmates! You know each other perfectly!", results.getMessage());
+        assertNotNull(results.getCoupleProgression());
+        assertTrue(results.getCoupleProgression().getLevel() >= 1);
+        assertFalse(results.getRecentMilestones().isEmpty());
+        assertTrue(results.getRecentMilestones().stream().allMatch(milestone -> "COUPLE".equals(milestone.getScope())));
 
         GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
         assertEquals(GameSession.GameStatus.COMPLETED, session.getStatus());
@@ -843,6 +847,9 @@ class GameServiceTest {
         assertNotNull(results.getPlayer1Name());
         assertNotNull(results.getPlayer2Name());
         assertEquals("GAME_RESULTS", results.getType());
+        assertNotNull(results.getCoupleProgression());
+        assertFalse(results.getRecentMilestones().isEmpty());
+        assertTrue(results.getRecentMilestones().stream().allMatch(milestone -> "COUPLE".equals(milestone.getScope())));
 
         GameSession finalSession = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
         assertEquals(GameSession.GameStatus.COMPLETED, finalSession.getStatus());

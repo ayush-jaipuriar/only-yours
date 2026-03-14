@@ -14,6 +14,28 @@ const mockScores = {
   player2Score: 5,
   totalQuestions: 8,
   message: 'Great connection! You really know each other.',
+  coupleProgression: {
+    scope: 'COUPLE',
+    label: 'Alice + Bob',
+    xp: 540,
+    level: 4,
+    xpIntoCurrentLevel: 60,
+    xpNeededForNextLevel: 200,
+    xpToNextLevel: 140,
+    progressPercent: 30,
+    currentStreakDays: 2,
+    longestStreakDays: 4,
+    achievementsUnlocked: 3,
+  },
+  recentMilestones: [
+    {
+      type: 'LEVEL_UP',
+      scope: 'COUPLE',
+      ownerLabel: 'Alice + Bob',
+      title: 'Couple Level Up',
+      description: 'Your couple reached level 4.',
+    },
+  ],
 };
 
 const MockAuthProvider = ({ children }) => (
@@ -55,6 +77,12 @@ describe('ResultsScreen', () => {
   it('should render the result message', () => {
     const { getByText } = renderResults();
     expect(getByText('Great connection! You really know each other.')).toBeTruthy();
+  });
+
+  it('should render progression highlights when milestones are present', () => {
+    const { getByText } = renderResults();
+    expect(getByText('Unlocked This Game')).toBeTruthy();
+    expect(getByText('Couple Level Up')).toBeTruthy();
   });
 
   it('should render Game Complete title', () => {

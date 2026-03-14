@@ -28,6 +28,7 @@ public class GameService {
     private final QuestionCategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final CoupleRepository coupleRepository;
+    private final ProgressionService progressionService;
 
     private static final int QUESTIONS_PER_GAME = 8;
     private static final long SESSION_TTL_MILLIS = Duration.ofDays(7).toMillis();
@@ -499,6 +500,8 @@ public class GameService {
         session.setCompletedAt(now);
         session.setLastActivityAt(now);
         gameSessionRepository.save(session);
+        ProgressionService.GameCompletionProgressionResult progressionResult =
+                progressionService.processCompletedGame(session, player1Score, player2Score);
 
         log.info("Game completed: session={}, p1Score={}, p2Score={}",
                 sessionId, player1Score, player2Score);
@@ -511,6 +514,8 @@ public class GameService {
                 .player2Score(player2Score)
                 .totalQuestions(QUESTIONS_PER_GAME)
                 .message(getResultMessage(player1Score + player2Score))
+                .coupleProgression(progressionResult.coupleProgression())
+                .recentMilestones(progressionResult.recentMilestones())
                 .build();
     }
 
@@ -655,6 +660,10 @@ public class GameService {
                 .player2Score(player2Score)
                 .totalQuestions(QUESTIONS_PER_GAME)
                 .message(getResultMessage(player1Score + player2Score))
+                .coupleProgression(findActiveCoupleForUser(userId).isPresent()
+                        ? progressionService.getProgressionSummary(userId).getCoupleProgression()
+                        : null)
+                .recentMilestones(List.of())
                 .build();
     }
 

@@ -31,8 +31,27 @@ describe('ProfileScreen flow', () => {
           },
         });
       }
-      if (url === '/game/badges') {
-        return Promise.resolve({ data: { badges: [] } });
+      if (url === '/game/progression') {
+        return Promise.resolve({
+          data: {
+            individualProgression: {
+              scope: 'USER',
+              label: 'You',
+              level: 2,
+              xp: 180,
+              xpIntoCurrentLevel: 60,
+              xpNeededForNextLevel: 160,
+              xpToNextLevel: 100,
+              progressPercent: 38,
+              currentStreakDays: 1,
+              longestStreakDays: 2,
+              achievementsUnlocked: 1,
+            },
+            coupleProgression: null,
+            achievements: [],
+            recentMilestones: [],
+          },
+        });
       }
       return Promise.resolve({ data: {} });
     });
@@ -75,6 +94,7 @@ describe('ProfileScreen flow', () => {
         username: 'updated_user',
         bio: 'Updated bio',
       });
+      expect(api.get).toHaveBeenCalledWith('/game/progression');
       expect(getByText('@updated_user')).toBeTruthy();
       expect(getByText('Updated bio')).toBeTruthy();
     });

@@ -727,46 +727,46 @@ Definition of done:
 
 #### J1) Progression model design checklist
 
-- [ ] Define first-release progression mechanics:
+- [x] Define first-release progression mechanics:
   - XP
   - levels
-  - expanded badge catalog
-- [ ] Keep reward logic centered on:
+  - expanded achievement catalog
+- [x] Keep reward logic centered on:
   - consistency
   - completion
   - streak maintenance
   - shared couple participation
-- [ ] Keep competitive/high-score-only mechanics secondary in this release.
+- [x] Keep competitive/high-score-only mechanics secondary in this release.
 
 #### J2) Backend progression computation checklist
 
-- [ ] Implement deterministic XP and level computation rules.
-- [ ] Expand badge logic beyond the current MVP set.
-- [ ] Define unlock triggers and data needed for milestone celebration surfaces.
-- [ ] Preserve compatibility with existing stats and badge endpoints where possible, or version/extend contracts safely.
+- [x] Implement deterministic XP and level computation rules.
+- [x] Expand badge logic beyond the current MVP set.
+- [x] Define unlock triggers and data needed for milestone celebration surfaces.
+- [x] Preserve compatibility with existing stats and badge endpoints where possible, or version/extend contracts safely.
 
 #### J3) API and data-contract expansion checklist
 
-- [ ] Add/extend API payloads for progression snapshot data:
+- [x] Add/extend API payloads for progression snapshot data:
   - current XP
   - current level
   - progress to next level
-  - expanded badges
+  - expanded achievements
   - recent unlock metadata if needed
-- [ ] Ensure null/no-history users still receive safe defaults and understandable progression state.
+- [x] Ensure null/no-history users still receive safe defaults and understandable progression state.
 
 #### J4) Frontend progression surfaces checklist
 
-- [ ] Add progression display primarily to dashboard and profile.
-- [ ] Add celebratory UX for level-ups and badge unlocks.
-- [ ] Keep progression information understandable at a glance without cluttering core gameplay.
+- [x] Add progression display primarily to dashboard and profile.
+- [x] Add celebratory UX for level-ups and badge unlocks.
+- [x] Keep progression information understandable at a glance without cluttering core gameplay.
 
 #### J5) Validation and docs checklist
 
-- [ ] Add backend tests for XP/level/badge calculations.
-- [ ] Add regression coverage to preserve current stats/badges behavior where unchanged.
-- [ ] Add frontend tests for dashboard/profile rendering and milestone states.
-- [ ] Update manual testing documentation for progression and unlock verification.
+- [x] Add backend tests for XP/level/achievement calculations.
+- [x] Add regression coverage to preserve current stats/badges behavior where unchanged.
+- [x] Add frontend tests for dashboard/profile rendering and milestone states.
+- [x] Update manual testing documentation for progression and unlock verification.
 
 Definition of done:
 - Users can understand their progression quickly on dashboard and profile.
@@ -1134,12 +1134,12 @@ Focus:
 - Expand progression foundations first, then add privacy-safe sharing for results and milestones.
 
 Checklist:
-- [ ] Create and review detailed Phase J sprint plan document before coding starts.
-- [ ] Complete `J1` progression model design.
-- [ ] Complete `J2` backend progression computation.
-- [ ] Complete `J3` API/data-contract expansion.
-- [ ] Complete `J4` frontend progression surfaces.
-- [ ] Complete `J5` validation + docs.
+- [x] Create and review detailed Phase J sprint plan document before coding starts.
+- [x] Complete `J1` progression model design.
+- [x] Complete `J2` backend progression computation.
+- [x] Complete `J3` API/data-contract expansion.
+- [x] Complete `J4` frontend progression surfaces.
+- [x] Complete `J5` validation + docs.
 - [ ] Create and review detailed Phase I sprint plan document before coding starts.
 - [ ] Complete `I1` shareable content contract.
 - [ ] Complete `I2` share-card rendering + UX.
@@ -1147,12 +1147,13 @@ Checklist:
 - [ ] Complete `I4` validation + docs.
 
 Status note (Mar 14, 2026):
-- `Phase J` is still pending beyond the existing badge MVP from `Phase B`.
+- `Phase J` is implemented in code and automatedly validated across backend and Expo.
+- `Phase J` expands the old badge MVP into a progression system with individual and couple XP/levels, milestone payloads, and broader achievements.
 - `Phase I` is still pending for its planned scope; partner-code sharing does not count as this phase.
 - The dependency order still matters here: progression metadata should stabilize before milestone-sharing UX is treated as complete.
 
 Gate to exit Week 8:
-- [ ] Progression model is stable, understandable, and validated.
+- [x] Progression model is stable, understandable, and validated.
 - [ ] Result and milestone sharing works with privacy-safe defaults.
 - [ ] User sign-off on gamification and sharing behavior.
 

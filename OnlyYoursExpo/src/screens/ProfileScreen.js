@@ -5,6 +5,8 @@ import { AuthContext } from '../state/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import BadgeChip from '../components/BadgeChip';
+import MilestoneHighlights from '../components/MilestoneHighlights';
+import ProgressionCard from '../components/ProgressionCard';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { accessibilityAlertProps } from '../accessibility';
@@ -21,6 +23,7 @@ const ProfileScreen = ({ navigation }) => {
   const { triggerHaptic } = useHaptics();
   const { theme } = useTheme();
   const [profile, setProfile] = useState(null);
+  const [progression, setProgression] = useState(null);
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -110,6 +113,10 @@ const ProfileScreen = ({ navigation }) => {
         emptyBadgesText: {
           fontSize: 13,
           color: theme.colors.textSecondary,
+        },
+        progressionSection: {
+          width: '100%',
+          marginBottom: 20,
         },
         profileFormSection: {
           width: '100%',
@@ -238,7 +245,7 @@ const ProfileScreen = ({ navigation }) => {
     try {
       const [profileResponse, badgeResponse] = await Promise.all([
         api.get('/user/me'),
-        api.get('/game/badges').catch(() => ({ data: { badges: [] } })),
+        api.get('/game/progression').catch(() => ({ data: null })),
       ]);
       const nextProfile = profileResponse.data;
       setProfile(nextProfile);
@@ -247,7 +254,8 @@ const ProfileScreen = ({ navigation }) => {
         bio: nextProfile.bio || '',
       });
       setProfileFormError('');
-      setBadges(badgeResponse?.data?.badges || []);
+      setProgression(badgeResponse?.data || null);
+      setBadges(badgeResponse?.data?.achievements || []);
     } catch (e) {
       console.error('Error loading profile:', e);
       setLoadError(true);
@@ -296,11 +304,14 @@ const ProfileScreen = ({ navigation }) => {
         username: profileDraft.username.trim().toLowerCase(),
         bio: profileDraft.bio.trim(),
       });
+      const progressionResponse = await api.get('/game/progression').catch(() => ({ data: progression }));
       setProfile(response.data);
       setProfileDraft({
         username: response.data.username || '',
         bio: response.data.bio || '',
       });
+      setProgression(progressionResponse?.data || progression);
+      setBadges(progressionResponse?.data?.achievements || badges);
       setIsEditingProfile(false);
       triggerHaptic(HAPTIC_EVENTS.PROFILE_SAVED);
     } catch (error) {
@@ -344,6 +355,13 @@ const ProfileScreen = ({ navigation }) => {
 
         <View style={styles.divider} />
 
+        <View style={styles.progressionSection}>
+          <ProgressionCard snapshot={progression?.coupleProgression} />
+          <ProgressionCard snapshot={progression?.individualProgression} compact />
+        </View>
+
+        <MilestoneHighlights milestones={progression?.recentMilestones} title="Latest Celebrations" />
+
         {isEditingProfile && (
           <View style={styles.profileFormSection}>
             <Text style={styles.inputLabel}>Username</Text>
@@ -376,11 +394,11 @@ const ProfileScreen = ({ navigation }) => {
         )}
 
         <View style={styles.badgesSection}>
-          <Text style={styles.badgesTitle}>Your Badges</Text>
+          <Text style={styles.badgesTitle}>Achievements</Text>
           {badges.length ? (
             badges.map((badge) => <BadgeChip key={badge.code} badge={badge} />)
           ) : (
-            <Text style={styles.emptyBadgesText}>No badges yet. Keep playing to unlock milestones.</Text>
+            <Text style={styles.emptyBadgesText}>No achievements yet. Keep playing to unlock milestones.</Text>
           )}
         </View>
 

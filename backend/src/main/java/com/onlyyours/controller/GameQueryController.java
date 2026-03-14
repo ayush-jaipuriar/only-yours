@@ -3,6 +3,7 @@ package com.onlyyours.controller;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.UserRepository;
 import com.onlyyours.service.GameService;
+import com.onlyyours.service.ProgressionService;
 import com.onlyyours.service.SessionExpiredException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.UUID;
 public class GameQueryController {
 
     private final GameService gameService;
+    private final ProgressionService progressionService;
     private final UserRepository userRepository;
 
     @GetMapping("/active")
@@ -59,6 +61,12 @@ public class GameQueryController {
     public ResponseEntity<?> getBadges(Principal principal) {
         User user = resolveCurrentUser(principal);
         return ResponseEntity.ok(Map.of("badges", gameService.getBadges(user.getId())));
+    }
+
+    @GetMapping("/progression")
+    public ResponseEntity<?> getProgressionSummary(Principal principal) {
+        User user = resolveCurrentUser(principal);
+        return ResponseEntity.ok(progressionService.getProgressionSummary(user.getId()));
     }
 
     @GetMapping("/{sessionId}/current-question")

@@ -72,12 +72,13 @@ describe('useDashboardGameFlow', () => {
           },
         });
       }
-      if (url === '/game/badges') {
+      if (url === '/game/progression') {
         return Promise.resolve({
           data: {
-            badges: [
-              { code: 'FIRST_GAME', title: 'First Spark', description: 'Complete your first game' },
-            ],
+            individualProgression: { scope: 'USER', label: 'You', level: 3, xp: 320, progressPercent: 40 },
+            coupleProgression: { scope: 'COUPLE', label: 'User One + User Two', level: 4, xp: 520, progressPercent: 55 },
+            achievements: [{ code: 'FIRST_GAME', title: 'First Spark', description: 'Complete your first game' }],
+            recentMilestones: [],
           },
         });
       }
@@ -94,6 +95,7 @@ describe('useDashboardGameFlow', () => {
     expect(result.current.shouldShowContinueGame).toBe(true);
     expect(result.current.stats?.gamesPlayed).toBe(12);
     expect(result.current.badges?.length).toBe(1);
+    expect(result.current.progression?.coupleProgression?.level).toBe(4);
     act(() => {
       result.current.handleContinueGame();
     });
@@ -125,8 +127,15 @@ describe('useDashboardGameFlow', () => {
           },
         });
       }
-      if (url === '/game/badges') {
-        return Promise.resolve({ data: { badges: [] } });
+      if (url === '/game/progression') {
+        return Promise.resolve({
+          data: {
+            individualProgression: null,
+            coupleProgression: null,
+            achievements: [],
+            recentMilestones: [],
+          },
+        });
       }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
@@ -177,8 +186,15 @@ describe('useDashboardGameFlow', () => {
           },
         });
       }
-      if (url === '/game/badges') {
-        return Promise.resolve({ data: { badges: [] } });
+      if (url === '/game/progression') {
+        return Promise.resolve({
+          data: {
+            individualProgression: { scope: 'USER', label: 'You', level: 2, xp: 140, progressPercent: 20 },
+            coupleProgression: { scope: 'COUPLE', label: 'User One + User Two', level: 2, xp: 180, progressPercent: 33 },
+            achievements: [],
+            recentMilestones: [],
+          },
+        });
       }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
@@ -225,8 +241,15 @@ describe('useDashboardGameFlow', () => {
           },
         });
       }
-      if (url === '/game/badges') {
-        return Promise.resolve({ data: { badges: [] } });
+      if (url === '/game/progression') {
+        return Promise.resolve({
+          data: {
+            individualProgression: null,
+            coupleProgression: null,
+            achievements: [],
+            recentMilestones: [],
+          },
+        });
       }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
@@ -256,7 +279,7 @@ describe('useDashboardGameFlow', () => {
     expect(navigation.navigate).toHaveBeenCalledWith('PartnerLink');
   });
 
-  it('keeps dashboard actions functional when stats and badges fail', async () => {
+  it('keeps dashboard actions functional when stats and progression fail', async () => {
     api.get.mockImplementation((url) => {
       if (url === '/couple') {
         return Promise.resolve({
@@ -272,8 +295,8 @@ describe('useDashboardGameFlow', () => {
       if (url === '/game/stats') {
         return Promise.reject(new Error('Stats endpoint unavailable'));
       }
-      if (url === '/game/badges') {
-        return Promise.reject(new Error('Badges endpoint unavailable'));
+      if (url === '/game/progression') {
+        return Promise.reject(new Error('Progression endpoint unavailable'));
       }
       return Promise.reject(new Error(`Unexpected URL: ${url}`));
     });
@@ -286,6 +309,7 @@ describe('useDashboardGameFlow', () => {
     });
 
     expect(result.current.stats).toBeNull();
+    expect(result.current.progression).toBeNull();
     expect(result.current.badges).toEqual([]);
     act(() => {
       result.current.handleStartGame();

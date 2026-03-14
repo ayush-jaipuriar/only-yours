@@ -8,6 +8,7 @@ const useDashboardGameFlow = (navigation, alertApi = Alert) => {
   const [couple, setCouple] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
   const [stats, setStats] = useState(null);
+  const [progression, setProgression] = useState(null);
   const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -35,10 +36,12 @@ const useDashboardGameFlow = (navigation, alertApi = Alert) => {
     }
 
     try {
-      const badgesResponse = await api.get('/game/badges');
-      setBadges(badgesResponse.data?.badges || []);
+      const progressionResponse = await api.get('/game/progression');
+      setProgression(progressionResponse.data);
+      setBadges(progressionResponse.data?.achievements || []);
     } catch (error) {
-      console.error('Error loading badges:', error);
+      console.error('Error loading progression:', error);
+      setProgression(null);
       setBadges([]);
     }
   };
@@ -115,6 +118,7 @@ const useDashboardGameFlow = (navigation, alertApi = Alert) => {
     couple,
     activeGame,
     stats,
+    progression,
     badges,
     loading,
     shouldShowContinueGame: Boolean(activeGame?.sessionId),

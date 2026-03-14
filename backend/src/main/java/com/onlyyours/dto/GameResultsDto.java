@@ -29,4 +29,8 @@ public class GameResultsDto {
     private Integer totalQuestions;
 
     private String message;
+
+    private ProgressionSnapshotDto coupleProgression;
+
+    private java.util.List<ProgressionMilestoneDto> recentMilestones;
 }

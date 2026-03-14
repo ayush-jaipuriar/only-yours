@@ -9,10 +9,14 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class BadgeDto {
-    private String code;
+public class ProgressionMilestoneDto {
+    private String type;
     private String scope;
+    private String ownerLabel;
+    private String code;
     private String title;
     private String description;
     private Long earnedAt;
+    private Long xpDelta;
+    private Integer newLevel;
 }

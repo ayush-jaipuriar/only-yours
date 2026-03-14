@@ -10,6 +10,22 @@ const BADGE_THEME = {
   SHARP_GUESSER: { surface: 'badgeSurfaceRose', border: 'accent', icon: '🧠' },
   STREAK_3: { surface: 'badgeSurfacePeach', border: 'warning', icon: '🔥' },
   RESPONSIVE_COUPLE: { surface: 'badgeSurfaceMint', border: 'success', icon: '💌' },
+  PROFILE_READY: { surface: 'badgeSurfaceSky', border: 'info', icon: '🪄' },
+  MATCH_WINNER: { surface: 'badgeSurfaceRose', border: 'accent', icon: '🥇' },
+  MIND_READER_25: { surface: 'badgeSurfaceLavender', border: 'primary', icon: '🔮' },
+  DAILY_DEVOTION_7: { surface: 'badgeSurfaceMint', border: 'success', icon: '🌞' },
+  STREAK_7: { surface: 'badgeSurfacePeach', border: 'warning', icon: '🔥' },
+  LEVEL_5_USER: { surface: 'badgeSurfaceGold', border: 'warning', icon: '⭐' },
+  LEVEL_10_USER: { surface: 'badgeSurfaceGold', border: 'warning', icon: '🌟' },
+  COUPLE_FIRST_GAME: { surface: 'badgeSurfaceRose', border: 'accent', icon: '💞' },
+  COUPLE_FIVE_GAMES: { surface: 'badgeSurfaceMint', border: 'success', icon: '🤝' },
+  COUPLE_TEN_GAMES: { surface: 'badgeSurfaceLavender', border: 'primary', icon: '💎' },
+  COUPLE_STREAK_3: { surface: 'badgeSurfacePeach', border: 'warning', icon: '🔥' },
+  COUPLE_STREAK_7: { surface: 'badgeSurfacePeach', border: 'warning', icon: '🚀' },
+  HEART_SYNC: { surface: 'badgeSurfaceRose', border: 'accent', icon: '💕' },
+  PERFECT_PAIR: { surface: 'badgeSurfaceGold', border: 'warning', icon: '👑' },
+  LEVEL_5_COUPLE: { surface: 'badgeSurfaceSky', border: 'info', icon: '💫' },
+  LEVEL_10_COUPLE: { surface: 'badgeSurfaceSky', border: 'info', icon: '🌠' },
 };
 
 const DEFAULT_THEME = { surface: 'surfaceMuted', border: 'borderStrong', icon: '🏅' };
@@ -46,6 +62,13 @@ const BadgeChip = ({ badge }) => {
           fontSize: 11,
           color: theme.colors.textSecondary,
         },
+        scope: {
+          fontSize: 10,
+          color: theme.colors.textTertiary,
+          fontWeight: '700',
+          marginBottom: 3,
+          textTransform: 'uppercase',
+        },
       }),
     [theme]
   );
@@ -54,7 +77,7 @@ const BadgeChip = ({ badge }) => {
     return null;
   }
 
-  const { code, title, description } = badge;
+  const { code, title, description, scope } = badge;
   const badgeTheme = BADGE_THEME[code] || DEFAULT_THEME;
   const backgroundColor = theme.colors[badgeTheme.surface] || theme.colors.surfaceMuted;
   const borderColor = theme.colors[badgeTheme.border] || theme.colors.borderStrong;
@@ -68,6 +91,7 @@ const BadgeChip = ({ badge }) => {
     >
       <Text style={styles.icon} {...decorativeAccessibilityProps}>{badgeTheme.icon}</Text>
       <View style={styles.textWrap}>
+        {scope ? <Text style={styles.scope}>{scope === 'COUPLE' ? 'Couple' : 'Personal'}</Text> : null}
         <Text style={styles.title} numberOfLines={1}>
           {title}
         </Text>

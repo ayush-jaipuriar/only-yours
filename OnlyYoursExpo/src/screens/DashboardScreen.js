@@ -10,6 +10,8 @@ import {
 } from 'react-native';
 import useDashboardGameFlow from './useDashboardGameFlow';
 import BadgeChip from '../components/BadgeChip';
+import MilestoneHighlights from '../components/MilestoneHighlights';
+import ProgressionCard from '../components/ProgressionCard';
 import useTheme from '../theme/useTheme';
 
 /**
@@ -33,6 +35,7 @@ const DashboardScreen = ({ navigation }) => {
     couple,
     activeGame,
     stats,
+    progression,
     badges,
     loading,
     shouldShowContinueGame,
@@ -174,6 +177,10 @@ const DashboardScreen = ({ navigation }) => {
           fontSize: 13,
           color: theme.colors.textSecondary,
         },
+        emptyProgressionText: {
+          fontSize: 13,
+          color: theme.colors.textSecondary,
+        },
         linksRow: {
           flexDirection: 'row',
           justifyContent: 'center',
@@ -273,6 +280,20 @@ const DashboardScreen = ({ navigation }) => {
         )}
 
         <View style={styles.sectionCard}>
+          <Text style={styles.sectionTitle} accessibilityRole="header">Progression</Text>
+          {progression?.coupleProgression || progression?.individualProgression ? (
+            <>
+              <ProgressionCard snapshot={progression?.coupleProgression} />
+              <ProgressionCard snapshot={progression?.individualProgression} compact />
+            </>
+          ) : (
+            <Text style={styles.emptyProgressionText}>Progression is loading or unavailable right now.</Text>
+          )}
+        </View>
+
+        <MilestoneHighlights milestones={progression?.recentMilestones} />
+
+        <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle} accessibilityRole="header">Your Stats</Text>
           <View style={styles.metricsGrid}>
             {metricCards.map((item) => (
@@ -291,7 +312,7 @@ const DashboardScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle} accessibilityRole="header">Badges</Text>
+          <Text style={styles.sectionTitle} accessibilityRole="header">Achievements</Text>
           {badges?.length ? (
             <View style={styles.badgeList}>
               {badges.map((badge) => (
@@ -299,7 +320,7 @@ const DashboardScreen = ({ navigation }) => {
               ))}
             </View>
           ) : (
-            <Text style={styles.emptyBadgeText}>No badges yet. Complete games to unlock milestones.</Text>
+            <Text style={styles.emptyBadgeText}>No achievements yet. Complete games to unlock milestones.</Text>
           )}
         </View>
 

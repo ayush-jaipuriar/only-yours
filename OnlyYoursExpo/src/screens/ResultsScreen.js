@@ -13,6 +13,8 @@ import { useGame } from '../state/GameContext';
 import useTheme from '../theme/useTheme';
 import api from '../services/api';
 import { accessibilityAlertProps, announceForAccessibility, decorativeAccessibilityProps } from '../accessibility';
+import MilestoneHighlights from '../components/MilestoneHighlights';
+import ProgressionCard from '../components/ProgressionCard';
 
 // eslint-disable-next-line react/prop-types
 const ResultsScreen = ({ route, navigation }) => {
@@ -278,6 +280,9 @@ const ResultsScreen = ({ route, navigation }) => {
             Combined: {combinedScore}/{maxCombined}
           </Text>
         </View>
+
+        <MilestoneHighlights milestones={scores.recentMilestones} title="Unlocked This Game" />
+        <ProgressionCard snapshot={scores.coupleProgression} />
 
         {/* Buttons */}
         <TouchableOpacity

@@ -2484,3 +2484,91 @@ Manual Phase H validation is currently deferred unless explicitly run. If not ex
 - `Manual duplicate-protection validation: Pending`
 - `Manual custom-deck gameplay validation: Pending`
 - `Manual standard-category regression validation: Pending`
+
+## 21) Phase J Verification (Progression Expansion)
+
+### Objective
+
+Verify that the new progression system feels coherent and trustworthy in real usage by checking:
+
+- couple progression as the primary visible track,
+- individual progression as the secondary track,
+- achievement expansion beyond the earlier badge MVP,
+- milestone celebrations on results/dashboard/profile surfaces,
+- progression updates after the intended gameplay and account actions.
+
+### Preconditions
+
+- Latest `OnlyYoursExpo/` Phase J build installed
+- Latest backend with `V13__PhaseJ_Progression_Foundation.sql` applied
+- Two linked accounts with an active couple
+- Access to `Dashboard`, `Profile`, `Results`, and gameplay entry flow
+- At least one account with enough existing history to verify bootstrap behavior, if available
+
+### Acceptance checklist
+
+- [ ] Dashboard shows couple progression as the primary card and personal progression as the secondary card
+- [ ] Profile shows the same progression model without contradicting dashboard values
+- [ ] Results screen shows couple progression updates and recent milestone highlights after a completed game
+- [ ] Progression values remain stable across reload/relogin and do not double-count a completed game
+- [ ] Daily login progression behaves sensibly and does not duplicate repeatedly in the same day
+- [ ] Profile completion rewards, if newly earned, are reflected once and do not loop
+- [ ] Expanded achievements appear with understandable labels/icons and scope indicators
+- [ ] Standard stats/history/gameplay flows still behave correctly after progression updates
+
+### Required walkthrough matrix
+
+- Baseline visibility:
+  - Open `Dashboard` on one linked account
+  - Verify the couple progression card appears first and the personal progression card appears as a secondary surface
+  - Open `Profile`
+  - Verify progression values are consistent with the dashboard view
+- Game completion progression:
+  - Start and complete a normal category game with both partners
+  - Capture the `Results` screen
+  - Verify couple XP/level progress is shown
+  - Verify milestone highlights appear when new achievements or level-ups were earned
+  - Return to `Dashboard` and `Profile`
+  - Verify the updated progression values persist and remain internally consistent
+- Idempotency/regression:
+  - Reload the app or relogin after a completed game
+  - Verify progression totals do not jump unexpectedly
+  - Re-open `Results`/history if available and confirm the same completed game was not counted twice
+- Daily-login/profile triggers:
+  - Use an account that has not yet completed profile setup if possible
+  - Complete the missing profile fields and save
+  - Verify any newly earned progression reward appears once
+  - Re-open the screen or save again without changing meaningful data
+  - Verify the reward does not duplicate
+- Achievement surface quality:
+  - Inspect achievement chips/cards on `Dashboard` and `Profile`
+  - Verify expanded achievements render with understandable copy, iconography, and scope
+  - Confirm the UI does not imply the wrong owner when a couple-scoped achievement is shown
+- Standard regression:
+  - Browse game history and existing stats surfaces
+  - Start another game invitation flow
+  - Verify normal gameplay, results, and history still work after progression data is present
+
+### Evidence to capture
+
+Capture, at minimum:
+
+- build/commit under test
+- device(s) and OS version(s)
+- account pairing used
+- screenshots or recordings for:
+  - dashboard progression cards
+  - profile progression section
+  - results milestone highlights
+  - any level-up or achievement celebration observed
+  - proof that a reload/relogin did not duplicate progression
+
+### Deferred sign-off note
+
+Manual Phase J validation is currently deferred unless explicitly run. If not executed yet, record:
+
+- `Manual dashboard/profile progression validation: Pending`
+- `Manual results milestone validation: Pending`
+- `Manual progression idempotency validation: Pending`
+- `Manual daily-login/profile reward validation: Pending`
+- `Manual standard-flow regression validation: Pending`

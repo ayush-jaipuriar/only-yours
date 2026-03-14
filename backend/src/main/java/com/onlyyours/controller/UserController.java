@@ -5,6 +5,7 @@ import com.onlyyours.dto.UpdateProfileRequestDto;
 import com.onlyyours.dto.UserDto;
 import com.onlyyours.model.User;
 import com.onlyyours.repository.UserRepository;
+import com.onlyyours.service.ProgressionService;
 import jakarta.validation.Valid;
 import java.time.DateTimeException;
 import java.time.ZoneId;
@@ -23,9 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserController {
 
     private final UserRepository userRepository;
+    private final ProgressionService progressionService;
 
-    public UserController(UserRepository userRepository) {
+    public UserController(UserRepository userRepository, ProgressionService progressionService) {
         this.userRepository = userRepository;
+        this.progressionService = progressionService;
     }
 
     @GetMapping("/me")
@@ -51,6 +54,7 @@ public class UserController {
         try {
             applyProfileUpdate(user, request);
             User saved = userRepository.save(user);
+            progressionService.recordProfileCompletion(saved);
             return ResponseEntity.ok(toUserDto(saved));
         } catch (IllegalStateException e) {
             return ResponseEntity.status(409).body(Map.of(
