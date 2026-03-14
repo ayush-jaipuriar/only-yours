@@ -63,7 +63,7 @@ const SignUpScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
-      <Text style={styles.title} accessibilityRole="header">Create Account</Text>
+      <Text style={styles.title}>Create Account</Text>
       <Text style={styles.subtitle}>Join Only Yours</Text>
 
       <TextInput

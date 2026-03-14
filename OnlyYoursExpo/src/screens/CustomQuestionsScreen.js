@@ -270,7 +270,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
-        <Text style={styles.heroTitle} accessibilityRole="header">{summary.deckName}</Text>
+        <Text style={styles.heroTitle}>{summary.deckName}</Text>
         <Text style={styles.heroText}>{summary.deckDescription}</Text>
 
         <View style={styles.statsRow}>
@@ -307,7 +307,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle} accessibilityRole="header">Your Authored Questions</Text>
+      <Text style={styles.sectionTitle}>Your Authored Questions</Text>
 
       {!questions.length ? (
         <EmptyState
@@ -323,7 +323,6 @@ const CustomQuestionsScreen = ({ navigation }) => {
             key={question.id}
             style={styles.card}
             accessible
-            accessibilityRole="text"
             accessibilityLabel={`Custom question. ${question.questionText}. ${formatUpdatedAt(question.updatedAt)}.`}
           >
             <Text style={styles.questionText}>{question.questionText}</Text>

@@ -311,7 +311,7 @@ const CategorySelectionScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title} accessibilityRole="header">What do you want to explore?</Text>
+      <Text style={styles.title}>What do you want to explore?</Text>
       <FlatList
         data={displayItems}
         renderItem={renderCategory}

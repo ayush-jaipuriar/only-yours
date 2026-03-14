@@ -208,7 +208,7 @@ const ResultsScreen = ({ route, navigation }) => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} accessibilityRole="status">Loading results...</Text>
+        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading results...</Text>
       </View>
     );
   }
@@ -216,7 +216,7 @@ const ResultsScreen = ({ route, navigation }) => {
   if (scoreLoadError || !scores) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]} accessibilityRole="header">Results Unavailable</Text>
+        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Unavailable</Text>
         <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} {...accessibilityAlertProps}>
           This game result is no longer available.
         </Text>
@@ -245,14 +245,13 @@ const ResultsScreen = ({ route, navigation }) => {
         ]}>
         {/* Header */}
         <Text style={styles.emoji} {...decorativeAccessibilityProps}>{getHeaderEmoji()}</Text>
-        <Text style={[styles.title, dynamicStyles.title]} accessibilityRole="header">Game Complete!</Text>
+        <Text style={[styles.title, dynamicStyles.title]}>Game Complete!</Text>
 
         {/* Score Cards */}
         <View style={styles.scoresRow}>
           <View
             style={[styles.scoreCard, dynamicStyles.scoreCard]}
             accessible
-            accessibilityRole="text"
             accessibilityLabel={`${scores.player1Name} scored ${scores.player1Score} out of ${scores.totalQuestions}.`}
           >
             <Text style={[styles.playerName, dynamicStyles.playerName]} numberOfLines={1}>
@@ -274,7 +273,6 @@ const ResultsScreen = ({ route, navigation }) => {
           <View
             style={[styles.scoreCard, dynamicStyles.scoreCard]}
             accessible
-            accessibilityRole="text"
             accessibilityLabel={`${scores.player2Name} scored ${scores.player2Score} out of ${scores.totalQuestions}.`}
           >
             <Text style={[styles.playerName, dynamicStyles.playerName]} numberOfLines={1}>

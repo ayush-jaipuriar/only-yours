@@ -67,7 +67,7 @@ const ResetPasswordScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
-      <Text style={styles.title} accessibilityRole="header">Reset Password</Text>
+      <Text style={styles.title}>Reset Password</Text>
       <Text style={styles.subtitle}>Enter your reset token and choose a new password.</Text>
 
       <TextInput

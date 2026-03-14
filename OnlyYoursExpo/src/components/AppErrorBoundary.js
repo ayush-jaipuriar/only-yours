@@ -51,7 +51,7 @@ class AppErrorBoundary extends React.Component {
       return (
         <View style={styles.container} testID="error-boundary-fallback">
           <Text style={styles.icon} {...decorativeAccessibilityProps}>💔</Text>
-          <Text style={styles.title} accessibilityRole="header">Something went wrong</Text>
+          <Text style={styles.title}>Something went wrong</Text>
           <Text style={styles.message} {...accessibilityAlertProps}>
             The app ran into an unexpected problem. Your progress may not be saved.
           </Text>

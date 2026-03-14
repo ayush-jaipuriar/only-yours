@@ -372,7 +372,7 @@ const ProfileScreen = ({ navigation }) => {
           </Text>
         </View>
 
-        <Text style={styles.name} accessibilityRole="header">{profile.name}</Text>
+        <Text style={styles.name}>{profile.name}</Text>
         <Text style={styles.email}>{profile.email}</Text>
         <Text style={styles.username}>@{profile.username || 'username'}</Text>
         {profile.bio ? <Text style={styles.bioText}>{profile.bio}</Text> : null}

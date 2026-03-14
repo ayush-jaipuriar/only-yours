@@ -90,7 +90,6 @@ const ProgressionCard = ({ snapshot, compact = false }) => {
     <View
       style={styles.card}
       accessible
-      accessibilityRole="summary"
       accessibilityLabel={`${snapshot.label}. Level ${snapshot.level}. ${snapshot.xp} experience points.`}
     >
       <Text style={styles.eyebrow}>{snapshot.scope === 'COUPLE' ? 'Couple Progression' : 'Personal Progression'}</Text>

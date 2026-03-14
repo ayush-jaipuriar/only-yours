@@ -259,7 +259,7 @@ const PartnerLinkScreen = ({ navigation }) => {
       >
         <HeartIllustration primaryColor={theme.colors.primary} linkColor={theme.colors.border} />
 
-        <Text style={[styles.heading, dynamicStyles.heading]} accessibilityRole="header">Link with Partner</Text>
+        <Text style={[styles.heading, dynamicStyles.heading]}>Link with Partner</Text>
         <Text style={[styles.subheading, dynamicStyles.subheading]}>
           Share your code or enter theirs to connect
         </Text>
@@ -289,7 +289,6 @@ const PartnerLinkScreen = ({ navigation }) => {
               <View
                 style={[styles.codeBadge, dynamicStyles.codeBadge]}
                 accessible
-                accessibilityRole="text"
                 accessibilityLabel={`Generated partner code ${generatedCode.split('').join(' ')}`}
               >
                 <Text style={[styles.codeText, dynamicStyles.codeText]}>{generatedCode}</Text>

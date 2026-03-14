@@ -162,7 +162,7 @@ const CustomQuestionEditorScreen = ({ route, navigation }) => {
     >
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.card}>
-          <Text style={styles.title} accessibilityRole="header">
+          <Text style={styles.title}>
             {existingQuestion ? 'Edit Custom Question' : 'Create Custom Question'}
           </Text>
           <Text style={styles.subtitle}>

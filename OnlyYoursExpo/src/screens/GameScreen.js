@@ -318,7 +318,7 @@ const GameScreen = ({ route, navigation }) => {
     return (
       <View style={[styles.transitionContainer, dynamicStyles.transitionContainer]}>
         <Text style={styles.transitionEmoji} {...decorativeAccessibilityProps}>🎯</Text>
-        <Text style={[styles.transitionTitle, dynamicStyles.transitionTitle]} accessibilityRole="header">Round 1 Complete!</Text>
+        <Text style={[styles.transitionTitle, dynamicStyles.transitionTitle]}>Round 1 Complete!</Text>
         <Text style={[styles.transitionSubtitle, dynamicStyles.transitionSubtitle]} {...accessibilityStatusProps}>
           Now guess how your partner answered...
         </Text>
@@ -344,7 +344,7 @@ const GameScreen = ({ route, navigation }) => {
           <Text style={styles.resultEmoji} {...decorativeAccessibilityProps}>
             {guessResult.correct ? '✅' : '❌'}
           </Text>
-          <Text style={[styles.resultTitle, dynamicStyles.resultTitle]} accessibilityRole="header">
+          <Text style={[styles.resultTitle, dynamicStyles.resultTitle]}>
             {guessResult.correct ? 'Correct!' : 'Not quite!'}
           </Text>
           <Text style={[styles.resultDetail, dynamicStyles.resultDetail]} {...accessibilityAlertProps}>
@@ -368,7 +368,7 @@ const GameScreen = ({ route, navigation }) => {
     if (isInvitationPending || gameStatus === 'invited') {
       return (
         <View style={[styles.centered, dynamicStyles.centered]}>
-          <Text style={[styles.pendingTitle, dynamicStyles.pendingTitle]} accessibilityRole="header">
+          <Text style={[styles.pendingTitle, dynamicStyles.pendingTitle]}>
             Invitation pending
           </Text>
           <Text style={[styles.pendingText, dynamicStyles.pendingText]}>
@@ -401,9 +401,14 @@ const GameScreen = ({ route, navigation }) => {
     }
 
     return (
-      <View style={[styles.centered, dynamicStyles.centered]}>
+      <View
+        style={[styles.centered, dynamicStyles.centered]}
+        accessible
+        accessibilityRole="progressbar"
+        accessibilityLabel="Loading question..."
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, dynamicStyles.loadingText]} accessibilityRole="status">Loading question...</Text>
+        <Text style={[styles.loadingText, dynamicStyles.loadingText]}>Loading question...</Text>
       </View>
     );
   }
@@ -435,7 +440,6 @@ const GameScreen = ({ route, navigation }) => {
               isRound2 && styles.roundBadgeR2,
             ]}
             accessible
-            accessibilityRole="text"
             accessibilityLabel={isRound2 ? `Round 2. ${correctCount} correct so far.` : 'Round 1. Answer the question.'}
           >
             <Text
@@ -492,13 +496,12 @@ const GameScreen = ({ route, navigation }) => {
               <View
                 style={dynamicStyles.customBadge}
                 accessible
-                accessibilityRole="text"
                 accessibilityLabel="Custom couple question"
               >
                 <Text style={dynamicStyles.customBadgeText}>Custom Couple Question</Text>
               </View>
             ) : null}
-            <Text style={[styles.questionText, dynamicStyles.questionText]} accessibilityRole="header">
+            <Text style={[styles.questionText, dynamicStyles.questionText]}>
               {currentQuestion.questionText}
             </Text>
           </View>

@@ -149,7 +149,7 @@ const OnboardingScreen = ({ navigation }) => {
       <View style={[styles.card, dynamicStyles.card]}>
         <View style={[styles.heroCard, dynamicStyles.heroCard]}>
           <Text style={styles.heroEmoji} {...decorativeAccessibilityProps}>💗</Text>
-          <Text style={[styles.title, dynamicStyles.title]} accessibilityRole="header">Welcome to Only Yours</Text>
+          <Text style={[styles.title, dynamicStyles.title]}>Welcome to Only Yours</Text>
           <Text style={[styles.subtitle, dynamicStyles.subtitle]}>
             Let’s set up your experience in under a minute.
           </Text>
@@ -170,7 +170,7 @@ const OnboardingScreen = ({ navigation }) => {
 
         <View style={styles.stepCard}>
           <Text style={styles.stepEmoji} {...decorativeAccessibilityProps}>{currentStep.emoji}</Text>
-          <Text style={[styles.stepTitle, dynamicStyles.stepTitle]} accessibilityRole="header">{currentStep.title}</Text>
+          <Text style={[styles.stepTitle, dynamicStyles.stepTitle]}>{currentStep.title}</Text>
           <Text style={[styles.stepDescription, dynamicStyles.stepDescription]}>
             {currentStep.description}
           </Text>

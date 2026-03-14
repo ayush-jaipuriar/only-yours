@@ -49,7 +49,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
-      <Text style={styles.title} accessibilityRole="header">Forgot Password</Text>
+      <Text style={styles.title}>Forgot Password</Text>
       <Text style={styles.subtitle}>Enter your email to request a reset code.</Text>
 
       <TextInput

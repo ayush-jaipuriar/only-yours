@@ -86,7 +86,6 @@ const BadgeChip = ({ badge }) => {
     <View
       style={[styles.chip, { backgroundColor, borderColor }]}
       accessible
-      accessibilityRole="text"
       accessibilityLabel={`${title}. ${description}`}
     >
       <Text style={styles.icon} {...decorativeAccessibilityProps}>{badgeTheme.icon}</Text>

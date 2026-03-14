@@ -48,7 +48,7 @@ const SignInScreen = ({ navigation }) => {
 
     return (
         <AuthFormScreenLayout>
-            <Text style={styles.title} accessibilityRole="header">Only Yours</Text>
+            <Text style={styles.title}>Only Yours</Text>
             <Text style={styles.subtitle}>Sign in to continue</Text>
 
             <TextInput

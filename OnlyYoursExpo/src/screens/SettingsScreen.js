@@ -480,7 +480,7 @@ const SettingsScreen = ({ navigation }) => {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.card}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Theme</Text>
+        <Text style={styles.sectionTitle}>Theme</Text>
         <Text style={styles.sectionSubtitle}>
           Choose how the app appearance behaves. Current resolved mode: {resolvedMode}.
         </Text>
@@ -510,7 +510,7 @@ const SettingsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Haptics</Text>
+        <Text style={styles.sectionTitle}>Haptics</Text>
         <Text style={styles.sectionSubtitle}>
           Add subtle device feedback for key actions like submits, results, and relationship controls.
         </Text>
@@ -541,7 +541,7 @@ const SettingsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Notification Preferences</Text>
+        <Text style={styles.sectionTitle}>Notification Preferences</Text>
         <Text style={styles.sectionSubtitle}>
           Configure your reminder window and quiet-hours boundaries.
         </Text>
@@ -625,7 +625,7 @@ const SettingsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Relationship Controls</Text>
+        <Text style={styles.sectionTitle}>Relationship Controls</Text>
         <Text style={styles.sectionSubtitle}>
           Manage unlink and cooldown recovery safely from one place.
         </Text>
@@ -699,7 +699,7 @@ const SettingsScreen = ({ navigation }) => {
 
         {unlinkFlowOpen && (
           <View style={styles.unlinkConfirmPanel}>
-            <Text style={styles.unlinkConfirmTitle} accessibilityRole="header">Final Confirmation</Text>
+            <Text style={styles.unlinkConfirmTitle}>Final Confirmation</Text>
             <Text style={styles.unlinkConfirmText}>
               This action unlinks your partner and starts a 24-hour cooldown.
             </Text>
@@ -750,7 +750,7 @@ const SettingsScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.card}>
-        <Text style={styles.sectionTitle} accessibilityRole="header">Onboarding</Text>
+        <Text style={styles.sectionTitle}>Onboarding</Text>
         <Text style={styles.sectionSubtitle}>
           Replay onboarding anytime to revisit key game flow concepts.
         </Text>

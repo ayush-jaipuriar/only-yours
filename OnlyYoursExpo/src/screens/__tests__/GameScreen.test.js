@@ -56,7 +56,7 @@ describe('GameScreen', () => {
   it('should show loading indicator when no current question', () => {
     const { getByRole, getByText } = renderWithProviders();
     expect(getByText('Loading question...')).toBeTruthy();
-    expect(getByRole('status')).toBeTruthy();
+    expect(getByRole('progressbar')).toBeTruthy();
   });
 
   it('should render Round 1 badge by default', () => {

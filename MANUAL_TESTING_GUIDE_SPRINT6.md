@@ -36,6 +36,7 @@ nvm use 24
 npm install
 npm run android:local-build
 
+[ -f .env ] || cp .env.example .env
 LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
 sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env
 REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
@@ -118,6 +119,7 @@ grep "^EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/On
 
 - **WebSocket timeout:** restart backend + Metro using LAN host override (`REACT_NATIVE_PACKAGER_HOSTNAME`)
 - **Failed to connect to `127.0.0.1:8081`:** restart Metro with `LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)` and `REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c`
+- **Android dev build crashes with `property 'accessibilityRole' ...` on `RCTText` or other Fabric views:** pull the latest frontend fix, restart Metro with `-c`, and reload the dev client so it picks up the corrected JS bundle. Unsupported roles like `text` on generic views and `accessibilityRole` directly on `Text` nodes were removed for Android compatibility.
 - **Resend key missing in logs:** verify root `.env` has `RESEND_API_KEY`, then restart backend
 - **Node API errors (`toReversed`)**: run `nvm use 24` before Expo commands
 
@@ -474,6 +476,12 @@ Expected:
 
 Because the app now runs on your physical phone (Expo Go / EAS APK), the backend URL must be reachable from your phone.
 
+If `OnlyYoursExpo/.env` does not exist yet, create it once from the example file:
+
+```bash
+cp OnlyYoursExpo/.env.example OnlyYoursExpo/.env
+```
+
 ### Option A (recommended): Same Wi-Fi LAN
 
 Update this file:
@@ -527,6 +535,7 @@ nvm use 24
 npm install
 npm run android:local-build
 
+[ -f .env ] || cp .env.example .env
 LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
 sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env
 REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c

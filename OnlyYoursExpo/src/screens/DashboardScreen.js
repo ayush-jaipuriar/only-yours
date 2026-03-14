@@ -230,7 +230,7 @@ const DashboardScreen = ({ navigation }) => {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText} accessibilityRole="status">Loading...</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -251,7 +251,7 @@ const DashboardScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Text style={styles.title} accessibilityRole="header">Welcome, {user?.name}!</Text>
+        <Text style={styles.title}>Welcome, {user?.name}!</Text>
 
         {couple ? (
           <>
@@ -302,7 +302,7 @@ const DashboardScreen = ({ navigation }) => {
         )}
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle} accessibilityRole="header">Progression</Text>
+          <Text style={styles.sectionTitle}>Progression</Text>
           {progression?.coupleProgression || progression?.individualProgression ? (
             <>
               <ProgressionCard snapshot={progression?.coupleProgression} />
@@ -344,14 +344,13 @@ const DashboardScreen = ({ navigation }) => {
         ) : null}
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle} accessibilityRole="header">Your Stats</Text>
+          <Text style={styles.sectionTitle}>Your Stats</Text>
           <View style={styles.metricsGrid}>
             {metricCards.map((item) => (
               <View
                 key={item.label}
                 style={styles.metricItem}
                 accessible
-                accessibilityRole="text"
                 accessibilityLabel={`${item.label}: ${item.value}`}
               >
                 <Text style={styles.metricValue}>{item.value}</Text>
@@ -362,7 +361,7 @@ const DashboardScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.sectionCard}>
-          <Text style={styles.sectionTitle} accessibilityRole="header">Achievements</Text>
+          <Text style={styles.sectionTitle}>Achievements</Text>
           {badges?.length ? (
             <View style={styles.badgeList}>
               {badges.map((badge) => (

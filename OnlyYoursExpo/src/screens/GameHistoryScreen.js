@@ -230,7 +230,7 @@ const GameHistoryScreen = ({ navigation }) => {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.sectionTitle} accessibilityRole="header">Sort</Text>
+      <Text style={styles.sectionTitle}>Sort</Text>
       <View style={styles.filterRow}>
         {SORT_OPTIONS.map((option) => (
           <TouchableOpacity
@@ -248,7 +248,7 @@ const GameHistoryScreen = ({ navigation }) => {
         ))}
       </View>
 
-      <Text style={styles.sectionTitle} accessibilityRole="header">Winner Filter</Text>
+      <Text style={styles.sectionTitle}>Winner Filter</Text>
       <View style={styles.filterRow}>
         {WINNER_OPTIONS.map((option) => (
           <TouchableOpacity
@@ -273,7 +273,6 @@ const GameHistoryScreen = ({ navigation }) => {
             key={item.sessionId}
             style={styles.card}
             accessible
-            accessibilityRole="text"
             accessibilityLabel={`${formatPlayedAt(item.completedAt)}. ${cardResultTheme.text}. Played with ${item.partnerName}. You scored ${item.myScore ?? 0}. Partner scored ${item.partnerScore ?? 0}.`}
           >
             <View style={styles.cardHeader}>

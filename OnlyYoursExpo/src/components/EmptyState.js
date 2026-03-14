@@ -86,7 +86,7 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
     <View style={styles.container} testID="empty-state">
       <View style={styles.panel} accessible={!actionLabel} {...(!actionLabel ? accessibilityStatusProps : {})}>
         {icon ? <Text style={styles.icon} {...decorativeAccessibilityProps}>{icon}</Text> : null}
-        {title ? <Text style={styles.title} accessibilityRole="header">{title}</Text> : null}
+        {title ? <Text style={styles.title}>{title}</Text> : null}
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {actionLabel && onAction ? (
           <TouchableOpacity

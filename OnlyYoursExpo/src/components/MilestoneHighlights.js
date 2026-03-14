@@ -80,7 +80,6 @@ const MilestoneHighlights = ({ milestones, title = 'Recent Milestones' }) => {
           key={`${milestone.type}-${milestone.code || milestone.title}-${index}`}
           style={[styles.item, index === 0 && styles.firstItem]}
           accessible
-          accessibilityRole="text"
           accessibilityLabel={`${milestone.ownerLabel || milestone.scope}. ${milestone.title}. ${milestone.description}`}
         >
           <Text style={styles.icon}>{ICON_BY_TYPE[milestone.type] || '✨'}</Text>
