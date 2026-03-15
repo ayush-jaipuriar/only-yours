@@ -11,13 +11,10 @@ import {
 import { useGame } from '../state/GameContext';
 import useTheme from '../theme/useTheme';
 import {
-  accessibilityAlertProps,
   accessibilityStatusProps,
   announceForAccessibility,
   decorativeAccessibilityProps,
 } from '../accessibility';
-
-const GUESS_RESULT_DISPLAY_MS = 2500;
 
 // eslint-disable-next-line react/prop-types
 const GameScreen = ({ route, navigation }) => {
@@ -27,23 +24,22 @@ const GameScreen = ({ route, navigation }) => {
     currentQuestion,
     myAnswer,
     waitingForPartner,
+    roundState,
     startGame,
     submitAnswer,
     submitGuess,
     gameStatus,
     round,
-    guessResult,
     scores,
     correctCount,
     isTransitioning,
     isInvitationPending,
+    isSubmitting,
     acceptPendingInvitation,
     refreshCurrentQuestion,
-    clearGuessResult,
   } = useGame();
 
   const [selectedOption, setSelectedOption] = useState(null);
-  const [showingResult, setShowingResult] = useState(false);
   const { width, height } = useWindowDimensions();
   const routeSessionId = route?.params?.sessionId;
 
@@ -65,20 +61,8 @@ const GameScreen = ({ route, navigation }) => {
   useEffect(() => {
     if (currentQuestion) {
       setSelectedOption(null);
-      setShowingResult(false);
     }
   }, [currentQuestion?.questionId]);
-
-  useEffect(() => {
-    if (guessResult && round === 'round2') {
-      setShowingResult(true);
-      const timer = setTimeout(() => {
-        setShowingResult(false);
-        clearGuessResult();
-      }, GUESS_RESULT_DISPLAY_MS);
-      return () => clearTimeout(timer);
-    }
-  }, [guessResult, round, clearGuessResult]);
 
   useEffect(() => {
     if (isInvitationPending || gameStatus === 'invited') {
@@ -93,28 +77,28 @@ const GameScreen = ({ route, navigation }) => {
   }, [isTransitioning]);
 
   useEffect(() => {
-    if (guessResult && round === 'round2') {
-      announceForAccessibility(
-        guessResult.correct
-          ? `Correct guess. ${guessResult.correctCount} correct so far.`
-          : `Incorrect guess. Your partner chose ${guessResult.partnerAnswer}. ${guessResult.correctCount} correct so far.`
-      );
+    if (roundState?.status === 'WAITING_FOR_PARTNER') {
+      announceForAccessibility(roundState.message || 'Waiting for your partner to finish the round.');
     }
-  }, [guessResult, round]);
+  }, [roundState]);
 
   const handleOptionSelect = useCallback((option) => {
-    if (waitingForPartner || myAnswer) return;
+    if (waitingForPartner || isSubmitting || myAnswer) {
+      return;
+    }
     setSelectedOption(option);
-  }, [waitingForPartner, myAnswer]);
+  }, [isSubmitting, myAnswer, waitingForPartner]);
 
   const handleSubmit = useCallback(() => {
-    if (!selectedOption) return;
+    if (!selectedOption) {
+      return;
+    }
     if (round === 'round2') {
       submitGuess(selectedOption);
-    } else {
-      submitAnswer(selectedOption);
+      return;
     }
-  }, [selectedOption, round, submitAnswer, submitGuess]);
+    submitAnswer(selectedOption);
+  }, [round, selectedOption, submitAnswer, submitGuess]);
 
   const handleAcceptPendingInvitation = useCallback(() => {
     const accepted = acceptPendingInvitation();
@@ -146,6 +130,40 @@ const GameScreen = ({ route, navigation }) => {
           color: theme.colors.primaryContrast,
         },
         pendingButtonSecondaryText: {
+          color: theme.colors.textPrimary,
+        },
+        reviewHeaderCard: {
+          backgroundColor: theme.colors.surfaceOverlay,
+          borderColor: theme.colors.border,
+          shadowColor: theme.colors.overlayScrim,
+        },
+        reviewTitle: {
+          color: theme.colors.textPrimary,
+        },
+        reviewMessage: {
+          color: theme.colors.textSecondary,
+        },
+        reviewStat: {
+          color: theme.colors.accent,
+        },
+        reviewListTitle: {
+          color: theme.colors.textPrimary,
+        },
+        reviewCard: {
+          backgroundColor: theme.colors.surface,
+          borderColor: theme.colors.border,
+        },
+        reviewQuestionText: {
+          color: theme.colors.textPrimary,
+        },
+        reviewSubmittedValue: {
+          color: theme.colors.primary,
+        },
+        reviewRefreshButton: {
+          backgroundColor: theme.colors.surfaceElevated,
+          borderColor: theme.colors.border,
+        },
+        reviewRefreshButtonText: {
           color: theme.colors.textPrimary,
         },
         roundBadge: {
@@ -230,6 +248,9 @@ const GameScreen = ({ route, navigation }) => {
         waitingText: {
           color: theme.colors.textSecondary,
         },
+        submittedText: {
+          color: theme.colors.textSecondary,
+        },
         transitionContainer: {
           backgroundColor: theme.colors.celebrationSurface,
         },
@@ -239,34 +260,6 @@ const GameScreen = ({ route, navigation }) => {
         transitionSubtitle: {
           color: theme.colors.textSecondary,
         },
-        resultOverlay: {
-          backgroundColor: theme.colors.overlayScrim,
-        },
-        resultCard: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          shadowColor: theme.colors.overlayScrim,
-        },
-        resultCorrect: {
-          borderColor: theme.colors.success,
-        },
-        resultWrong: {
-          borderColor: theme.colors.danger,
-        },
-        resultTitle: {
-          color: theme.colors.textPrimary,
-        },
-        resultDetail: {
-          color: theme.colors.textSecondary,
-        },
-        resultBold: {
-          color: theme.colors.textPrimary,
-        },
-        resultQuestion: {
-          color: theme.colors.textTertiary,
-        },
-        resultScore: {
-          color: theme.colors.accent,
-        },
       }),
     [isRound2, theme]
   );
@@ -274,11 +267,7 @@ const GameScreen = ({ route, navigation }) => {
   const renderOption = (letter, text) => {
     const isSelected = selectedOption === letter;
     const isMyAnswer = myAnswer === letter;
-    const isDisabled = waitingForPartner || myAnswer;
-
-    const optionLetterBg = round === 'round2'
-      ? styles.optionLetterRound2
-      : styles.optionLetterRound1;
+    const isDisabled = waitingForPartner || isSubmitting || Boolean(myAnswer);
 
     return (
       <TouchableOpacity
@@ -298,11 +287,12 @@ const GameScreen = ({ route, navigation }) => {
         accessibilityRole="button"
         accessibilityLabel={`Option ${letter}. ${text}`}
         accessibilityHint={isRound2 ? 'Select this answer as your guess.' : 'Select this as your answer.'}
-        accessibilityState={{ selected: isSelected || isMyAnswer, disabled: isDisabled }}>
+        accessibilityState={{ selected: isSelected || isMyAnswer, disabled: isDisabled }}
+      >
         <View
           style={[
             styles.optionLetter,
-            optionLetterBg,
+            round === 'round2' ? styles.optionLetterRound2 : styles.optionLetterRound1,
             round === 'round2' ? dynamicStyles.optionLetterRound2 : dynamicStyles.optionLetterRound1,
           ]}
           {...decorativeAccessibilityProps}
@@ -327,39 +317,6 @@ const GameScreen = ({ route, navigation }) => {
           color={theme.colors.accent}
           style={styles.transitionSpinner}
         />
-      </View>
-    );
-  }
-
-  if (showingResult && guessResult && round === 'round2') {
-    return (
-      <View style={[styles.resultOverlay, dynamicStyles.resultOverlay]}>
-        <View
-          style={[
-            styles.resultCard,
-            dynamicStyles.resultCard,
-            guessResult.correct ? styles.resultCorrect : styles.resultWrong,
-            guessResult.correct ? dynamicStyles.resultCorrect : dynamicStyles.resultWrong,
-          ]}>
-          <Text style={styles.resultEmoji} {...decorativeAccessibilityProps}>
-            {guessResult.correct ? '✅' : '❌'}
-          </Text>
-          <Text style={[styles.resultTitle, dynamicStyles.resultTitle]}>
-            {guessResult.correct ? 'Correct!' : 'Not quite!'}
-          </Text>
-          <Text style={[styles.resultDetail, dynamicStyles.resultDetail]} {...accessibilityAlertProps}>
-            Your partner chose{' '}
-            <Text style={[styles.resultBold, dynamicStyles.resultBold]}>{guessResult.partnerAnswer}</Text>
-          </Text>
-          {guessResult.questionText && (
-            <Text style={[styles.resultQuestion, dynamicStyles.resultQuestion]} numberOfLines={2}>
-              "{guessResult.questionText}"
-            </Text>
-          )}
-          <Text style={[styles.resultScore, dynamicStyles.resultScore]}>
-            {guessResult.correctCount} correct so far
-          </Text>
-        </View>
       </View>
     );
   }
@@ -400,6 +357,97 @@ const GameScreen = ({ route, navigation }) => {
       );
     }
 
+    if (roundState?.status === 'WAITING_FOR_PARTNER') {
+      const isRound2Waiting = roundState.round === 'ROUND2';
+      const submittedLabel = isRound2Waiting ? 'guesses' : 'answers';
+
+      return (
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.contentWrapper}>
+              <View
+                style={[
+                  styles.roundBadge,
+                  dynamicStyles.roundBadge,
+                  isRound2Waiting && styles.roundBadgeR2,
+                ]}
+                accessible
+                accessibilityLabel={
+                  isRound2Waiting
+                    ? `Round 2 complete for you. ${correctCount} correct so far.`
+                    : 'Round 1 complete for you.'
+                }
+              >
+                <Text
+                  style={[
+                    styles.roundBadgeText,
+                    dynamicStyles.roundBadgeText,
+                    isRound2Waiting && styles.roundBadgeTextR2,
+                  ]}
+                >
+                  {isRound2Waiting ? 'Round 2 Submitted' : 'Round 1 Submitted'}
+                </Text>
+                {isRound2Waiting && (
+                  <Text style={[styles.runningScore, dynamicStyles.runningScore]}>
+                    {correctCount}/{roundState.totalQuestions} correct
+                  </Text>
+                )}
+              </View>
+
+              <View style={[styles.reviewHeaderCard, dynamicStyles.reviewHeaderCard]}>
+                <Text style={[styles.reviewTitle, dynamicStyles.reviewTitle]}>
+                  Waiting for your partner
+                </Text>
+                <Text
+                  style={[styles.reviewMessage, dynamicStyles.reviewMessage]}
+                  {...accessibilityStatusProps}
+                >
+                  {roundState.message}
+                </Text>
+                <Text style={[styles.reviewStat, dynamicStyles.reviewStat]}>
+                  {roundState.completedCount}/{roundState.totalQuestions} {submittedLabel} locked in
+                </Text>
+                <TouchableOpacity
+                  style={[styles.reviewRefreshButton, dynamicStyles.reviewRefreshButton]}
+                  onPress={refreshCurrentQuestion}
+                  activeOpacity={0.8}
+                  accessibilityRole="button"
+                  accessibilityLabel="Refresh game status"
+                  accessibilityHint="Checks whether your partner finished the round."
+                >
+                  <Text style={[styles.reviewRefreshButtonText, dynamicStyles.reviewRefreshButtonText]}>
+                    Refresh Status
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={[styles.reviewListTitle, dynamicStyles.reviewListTitle]}>
+                Your submitted {submittedLabel}
+              </Text>
+
+              {roundState.reviewItems?.map((item) => (
+                <View key={`${roundState.round}-${item.questionId}`} style={[styles.reviewCard, dynamicStyles.reviewCard]}>
+                  <Text style={[styles.questionNumber, { color: theme.colors.primary }]}>
+                    Question {item.questionNumber}
+                  </Text>
+                  <Text style={[styles.reviewQuestionText, dynamicStyles.reviewQuestionText]}>
+                    {item.questionText}
+                  </Text>
+                  <Text style={[styles.reviewSubmittedValue, dynamicStyles.reviewSubmittedValue]}>
+                    Your {isRound2Waiting ? 'guess' : 'answer'}: {item.submittedValue}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </ScrollView>
+        </View>
+      );
+    }
+
     return (
       <View
         style={[styles.centered, dynamicStyles.centered]}
@@ -414,8 +462,7 @@ const GameScreen = ({ route, navigation }) => {
   }
 
   const primaryColor = isRound2 ? theme.colors.accent : theme.colors.primary;
-  const progressPercent =
-    (currentQuestion.questionNumber / currentQuestion.totalQuestions) * 100;
+  const progressPercent = (currentQuestion.questionNumber / currentQuestion.totalQuestions) * 100;
   const isCompactLandscape = width > height && height < 520;
 
   return (
@@ -432,7 +479,6 @@ const GameScreen = ({ route, navigation }) => {
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.contentWrapper}>
-          {/* Round Badge */}
           <View
             style={[
               styles.roundBadge,
@@ -458,11 +504,9 @@ const GameScreen = ({ route, navigation }) => {
             )}
           </View>
 
-          {/* Progress */}
           <View style={styles.header}>
             <Text style={[styles.questionNumber, { color: primaryColor }]}>
-              Question {currentQuestion.questionNumber} of{' '}
-              {currentQuestion.totalQuestions}
+              Question {currentQuestion.questionNumber} of {currentQuestion.totalQuestions}
             </Text>
             <View
               style={[styles.progressBar, dynamicStyles.progressBar]}
@@ -481,7 +525,6 @@ const GameScreen = ({ route, navigation }) => {
             </View>
           </View>
 
-          {/* Round 2 Prompt */}
           {isRound2 && (
             <View style={[styles.guessPrompt, dynamicStyles.guessPrompt]}>
               <Text style={[styles.guessPromptText, dynamicStyles.guessPromptText]}>
@@ -490,7 +533,6 @@ const GameScreen = ({ route, navigation }) => {
             </View>
           )}
 
-          {/* Question */}
           <View style={[styles.questionContainer, dynamicStyles.questionContainer]}>
             {currentQuestion.customQuestion ? (
               <View
@@ -506,7 +548,6 @@ const GameScreen = ({ route, navigation }) => {
             </Text>
           </View>
 
-          {/* Options */}
           <View style={styles.optionsContainer}>
             {renderOption('A', currentQuestion.optionA)}
             {renderOption('B', currentQuestion.optionB)}
@@ -514,17 +555,16 @@ const GameScreen = ({ route, navigation }) => {
             {renderOption('D', currentQuestion.optionD)}
           </View>
 
-          {/* Footer */}
           <View style={styles.footer}>
-            {waitingForPartner ? (
+            {isSubmitting ? (
               <View style={styles.waitingContainer}>
                 <ActivityIndicator size="small" color={primaryColor} />
-                <Text style={[styles.waitingText, { color: theme.colors.textSecondary }]} {...accessibilityStatusProps}>
-                  Waiting for partner...
+                <Text style={[styles.submittedText, dynamicStyles.submittedText]} {...accessibilityStatusProps}>
+                  {isRound2 ? 'Submitting guess...' : 'Submitting answer...'}
                 </Text>
               </View>
             ) : myAnswer ? (
-              <Text style={[styles.waitingText, { color: theme.colors.textSecondary }]} {...accessibilityStatusProps}>
+              <Text style={[styles.submittedText, dynamicStyles.submittedText]} {...accessibilityStatusProps}>
                 {isRound2 ? 'Guess submitted!' : 'Answer submitted!'}
               </Text>
             ) : (
@@ -540,7 +580,8 @@ const GameScreen = ({ route, navigation }) => {
                 accessibilityRole="button"
                 accessibilityLabel={isRound2 ? 'Submit guess' : 'Submit answer'}
                 accessibilityHint={isRound2 ? 'Submits your selected guess.' : 'Submits your selected answer.'}
-                accessibilityState={{ disabled: !selectedOption }}>
+                accessibilityState={{ disabled: !selectedOption }}
+              >
                 <Text style={[styles.submitButtonText, dynamicStyles.submitButtonText]}>
                   {isRound2 ? 'Submit Guess' : 'Submit Answer'}
                 </Text>
@@ -620,8 +661,63 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '600',
   },
-
-  // Round badge
+  reviewHeaderCard: {
+    borderWidth: 1,
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 18,
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 4,
+  },
+  reviewTitle: {
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 8,
+  },
+  reviewMessage: {
+    fontSize: 15,
+    lineHeight: 22,
+    marginBottom: 10,
+  },
+  reviewStat: {
+    fontSize: 14,
+    fontWeight: '700',
+    marginBottom: 14,
+  },
+  reviewRefreshButton: {
+    borderWidth: 1,
+    borderRadius: 22,
+    alignSelf: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  reviewRefreshButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  reviewListTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 12,
+  },
+  reviewCard: {
+    borderWidth: 1,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+  },
+  reviewQuestionText: {
+    fontSize: 16,
+    lineHeight: 22,
+    marginBottom: 10,
+    fontWeight: '600',
+  },
+  reviewSubmittedValue: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
   roundBadge: {
     alignSelf: 'center',
     backgroundColor: '#f3e5f5',
@@ -649,8 +745,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     fontWeight: '600',
   },
-
-  // Header
   header: {
     marginBottom: 16,
   },
@@ -669,8 +763,6 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 4,
   },
-
-  // Guess prompt
   guessPrompt: {
     backgroundColor: '#e0f7fa',
     borderRadius: 10,
@@ -685,8 +777,6 @@ const styles = StyleSheet.create({
     color: '#00796b',
     textAlign: 'center',
   },
-
-  // Question
   questionContainer: {
     backgroundColor: '#fff',
     borderRadius: 12,
@@ -705,8 +795,6 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     textAlign: 'center',
   },
-
-  // Options
   optionsContainer: {
     width: '100%',
   },
@@ -765,8 +853,6 @@ const styles = StyleSheet.create({
     color: '#333',
     lineHeight: 22,
   },
-
-  // Footer
   footer: {
     paddingTop: 16,
     paddingBottom: 10,
@@ -802,8 +888,12 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     textAlign: 'center',
   },
-
-  // Transition screen
+  submittedText: {
+    fontSize: 16,
+    color: '#666',
+    textAlign: 'center',
+    fontWeight: '500',
+  },
   transitionContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -831,68 +921,6 @@ const styles = StyleSheet.create({
   },
   transitionSpinner: {
     marginTop: 10,
-  },
-
-  // Guess result overlay
-  resultOverlay: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-    padding: 30,
-  },
-  resultCard: {
-    width: '100%',
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 30,
-    alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    borderWidth: 3,
-  },
-  resultCorrect: {
-    borderColor: '#4caf50',
-  },
-  resultWrong: {
-    borderColor: '#f44336',
-  },
-  resultEmoji: {
-    fontSize: 56,
-    marginBottom: 16,
-  },
-  resultTitle: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 12,
-  },
-  resultDetail: {
-    fontSize: 18,
-    color: '#555',
-    textAlign: 'center',
-    marginBottom: 8,
-  },
-  resultBold: {
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  resultQuestion: {
-    fontSize: 14,
-    color: '#999',
-    fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 8,
-    marginBottom: 8,
-  },
-  resultScore: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#03dac6',
-    marginTop: 12,
   },
 });
 

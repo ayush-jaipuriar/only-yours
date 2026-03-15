@@ -24,6 +24,7 @@ class WebSocketService {
     this.onConnectionStateChange = null;
     this._nextSubId = 1;
     this.connectPromise = null;
+    this.pendingConnectWaiters = new Set();
   }
 
   /**
@@ -45,9 +46,55 @@ class WebSocketService {
     return Boolean(this.client && this.client.active && this.connected);
   }
 
+  hasActiveClient() {
+    return Boolean(this.client && this.client.active);
+  }
+
+  _waitForConnected(timeoutMs = 15000) {
+    if (this.isConnected()) {
+      return Promise.resolve();
+    }
+
+    return new Promise((resolve, reject) => {
+      const waiter = {
+        resolve: () => {
+          clearTimeout(timeout);
+          this.pendingConnectWaiters.delete(waiter);
+          resolve();
+        },
+        reject: (error) => {
+          clearTimeout(timeout);
+          this.pendingConnectWaiters.delete(waiter);
+          reject(error);
+        },
+      };
+
+      const timeout = setTimeout(() => {
+        waiter.reject(new Error('WebSocket reconnect timed out'));
+      }, timeoutMs);
+
+      this.pendingConnectWaiters.add(waiter);
+    });
+  }
+
+  _resolvePendingConnectWaiters() {
+    for (const waiter of this.pendingConnectWaiters) {
+      waiter.resolve();
+    }
+  }
+
+  _rejectPendingConnectWaiters(message) {
+    for (const waiter of this.pendingConnectWaiters) {
+      waiter.reject(new Error(message));
+    }
+  }
+
   async connect(baseUrl) {
     if (this.isConnected()) {
       return;
+    }
+    if (this.hasActiveClient()) {
+      return this._waitForConnected();
     }
     if (this.connectPromise) {
       return this.connectPromise;
@@ -97,6 +144,7 @@ class WebSocketService {
           console.log('[WebSocket] STOMP connected');
           this.connected = true;
           this._emitConnectionState('connected');
+          this._resolvePendingConnectWaiters();
           if (!settled) {
             settled = true;
             clearTimeout(timeout);
@@ -158,6 +206,7 @@ class WebSocketService {
       this.connected = false;
       this.subscriptions.clear();
       this._emitConnectionState('disconnected');
+      this._rejectPendingConnectWaiters('WebSocket disconnected');
     }
   }
 

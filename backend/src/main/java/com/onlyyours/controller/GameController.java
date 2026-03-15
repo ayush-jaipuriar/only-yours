@@ -216,6 +216,13 @@ public class GameController {
                     e.getSessionId(),
                     "This game session expired. Start a new game to continue."
             );
+        } catch (ActiveGameSessionExistsException e) {
+            sendStatusToUser(
+                    principal.getName(),
+                    "ACTIVE_SESSION_EXISTS",
+                    e.getSessionId(),
+                    "A game is already active. Continue your existing session."
+            );
         } catch (Exception e) {
             log.error("Error accepting invitation by {}: {}", principal.getName(), e.getMessage(), e);
             sendErrorToUser(principal.getName(), "Failed to accept game: " + e.getMessage());
@@ -247,7 +254,11 @@ public class GameController {
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + declinerEmail));
 
             // Decline invitation
-            gameService.declineInvitation(sessionId, decliner.getId());
+            boolean declined = gameService.declineInvitation(sessionId, decliner.getId());
+            if (!declined) {
+                log.info("Decline ignored for session {} because invitation was already resolved", sessionId);
+                return;
+            }
 
             // Notify inviter
             Couple couple = requireActiveCoupleForUser(decliner.getId());
@@ -313,25 +324,11 @@ public class GameController {
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
 
-            // Submit answer
-            Optional<QuestionPayloadDto> nextQuestion = gameService.submitAnswer(
+            Optional<QuestionPayloadDto> answerResult = gameService.submitAnswer(
                     request.getSessionId(),
                     user.getId(),
                     request.getQuestionId(),
                     request.getAnswer()
-            );
-
-            // Send confirmation to this player
-            messagingTemplate.convertAndSendToUser(
-                    userEmail,
-                    "/queue/game-status",
-                    GameStatusDto.builder()
-                            .sessionId(request.getSessionId())
-                            .status("ANSWER_RECORDED")
-                            .message("Waiting for partner...")
-                            .eventType("ANSWER_RECORDED")
-                            .timestamp(System.currentTimeMillis())
-                            .build()
             );
 
             GameSession latestSession = gameService.getGameSession(request.getSessionId());
@@ -339,53 +336,49 @@ public class GameController {
             User partner = latestCouple.getUser1().getId().equals(user.getId())
                     ? latestCouple.getUser2()
                     : latestCouple.getUser1();
-            boolean bothAnswered = gameService.areBothPlayersAnswered(request.getSessionId(), request.getQuestionId());
-            if (!bothAnswered && partner != null) {
-                pushNotificationService.sendGameplayEventToUser(
-                        partner.getId(),
-                        PushNotificationService.GameplayEventType.PARTNER_COMPLETED_ANSWERING,
-                        request.getSessionId(),
-                        "Your Partner Answered",
-                        user.getName() + " answered the next question. Continue your game.",
-                        Map.of("questionId", request.getQuestionId())
+
+            if (latestSession.getStatus() == GameSession.GameStatus.ROUND2) {
+                String gameTopic = "/topic/game/" + request.getSessionId();
+
+                messagingTemplate.convertAndSend(
+                        gameTopic,
+                        GameStatusDto.builder()
+                                .sessionId(request.getSessionId())
+                                .status("ROUND1_COMPLETE")
+                                .message("Round 1 complete! Start guessing how your partner answered.")
+                                .eventType("ROUND1_COMPLETE")
+                                .timestamp(System.currentTimeMillis())
+                                .build()
                 );
+
+                QuestionPayloadDto firstRound2Q = gameService.getFirstRound2Question(request.getSessionId());
+                messagingTemplate.convertAndSend(gameTopic, firstRound2Q);
+                log.info("Round 2 started: session={}, first question broadcasted", request.getSessionId());
+                return;
             }
 
-            // If both answered, broadcast next question or completion status
-            if (nextQuestion.isPresent()) {
-                // Both answered and there's a next question
-                String gameTopic = "/topic/game/" + request.getSessionId();
-                messagingTemplate.convertAndSend(gameTopic, nextQuestion.get());
+            Optional<Object> currentView = answerResult
+                    .<Object>map(payload -> payload)
+                    .or(() -> gameService.getCurrentQuestionForUser(
+                            request.getSessionId(),
+                            user.getId()
+                    ));
+            currentView.ifPresent(payload -> messagingTemplate.convertAndSendToUser(
+                    userEmail,
+                    "/queue/game-events",
+                    payload
+            ));
 
-                log.info("Next question broadcasted: session={}, question={}", 
-                        request.getSessionId(), nextQuestion.get().getQuestionNumber());
-                        
-            } else {
-                // Check if Round 1 is complete (no next question returned)
-                GameSession session = gameService.getGameSession(request.getSessionId());
-                
-                if (session.getStatus() == GameSession.GameStatus.ROUND2) {
-                    String gameTopic = "/topic/game/" + request.getSessionId();
-
-                    messagingTemplate.convertAndSend(
-                            gameTopic,
-                            GameStatusDto.builder()
-                                    .sessionId(request.getSessionId())
-                                    .status("ROUND1_COMPLETE")
-                                    .message("Round 1 complete! Now guess your partner's answers...")
-                                    .eventType("ROUND1_COMPLETE")
-                                    .timestamp(System.currentTimeMillis())
-                                    .build()
+            if (currentView.isPresent() && currentView.get() instanceof GameRoundStateDto roundState) {
+                if ("ROUND1".equals(roundState.getRound()) && "WAITING_FOR_PARTNER".equals(roundState.getStatus())) {
+                    pushNotificationService.sendGameplayEventToUser(
+                            partner.getId(),
+                            PushNotificationService.GameplayEventType.PARTNER_COMPLETED_ANSWERING,
+                            request.getSessionId(),
+                            "Partner Finished Round 1",
+                            user.getName() + " finished answering. Complete your answers to unlock guessing."
                     );
-                    log.info("Round 1 complete: session={}", request.getSessionId());
-
-                    QuestionPayloadDto firstRound2Q =
-                            gameService.getFirstRound2Question(request.getSessionId());
-                    messagingTemplate.convertAndSend(gameTopic, firstRound2Q);
-                    log.info("Round 2 started: session={}, first question broadcasted",
-                            request.getSessionId());
                 }
-                // Else: only one player answered, waiting for partner (already sent confirmation above)
             }
 
         } catch (SessionExpiredException e) {
@@ -421,56 +414,61 @@ public class GameController {
             User user = userRepository.findByEmail(userEmail)
                     .orElseThrow(() -> new IllegalArgumentException("User not found: " + userEmail));
 
-            GuessResultDto result = gameService.submitGuess(
+            gameService.submitGuess(
                     request.getSessionId(),
                     user.getId(),
                     request.getQuestionId(),
                     request.getGuess()
             );
 
-            messagingTemplate.convertAndSendToUser(
-                    userEmail,
-                    "/queue/game-events",
-                    result
+            Optional<Object> currentView = gameService.resolveCurrentStateAfterGuessSubmission(
+                    request.getSessionId(),
+                    user.getId()
             );
 
-            if (gameService.areBothPlayersGuessed(request.getSessionId(), request.getQuestionId())) {
-                Optional<QuestionPayloadDto> nextQuestion =
-                        gameService.getNextRound2Question(request.getSessionId());
-
+            if (currentView.isPresent() && currentView.get() instanceof GameResultsDto results) {
                 String gameTopic = "/topic/game/" + request.getSessionId();
+                messagingTemplate.convertAndSend(gameTopic, results);
 
-                if (nextQuestion.isPresent()) {
-                    messagingTemplate.convertAndSend(gameTopic, nextQuestion.get());
-                    log.info("Round 2 next question broadcasted: session={}, question={}",
-                            request.getSessionId(), nextQuestion.get().getQuestionNumber());
-                } else {
-                    GameResultsDto results =
-                            gameService.calculateAndCompleteGame(request.getSessionId());
-                    messagingTemplate.convertAndSend(gameTopic, results);
+                String resultSummary = buildResultSummary(results);
+                GameSession completedSession = gameService.getGameSession(request.getSessionId());
+                Couple completedCouple = completedSession.getCouple();
+                pushNotificationService.sendGameplayEventToUser(
+                        completedCouple.getUser1().getId(),
+                        PushNotificationService.GameplayEventType.RESULTS_READY,
+                        request.getSessionId(),
+                        "Results Ready",
+                        resultSummary,
+                        Map.of(
+                                "player1Score", results.getPlayer1Score(),
+                                "player2Score", results.getPlayer2Score(),
+                                "winner", determineWinnerLabel(results)
+                        )
+                );
+                pushNotificationService.sendGameplayEventToUser(
+                        completedCouple.getUser2().getId(),
+                        PushNotificationService.GameplayEventType.RESULTS_READY,
+                        request.getSessionId(),
+                        "Results Ready",
+                        resultSummary,
+                        Map.of(
+                                "player1Score", results.getPlayer1Score(),
+                                "player2Score", results.getPlayer2Score(),
+                                "winner", determineWinnerLabel(results)
+                        )
+                );
 
-                    GameSession completedSession = gameService.getGameSession(request.getSessionId());
-                    Couple completedCouple = completedSession.getCouple();
-                    pushNotificationService.sendGameplayEventToUser(
-                            completedCouple.getUser1().getId(),
-                            PushNotificationService.GameplayEventType.RESULTS_READY,
-                            request.getSessionId(),
-                            "Results Ready",
-                            "Your game results are ready to view."
-                    );
-                    pushNotificationService.sendGameplayEventToUser(
-                            completedCouple.getUser2().getId(),
-                            PushNotificationService.GameplayEventType.RESULTS_READY,
-                            request.getSessionId(),
-                            "Results Ready",
-                            "Your game results are ready to view."
-                    );
-
-                    log.info("Game completed: session={}, p1={}, p2={}",
-                            request.getSessionId(), results.getPlayer1Score(),
-                            results.getPlayer2Score());
-                }
+                log.info("Game completed: session={}, p1={}, p2={}",
+                        request.getSessionId(), results.getPlayer1Score(),
+                        results.getPlayer2Score());
+                return;
             }
+
+            currentView.ifPresent(payload -> messagingTemplate.convertAndSendToUser(
+                    userEmail,
+                    "/queue/game-events",
+                    payload
+            ));
 
         } catch (SessionExpiredException e) {
             sendStatusToUser(
@@ -509,6 +507,21 @@ public class GameController {
                         .timestamp(System.currentTimeMillis())
                         .build()
         );
+    }
+
+    private String buildResultSummary(GameResultsDto results) {
+        String winner = determineWinnerLabel(results);
+        return winner + " won " + results.getPlayer1Score() + "-" + results.getPlayer2Score() + ".";
+    }
+
+    private String determineWinnerLabel(GameResultsDto results) {
+        if (results.getPlayer1Score() > results.getPlayer2Score()) {
+            return results.getPlayer1Name();
+        }
+        if (results.getPlayer2Score() > results.getPlayer1Score()) {
+            return results.getPlayer2Name();
+        }
+        return "No one";
     }
 
     private Couple requireActiveCoupleForUser(UUID userId) {

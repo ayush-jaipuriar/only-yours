@@ -89,4 +89,32 @@ describe('GameScreen', () => {
     const { findByText } = renderWithProviders();
     expect(await findByText('Custom Couple Question')).toBeTruthy();
   });
+
+  it('renders the round-end waiting review state', async () => {
+    const api = require('../../services/api').default;
+    api.get.mockResolvedValueOnce({
+      data: {
+        type: 'ROUND_STATE',
+        sessionId: 'test-session',
+        round: 'ROUND1',
+        status: 'WAITING_FOR_PARTNER',
+        message: 'You finished your answers. Waiting for your partner to finish.',
+        totalQuestions: 8,
+        completedCount: 8,
+        reviewItems: [
+          {
+            questionId: 1,
+            questionNumber: 1,
+            questionText: 'What is your favorite color?',
+            submittedValue: 'B',
+          },
+        ],
+      },
+    });
+
+    const { findByText } = renderWithProviders();
+    expect(await findByText('Waiting for your partner')).toBeTruthy();
+    expect(await findByText('Your submitted answers')).toBeTruthy();
+    expect(await findByText('Your answer: B')).toBeTruthy();
+  });
 });

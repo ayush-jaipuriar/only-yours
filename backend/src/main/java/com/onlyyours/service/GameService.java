@@ -119,13 +119,8 @@ public class GameService {
     public QuestionPayloadDto acceptInvitation(UUID sessionId, UUID accepterId) {
         log.info("Accepting invitation: sessionId={}, accepter={}", sessionId, accepterId);
 
-        GameSession session = gameSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Game session not found: " + sessionId));
+        GameSession session = getGameSessionForUpdate(sessionId);
         assertSessionNotExpired(session);
-
-        if (session.getStatus() != GameSession.GameStatus.INVITED) {
-            throw new IllegalStateException("Game is not in INVITED state: " + session.getStatus());
-        }
 
         Couple couple = session.getCouple();
         UUID user1Id = couple.getUser1().getId();
@@ -133,6 +128,16 @@ public class GameService {
         
         if (!accepterId.equals(user1Id) && !accepterId.equals(user2Id)) {
             throw new IllegalStateException("Accepter is not part of this couple");
+        }
+
+        if (session.getStatus() == GameSession.GameStatus.ROUND1
+                || session.getStatus() == GameSession.GameStatus.ROUND2) {
+            log.info("Invitation already accepted for session {}, returning current question snapshot", sessionId);
+            return buildResumePayloadForAcceptedSession(session, accepterId);
+        }
+
+        if (session.getStatus() != GameSession.GameStatus.INVITED) {
+            throw new IllegalStateException("Game is not in INVITED state: " + session.getStatus());
         }
 
         List<Question> allQuestions = loadQuestionsForSessionStart(session);
@@ -168,15 +173,14 @@ public class GameService {
         log.info("Game started: sessionId={}, questions={}, count={}", 
                 sessionId, questionIds, selectedQuestions.size());
 
-        return buildQuestionPayload(session, selectedQuestions.get(0), 1, "ROUND1");
+        return buildQuestionPayload(session, selectedQuestions.get(0).getId(), 1, "ROUND1", null);
     }
 
     @Transactional
-    public void declineInvitation(UUID sessionId, UUID declinerId) {
+    public boolean declineInvitation(UUID sessionId, UUID declinerId) {
         log.info("Declining invitation: sessionId={}, decliner={}", sessionId, declinerId);
 
-        GameSession session = gameSessionRepository.findById(sessionId)
-                .orElseThrow(() -> new IllegalArgumentException("Game session not found: " + sessionId));
+        GameSession session = getGameSessionForUpdate(sessionId);
         assertSessionNotExpired(session);
 
         Couple couple = session.getCouple();
@@ -186,6 +190,17 @@ public class GameService {
             throw new IllegalStateException("Decliner is not part of this couple");
         }
 
+        if (session.getStatus() == GameSession.GameStatus.DECLINED) {
+            log.info("Invitation already declined: sessionId={}", sessionId);
+            return false;
+        }
+
+        if (session.getStatus() != GameSession.GameStatus.INVITED) {
+            log.info("Ignoring decline for non-invited session: sessionId={}, status={}",
+                    sessionId, session.getStatus());
+            return false;
+        }
+
         session.setStatus(GameSession.GameStatus.DECLINED);
         Date now = new Date();
         session.setCompletedAt(now);
@@ -193,6 +208,7 @@ public class GameService {
         gameSessionRepository.save(session);
         
         log.info("Invitation declined: sessionId={}", sessionId);
+        return true;
     }
 
     @Transactional
@@ -217,13 +233,37 @@ public class GameService {
             throw new IllegalStateException("Game is not in ROUND1 state: " + session.getStatus());
         }
 
+        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
+        if (questionIds.length == 0) {
+            throw new IllegalStateException("Session has no question IDs assigned");
+        }
+
+        Integer expectedQuestionId = resolveNextRound1QuestionIdForUser(session, userId, questionIds);
+        if (expectedQuestionId == null) {
+            if (areBothUsersFinishedRound1(session)) {
+                transitionToRound2(session);
+                return Optional.of(buildRound2QuestionPayload(session, questionIds[0], 1, userId));
+            }
+            return Optional.empty();
+        }
+
         Optional<GameAnswer> existing = gameAnswerRepository
                 .findByGameSession_IdAndQuestion_IdAndUser_Id(sessionId, questionId, userId);
 
         if (existing.isPresent()) {
             log.warn("Answer already recorded for user {}, question {}. Ignoring duplicate.", 
                     userId, questionId);
-            return resolveRound1Progress(session, questionId);
+            return resolveNextRound1QuestionForUser(session, userId, questionIds);
+        }
+
+        if (!Objects.equals(expectedQuestionId, questionId)) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Question submission out of order. Expected question %s but received %s",
+                            expectedQuestionId,
+                            questionId
+                    )
+            );
         }
 
         Question question = questionRepository.findById(questionId)
@@ -238,63 +278,18 @@ public class GameService {
         gameAnswer.setRound1Answer(answer);
 
         gameAnswerRepository.save(gameAnswer);
-        
-        log.info("Answer recorded: session={}, user={}, question={}", sessionId, userId, questionId);
-
-        return resolveRound1Progress(session, questionId);
-    }
-
-    private Optional<QuestionPayloadDto> resolveRound1Progress(GameSession session, Integer questionId) {
-        long answerCount = gameAnswerRepository.countByGameSession_IdAndQuestion_Id(session.getId(), questionId);
-        if (answerCount < 2) {
-            log.info("Waiting for partner to answer question {}", questionId);
-            session.setLastActivityAt(new Date());
-            gameSessionRepository.save(session);
-            return Optional.empty();
-        }
-
-        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
-        if (questionIds.length == 0) {
-            throw new IllegalStateException("Session has no question IDs assigned");
-        }
-
-        int currentIndex = safeCurrentQuestionIndex(session, questionIds.length);
-        Integer currentQuestionId = questionIds[currentIndex];
-        if (!Objects.equals(currentQuestionId, questionId)) {
-            // Another request has already advanced this session.
-            log.info(
-                    "Round 1 already advanced for session {} (currentQuestionId={}, submittedQuestionId={})",
-                    session.getId(),
-                    currentQuestionId,
-                    questionId
-            );
-            session.setLastActivityAt(new Date());
-            gameSessionRepository.save(session);
-            return Optional.empty();
-        }
-
-        log.info("Both players answered question {}. Advancing...", questionId);
-
-        int nextIndex = currentIndex + 1;
-        if (nextIndex >= questionIds.length) {
-            log.info("Round 1 complete for session {}", session.getId());
-            session.setStatus(GameSession.GameStatus.ROUND2);
-            session.setCurrentQuestionIndex(0);
-            session.setLastActivityAt(new Date());
-            gameSessionRepository.save(session);
-            return Optional.empty();
-        }
-
-        Integer nextQuestionId = questionIds[nextIndex];
-        Question nextQuestion = questionRepository.findById(nextQuestionId)
-                .orElseThrow(() -> new IllegalStateException("Question not found: " + nextQuestionId));
-
-        session.setCurrentQuestionIndex(nextIndex);
         session.setLastActivityAt(new Date());
         gameSessionRepository.save(session);
 
-        log.info("Advancing to question {} of {}", nextIndex + 1, questionIds.length);
-        return Optional.of(buildQuestionPayload(session, nextQuestion, nextIndex + 1, "ROUND1"));
+        log.info("Answer recorded: session={}, user={}, question={}", sessionId, userId, questionId);
+
+        if (areBothUsersFinishedRound1(session)) {
+            log.info("Round 1 complete for session {}", session.getId());
+            transitionToRound2(session);
+            return Optional.of(buildRound2QuestionPayload(session, questionIds[0], 1, userId));
+        }
+
+        return resolveNextRound1QuestionForUser(session, userId, questionIds);
     }
 
     public boolean areBothPlayersAnswered(UUID sessionId, Integer questionId) {
@@ -322,16 +317,16 @@ public class GameService {
         if (session.getStatus() != GameSession.GameStatus.ROUND2) {
             throw new IllegalStateException("Game is not in ROUND2 state: " + session.getStatus());
         }
-        String[] questionIdsArray = session.getQuestionIds().split(",");
-        Integer firstQuestionId = Integer.parseInt(questionIdsArray[0].trim());
-        Question firstQuestion = questionRepository.findById(firstQuestionId)
-                .orElseThrow(() -> new IllegalStateException("Question not found: " + firstQuestionId));
-        
+        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
+        if (questionIds.length == 0) {
+            throw new IllegalStateException("Session has no question IDs assigned");
+        }
+
         session.setCurrentQuestionIndex(0);
         session.setLastActivityAt(new Date());
         gameSessionRepository.save(session);
-        
-        return buildQuestionPayload(session, firstQuestion, 1, "ROUND2");
+
+        return buildQuestionPayload(session, questionIds[0], 1, "ROUND2", 0);
     }
 
     @Transactional
@@ -351,6 +346,19 @@ public class GameService {
             throw new IllegalStateException("Game is not in ROUND2 state: " + session.getStatus());
         }
 
+        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
+        if (questionIds.length == 0) {
+            throw new IllegalStateException("Session has no question IDs assigned");
+        }
+
+        Integer expectedQuestionId = resolveNextRound2QuestionIdForUser(session, userId, questionIds);
+        if (expectedQuestionId == null) {
+            if (areBothUsersFinishedRound2(session)) {
+                throw new IllegalStateException("Round 2 already completed for this user");
+            }
+            throw new IllegalStateException("No Round 2 question available for this user");
+        }
+
         GameAnswer myAnswer = gameAnswerRepository
                 .findByGameSession_IdAndQuestion_IdAndUser_Id(sessionId, questionId, userId)
                 .orElseThrow(() -> new IllegalStateException(
@@ -359,6 +367,16 @@ public class GameService {
         if (myAnswer.getRound2Guess() != null) {
             log.warn("Guess already recorded for user {}, question {}. Ignoring duplicate.", userId, questionId);
             return buildGuessResult(session, myAnswer, questionId, userId);
+        }
+
+        if (!Objects.equals(expectedQuestionId, questionId)) {
+            throw new IllegalStateException(
+                    String.format(
+                            "Guess submission out of order. Expected question %s but received %s",
+                            expectedQuestionId,
+                            questionId
+                    )
+            );
         }
 
         myAnswer.setRound2Guess(guess);
@@ -434,25 +452,21 @@ public class GameService {
         if (session.getStatus() != GameSession.GameStatus.ROUND2) {
             throw new IllegalStateException("Game is not in ROUND2 state: " + session.getStatus());
         }
-        int currentIndex = Optional.ofNullable(session.getCurrentQuestionIndex()).orElse(0);
+        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
+        int currentIndex = safeCurrentQuestionIndex(session, questionIds.length);
         int nextIndex = currentIndex + 1;
 
-        if (nextIndex >= QUESTIONS_PER_GAME) {
-            log.info("Round 2 complete for session {}", sessionId);
+        if (nextIndex >= questionIds.length) {
+            log.info("Round 2 shared helper reached final question for session {}", sessionId);
             return Optional.empty();
         }
-
-        String[] questionIdsArray = session.getQuestionIds().split(",");
-        Integer nextQuestionId = Integer.parseInt(questionIdsArray[nextIndex].trim());
-        Question nextQuestion = questionRepository.findById(nextQuestionId)
-                .orElseThrow(() -> new IllegalStateException("Question not found: " + nextQuestionId));
 
         session.setCurrentQuestionIndex(nextIndex);
         session.setLastActivityAt(new Date());
         gameSessionRepository.save(session);
 
-        log.info("Round 2: advancing to question {} of {}", nextIndex + 1, QUESTIONS_PER_GAME);
-        return Optional.of(buildQuestionPayload(session, nextQuestion, nextIndex + 1, "ROUND2"));
+        log.info("Round 2 shared helper advancing to question {} of {}", nextIndex + 1, questionIds.length);
+        return Optional.of(buildQuestionPayload(session, questionIds[nextIndex], nextIndex + 1, "ROUND2", 0));
     }
 
     @Transactional
@@ -551,10 +565,9 @@ public class GameService {
         User partner = couple.getUser1().getId().equals(currentUser.getId()) ? couple.getUser2() : couple.getUser1();
         Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
         int totalQuestions = questionIds.length > 0 ? questionIds.length : QUESTIONS_PER_GAME;
-        int safeIndex = safeCurrentQuestionIndex(session, totalQuestions);
         Integer currentQuestionNumber = session.getStatus() == GameSession.GameStatus.INVITED
                 ? null
-                : safeIndex + 1;
+                : resolveCurrentQuestionNumberForUser(session, userId, totalQuestions, questionIds);
 
         String round = switch (session.getStatus()) {
             case ROUND1 -> "ROUND1";
@@ -592,11 +605,15 @@ public class GameService {
         return findLatestActiveSessionForCouple(coupleOptional.get().getId());
     }
 
-    @Transactional
-    public Optional<QuestionPayloadDto> getCurrentQuestionForUser(UUID sessionId, UUID userId) {
-        GameSession session = getGameSessionForUpdate(sessionId);
+    @Transactional(readOnly = true)
+    public Optional<Object> getCurrentQuestionForUser(UUID sessionId, UUID userId) {
+        GameSession session = getGameSession(sessionId);
         assertSessionNotExpired(session);
         ensureUserBelongsToSession(userId, session);
+
+        if (session.getStatus() == GameSession.GameStatus.COMPLETED) {
+            return Optional.of(getCompletedResultsForUser(sessionId, userId));
+        }
 
         if (session.getStatus() != GameSession.GameStatus.ROUND1
                 && session.getStatus() != GameSession.GameStatus.ROUND2) {
@@ -608,32 +625,45 @@ public class GameService {
             return Optional.empty();
         }
 
-        if (session.getStatus() == GameSession.GameStatus.ROUND1) {
-            int round1Index = safeCurrentQuestionIndex(session, questionIds.length);
-            Integer round1QuestionId = questionIds[round1Index];
-            long answerCount = gameAnswerRepository.countByGameSession_IdAndQuestion_Id(sessionId, round1QuestionId);
-            if (answerCount >= 2) {
-                Optional<QuestionPayloadDto> recovered = resolveRound1Progress(session, round1QuestionId);
-                if (recovered.isPresent()) {
-                    return recovered;
-                }
-                questionIds = parseQuestionIds(session.getQuestionIds());
-                if (questionIds.length == 0) {
-                    return Optional.empty();
-                }
-            }
+        Object currentState = resolveCurrentStateSnapshotForUser(session, userId, questionIds);
+        if (currentState == null) {
+            return Optional.empty();
         }
 
-        int safeIndex = safeCurrentQuestionIndex(session, questionIds.length);
-        Integer questionId = questionIds[safeIndex];
-        Question question = questionRepository.findById(questionId)
-                .orElseThrow(() -> new IllegalStateException("Question not found: " + questionId));
+        return Optional.of(currentState);
+    }
+
+    @Transactional
+    public Optional<Object> resolveCurrentStateAfterGuessSubmission(UUID sessionId, UUID userId) {
+        GameSession session = getGameSessionForUpdate(sessionId);
+        assertSessionNotExpired(session);
+        ensureUserBelongsToSession(userId, session);
+
+        if (session.getStatus() == GameSession.GameStatus.COMPLETED) {
+            return Optional.of(getCompletedResultsForUser(sessionId, userId));
+        }
+
+        if (session.getStatus() != GameSession.GameStatus.ROUND2) {
+            return Optional.empty();
+        }
+
+        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
+        if (questionIds.length == 0) {
+            return Optional.empty();
+        }
+
+        if (areBothUsersFinishedRound2(session)) {
+            return Optional.of(completeGameIfReady(sessionId, userId));
+        }
+
+        Object currentState = resolveCurrentStateSnapshotForUser(session, userId, questionIds);
+        if (currentState == null) {
+            return Optional.empty();
+        }
 
         session.setLastActivityAt(new Date());
         gameSessionRepository.save(session);
-
-        String round = session.getStatus() == GameSession.GameStatus.ROUND2 ? "ROUND2" : "ROUND1";
-        return Optional.of(buildQuestionPayload(session, question, safeIndex + 1, round));
+        return Optional.of(currentState);
     }
 
     @Transactional(readOnly = true)
@@ -932,6 +962,302 @@ public class GameService {
         return currentIndex;
     }
 
+    private Integer resolveCurrentQuestionNumberForUser(
+            GameSession session,
+            UUID userId,
+            int totalQuestions,
+            Integer[] questionIds
+    ) {
+        if (session.getStatus() == GameSession.GameStatus.INVITED || totalQuestions <= 0) {
+            return null;
+        }
+
+        if (session.getStatus() == GameSession.GameStatus.COMPLETED) {
+            return totalQuestions;
+        }
+
+        Integer nextQuestionId = session.getStatus() == GameSession.GameStatus.ROUND2
+                ? resolveNextRound2QuestionIdForUser(session, userId, questionIds)
+                : resolveNextRound1QuestionIdForUser(session, userId, questionIds);
+
+        if (nextQuestionId == null) {
+            return totalQuestions;
+        }
+
+        for (int i = 0; i < questionIds.length; i++) {
+            if (Objects.equals(questionIds[i], nextQuestionId)) {
+                return i + 1;
+            }
+        }
+        return totalQuestions;
+    }
+
+    private void transitionToRound2(GameSession session) {
+        session.setStatus(GameSession.GameStatus.ROUND2);
+        session.setCurrentQuestionIndex(0);
+        session.setLastActivityAt(new Date());
+        gameSessionRepository.save(session);
+    }
+
+    private Object resolveCurrentStateSnapshotForUser(GameSession session, UUID userId, Integer[] questionIds) {
+        if (session.getStatus() == GameSession.GameStatus.ROUND1) {
+            Integer nextQuestionId = resolveNextRound1QuestionIdForUser(session, userId, questionIds);
+            if (nextQuestionId != null) {
+                return buildRound1QuestionPayload(session, nextQuestionId, questionIds, userId);
+            }
+
+            return buildWaitingState(session, userId, "ROUND1", questionIds);
+        }
+
+        if (session.getStatus() == GameSession.GameStatus.ROUND2) {
+            Integer nextQuestionId = resolveNextRound2QuestionIdForUser(session, userId, questionIds);
+            if (nextQuestionId != null) {
+                return buildRound2QuestionPayloadForQuestionIds(session, nextQuestionId, questionIds, userId);
+            }
+
+            return buildWaitingState(session, userId, "ROUND2", questionIds);
+        }
+
+        return null;
+    }
+
+    private QuestionPayloadDto buildResumePayloadForAcceptedSession(GameSession session, UUID userId) {
+        Integer[] questionIds = parseQuestionIds(session.getQuestionIds());
+        if (questionIds.length == 0) {
+            throw new IllegalStateException("Session has no question IDs assigned");
+        }
+
+        if (session.getStatus() == GameSession.GameStatus.ROUND1) {
+            Integer nextQuestionId = resolveNextRound1QuestionIdForUser(session, userId, questionIds);
+            if (nextQuestionId != null) {
+                return buildRound1QuestionPayload(session, nextQuestionId, questionIds, userId);
+            }
+        }
+
+        if (session.getStatus() == GameSession.GameStatus.ROUND2) {
+            Integer nextQuestionId = resolveNextRound2QuestionIdForUser(session, userId, questionIds);
+            if (nextQuestionId != null) {
+                return buildRound2QuestionPayloadForQuestionIds(session, nextQuestionId, questionIds, userId);
+            }
+        }
+
+        throw new ActiveGameSessionExistsException(session.getId());
+    }
+
+    private GameResultsDto completeGameIfReady(UUID sessionId, UUID userId) {
+        GameSession lockedSession = getGameSessionForUpdate(sessionId);
+        if (lockedSession.getStatus() == GameSession.GameStatus.COMPLETED) {
+            return getCompletedResultsForUser(sessionId, userId);
+        }
+        if (!areBothUsersFinishedRound2(lockedSession)) {
+            throw new IllegalStateException("Game results are not available until both players finish Round 2");
+        }
+        return calculateAndCompleteGame(sessionId);
+    }
+
+    private Optional<QuestionPayloadDto> resolveNextRound1QuestionForUser(
+            GameSession session,
+            UUID userId,
+            Integer[] questionIds
+    ) {
+        Integer nextQuestionId = resolveNextRound1QuestionIdForUser(session, userId, questionIds);
+        if (nextQuestionId == null) {
+            return Optional.empty();
+        }
+        return Optional.of(buildRound1QuestionPayload(session, nextQuestionId, questionIds, userId));
+    }
+
+    private Integer resolveNextRound1QuestionIdForUser(GameSession session, UUID userId, Integer[] questionIds) {
+        Map<Integer, GameAnswer> answerByQuestionId = findAnswersByQuestionId(session.getId(), userId);
+        for (Integer questionId : questionIds) {
+            GameAnswer answer = answerByQuestionId.get(questionId);
+            if (answer == null || answer.getRound1Answer() == null) {
+                return questionId;
+            }
+        }
+        return null;
+    }
+
+    private Integer resolveNextRound2QuestionIdForUser(GameSession session, UUID userId, Integer[] questionIds) {
+        Map<Integer, GameAnswer> answerByQuestionId = findAnswersByQuestionId(session.getId(), userId);
+        for (Integer questionId : questionIds) {
+            GameAnswer answer = answerByQuestionId.get(questionId);
+            if (answer == null || answer.getRound2Guess() == null) {
+                return questionId;
+            }
+        }
+        return null;
+    }
+
+    private boolean areBothUsersFinishedRound1(GameSession session) {
+        Couple couple = session.getCouple();
+        long totalQuestions = parseQuestionIds(session.getQuestionIds()).length;
+        if (totalQuestions == 0) {
+            return false;
+        }
+
+        return gameAnswerRepository.countByGameSession_IdAndUser_IdAndRound1AnswerIsNotNull(session.getId(), couple.getUser1().getId()) >= totalQuestions
+                && gameAnswerRepository.countByGameSession_IdAndUser_IdAndRound1AnswerIsNotNull(session.getId(), couple.getUser2().getId()) >= totalQuestions;
+    }
+
+    private boolean areBothUsersFinishedRound2(GameSession session) {
+        Couple couple = session.getCouple();
+        long totalQuestions = parseQuestionIds(session.getQuestionIds()).length;
+        if (totalQuestions == 0) {
+            return false;
+        }
+
+        return gameAnswerRepository.countByGameSession_IdAndUser_IdAndRound2GuessIsNotNull(session.getId(), couple.getUser1().getId()) >= totalQuestions
+                && gameAnswerRepository.countByGameSession_IdAndUser_IdAndRound2GuessIsNotNull(session.getId(), couple.getUser2().getId()) >= totalQuestions;
+    }
+
+    private Map<Integer, GameAnswer> findAnswersByQuestionId(UUID sessionId, UUID userId) {
+        return gameAnswerRepository.findByGameSession_IdAndUser_Id(sessionId, userId)
+                .stream()
+                .collect(Collectors.toMap(
+                        answer -> answer.getQuestion().getId(),
+                        answer -> answer,
+                        this::preferMostCompleteAnswer
+                ));
+    }
+
+    private GameAnswer preferMostCompleteAnswer(GameAnswer existingAnswer, GameAnswer candidateAnswer) {
+        boolean existingHasGuess = existingAnswer.getRound2Guess() != null;
+        boolean candidateHasGuess = candidateAnswer.getRound2Guess() != null;
+        if (candidateHasGuess && !existingHasGuess) {
+            return candidateAnswer;
+        }
+
+        boolean existingHasRound1 = existingAnswer.getRound1Answer() != null;
+        boolean candidateHasRound1 = candidateAnswer.getRound1Answer() != null;
+        if (candidateHasRound1 && !existingHasRound1) {
+            return candidateAnswer;
+        }
+
+        return existingAnswer;
+    }
+
+    private int resolveQuestionNumber(Integer questionId, Integer[] questionIds) {
+        for (int i = 0; i < questionIds.length; i++) {
+            if (Objects.equals(questionIds[i], questionId)) {
+                return i + 1;
+            }
+        }
+        throw new IllegalStateException("Question " + questionId + " is not part of this game session");
+    }
+
+    private int calculateCorrectGuessCount(GameSession session, UUID userId) {
+        Couple couple = session.getCouple();
+        UUID partnerId = couple.getUser1().getId().equals(userId)
+                ? couple.getUser2().getId()
+                : couple.getUser1().getId();
+
+        Map<Integer, GameAnswer> myAnswers = findAnswersByQuestionId(session.getId(), userId);
+        Map<Integer, GameAnswer> partnerAnswers = findAnswersByQuestionId(session.getId(), partnerId);
+
+        int correctCount = 0;
+        for (Map.Entry<Integer, GameAnswer> entry : myAnswers.entrySet()) {
+            GameAnswer myAnswer = entry.getValue();
+            GameAnswer partnerAnswer = partnerAnswers.get(entry.getKey());
+            if (myAnswer != null
+                    && partnerAnswer != null
+                    && myAnswer.getRound2Guess() != null
+                    && myAnswer.getRound2Guess().equals(partnerAnswer.getRound1Answer())) {
+                correctCount++;
+            }
+        }
+        return correctCount;
+    }
+
+    private QuestionPayloadDto buildRound1QuestionPayload(
+            GameSession session,
+            Integer questionId,
+            Integer[] questionIds,
+            UUID userId
+    ) {
+        int questionNumber = resolveQuestionNumber(questionId, questionIds);
+        return buildQuestionPayload(session, questionId, questionNumber, "ROUND1", null);
+    }
+
+    private QuestionPayloadDto buildRound2QuestionPayload(
+            GameSession session,
+            Integer questionId,
+            int questionNumber,
+            UUID userId
+    ) {
+        return buildQuestionPayload(
+                session,
+                questionId,
+                questionNumber,
+                "ROUND2",
+                calculateCorrectGuessCount(session, userId)
+        );
+    }
+
+    private QuestionPayloadDto buildRound2QuestionPayloadForQuestionIds(
+            GameSession session,
+            Integer questionId,
+            Integer[] questionIds,
+            UUID userId
+    ) {
+        return buildRound2QuestionPayload(session, questionId, resolveQuestionNumber(questionId, questionIds), userId);
+    }
+
+    private GameRoundStateDto buildWaitingState(
+            GameSession session,
+            UUID userId,
+            String round,
+            Integer[] questionIds
+    ) {
+        String submittedLabel = "ROUND2".equals(round) ? "guesses" : "answers";
+        return GameRoundStateDto.builder()
+                .sessionId(session.getId())
+                .round(round)
+                .status("WAITING_FOR_PARTNER")
+                .message("You finished your " + submittedLabel + ". Waiting for your partner to finish.")
+                .totalQuestions(questionIds.length)
+                .completedCount(questionIds.length)
+                .correctCount("ROUND2".equals(round) ? calculateCorrectGuessCount(session, userId) : null)
+                .reviewItems(buildReviewItems(session, userId, round, questionIds))
+                .build();
+    }
+
+    private List<GameReviewItemDto> buildReviewItems(
+            GameSession session,
+            UUID userId,
+            String round,
+            Integer[] questionIds
+    ) {
+        Map<Integer, GameAnswer> answerByQuestionId = findAnswersByQuestionId(session.getId(), userId);
+        List<GameReviewItemDto> reviewItems = new ArrayList<>();
+
+        for (int i = 0; i < questionIds.length; i++) {
+            Integer questionId = questionIds[i];
+            GameAnswer answer = answerByQuestionId.get(questionId);
+            if (answer == null) {
+                continue;
+            }
+
+            String submittedValue = "ROUND2".equals(round)
+                    ? answer.getRound2Guess()
+                    : answer.getRound1Answer();
+            if (submittedValue == null) {
+                continue;
+            }
+
+            reviewItems.add(
+                    GameReviewItemDto.builder()
+                            .questionId(questionId)
+                            .questionNumber(i + 1)
+                            .questionText(answer.getQuestion().getText())
+                            .submittedValue(submittedValue)
+                            .build()
+            );
+        }
+
+        return reviewItems;
+    }
+
     private Comparator<GameSession> buildHistoryComparator(String sortOrder) {
         Comparator<GameSession> comparator = Comparator
                 .comparing(this::resolveSessionReferenceDate, Comparator.nullsLast(Date::compareTo))
@@ -1144,9 +1470,13 @@ public class GameService {
 
     private QuestionPayloadDto buildQuestionPayload(
             GameSession session,
-            Question question,
+            Integer questionId,
             int questionNumber,
-            String round) {
+            String round,
+            Integer correctCountSoFar) {
+
+        Question question = questionRepository.findById(questionId)
+                .orElseThrow(() -> new IllegalStateException("Question not found: " + questionId));
 
         return QuestionPayloadDto.builder()
                 .sessionId(session.getId())
@@ -1160,6 +1490,7 @@ public class GameService {
                 .optionD(question.getOptionD())
                 .round(round)
                 .customQuestion(question.getSourceType() == Question.SourceType.CUSTOM_COUPLE)
+                .correctCountSoFar(correctCountSoFar)
                 .build();
     }
 }

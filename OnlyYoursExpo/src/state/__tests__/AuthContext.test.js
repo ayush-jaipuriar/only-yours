@@ -3,15 +3,34 @@ import { renderHook, act } from '@testing-library/react-hooks/native';
 import { Alert } from 'react-native';
 import { AuthProvider, useAuth } from '../AuthContext';
 
+let mockConnectionStateListener = null;
+let mockIsConnected = false;
+
+jest.mock('@react-native-async-storage/async-storage', () => ({
+  multiSet: jest.fn(() => Promise.resolve()),
+  multiRemove: jest.fn(() => Promise.resolve()),
+  getItem: jest.fn(() => Promise.resolve(null)),
+}));
+
 jest.mock('../../services/WebSocketService', () => ({
-  connect: jest.fn(() => Promise.resolve()),
-  disconnect: jest.fn(),
+  connect: jest.fn(() => {
+    mockIsConnected = true;
+    mockConnectionStateListener?.('connected');
+    return Promise.resolve();
+  }),
+  disconnect: jest.fn(() => {
+    mockIsConnected = false;
+    mockConnectionStateListener?.('disconnected');
+  }),
   subscribe: jest.fn(() => ({ id: 1, destination: '/test', unsubscribe: jest.fn() })),
   unsubscribe: jest.fn(),
   sendMessage: jest.fn(),
-  setConnectionStateListener: jest.fn(),
+  setConnectionStateListener: jest.fn((listener) => {
+    mockConnectionStateListener = listener;
+  }),
   getConnectionState: jest.fn(() => 'disconnected'),
-  isConnected: jest.fn(() => false),
+  isConnected: jest.fn(() => mockIsConnected),
+  hasActiveClient: jest.fn(() => false),
 }));
 
 jest.mock('../../services/NotificationService', () => ({
@@ -38,13 +57,23 @@ const NotificationService = require('../../services/NotificationService');
 
 const wrapper = ({ children }) => <AuthProvider>{children}</AuthProvider>;
 
+const renderAuthHook = async () => {
+  const rendered = renderHook(() => useAuth(), { wrapper });
+  await act(async () => {
+    await Promise.resolve();
+  });
+  return rendered;
+};
+
 describe('AuthContext — Game Status Handling', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockConnectionStateListener = null;
+    mockIsConnected = false;
   });
 
-  it('should provide auth context values', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
+  it('should provide auth context values', async () => {
+    const { result } = await renderAuthHook();
 
     expect(result.current.isLoggedIn).toBe(false);
     expect(result.current.user).toBeNull();
@@ -56,16 +85,16 @@ describe('AuthContext — Game Status Handling', () => {
     expect(typeof result.current.replayOnboarding).toBe('function');
   });
 
-  it('should expose setNavigationRef and setGameContextRef', () => {
-    const { result } = renderHook(() => useAuth(), { wrapper });
+  it('should expose setNavigationRef and setGameContextRef', async () => {
+    const { result } = await renderAuthHook();
 
     expect(typeof result.current.setNavigationRef).toBe('function');
     expect(typeof result.current.setGameContextRef).toBe('function');
   });
 
   describe('INVITATION_SENT status handling (BUG-2 fix)', () => {
-    it('should call startGame and navigate on INVITATION_SENT', () => {
-      const { result } = renderHook(() => useAuth(), { wrapper });
+    it('should call startGame and navigate on INVITATION_SENT', async () => {
+      const { result } = await renderAuthHook();
 
       const mockNav = { navigate: jest.fn() };
       const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn(), submitAnswer: jest.fn() };
@@ -96,8 +125,8 @@ describe('AuthContext — Game Status Handling', () => {
       }
     });
 
-    it('should not crash on INVITATION_SENT without sessionId', () => {
-      const { result } = renderHook(() => useAuth(), { wrapper });
+    it('should not crash on INVITATION_SENT without sessionId', async () => {
+      const { result } = await renderAuthHook();
 
       const mockNav = { navigate: jest.fn() };
       const mockGameCtx = { startGame: jest.fn() };
@@ -127,8 +156,8 @@ describe('AuthContext — Game Status Handling', () => {
       }
     });
 
-    it('should show alert on INVITATION_DECLINED', () => {
-      renderHook(() => useAuth(), { wrapper });
+    it('should show alert on INVITATION_DECLINED', async () => {
+      await renderAuthHook();
 
       const subscribeCalls = WebSocketService.subscribe.mock.calls;
       const gameEventsCall = subscribeCalls.find(
@@ -152,8 +181,8 @@ describe('AuthContext — Game Status Handling', () => {
       }
     });
 
-    it('should handle ACTIVE_SESSION_EXISTS by opening the existing game', () => {
-      const { result } = renderHook(() => useAuth(), { wrapper });
+    it('should handle ACTIVE_SESSION_EXISTS by opening the existing game', async () => {
+      const { result } = await renderAuthHook();
 
       const mockNav = { navigate: jest.fn() };
       const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
@@ -184,8 +213,8 @@ describe('AuthContext — Game Status Handling', () => {
       }
     });
 
-    it('should handle SESSION_EXPIRED with recovery UX', () => {
-      const { result } = renderHook(() => useAuth(), { wrapper });
+    it('should handle SESSION_EXPIRED with recovery UX', async () => {
+      const { result } = await renderAuthHook();
 
       const mockNav = { navigate: jest.fn() };
       const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
@@ -221,7 +250,7 @@ describe('AuthContext — Game Status Handling', () => {
     });
 
     it('routes notification deep-link intents when response listener fires', async () => {
-      const { result } = renderHook(() => useAuth(), { wrapper });
+      const { result } = await renderAuthHook();
 
       const mockNav = { navigate: jest.fn(), getCurrentRoute: jest.fn(() => ({ name: 'Dashboard' })) };
       const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
@@ -251,6 +280,61 @@ describe('AuthContext — Game Status Handling', () => {
 
       expect(mockGameCtx.startGame).toHaveBeenCalledWith('notif-session-1');
       expect(mockNav.navigate).toHaveBeenCalledWith('Game', { sessionId: 'notif-session-1' });
+    });
+
+    it('routes gameplay payloads from the private queue into GameContext', async () => {
+      const { result } = await renderAuthHook();
+
+      const mockGameCtx = {
+        startGame: jest.fn(),
+        endGame: jest.fn(),
+        submitAnswer: jest.fn(),
+        handleRealtimePayload: jest.fn(() => true),
+      };
+
+      act(() => {
+        result.current.setGameContextRef(mockGameCtx);
+      });
+
+      await act(async () => {
+        await result.current.login({
+          accessToken: 'access-token',
+          refreshToken: 'refresh-token',
+          user: { id: 'user-1', name: 'User One', email: 'user@test.com' },
+        });
+        await Promise.resolve();
+      });
+
+      const gameEventsCall = WebSocketService.subscribe.mock.calls.find(
+        (call) => call[0] === '/user/queue/game-events'
+      );
+
+      expect(gameEventsCall).toBeTruthy();
+
+      const callback = gameEventsCall[1];
+      act(() => {
+        callback({
+          type: 'QUESTION',
+          sessionId: 'session-123',
+          questionId: 1,
+          questionNumber: 1,
+          totalQuestions: 8,
+          questionText: 'Test question?',
+          optionA: 'A',
+          optionB: 'B',
+          optionC: 'C',
+          optionD: 'D',
+          round: 'ROUND1',
+        });
+      });
+
+      expect(mockGameCtx.handleRealtimePayload).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: 'QUESTION',
+          sessionId: 'session-123',
+          questionId: 1,
+        })
+      );
     });
   });
 });

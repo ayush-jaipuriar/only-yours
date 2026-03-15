@@ -362,7 +362,7 @@ class GameControllerWebSocketTest {
         StompSession inviteeSession = connectWithToken(inviteeToken);
 
         BlockingQueue<Map> inviteeEvents = new LinkedBlockingQueue<>();
-        BlockingQueue<Map> inviterStatus = new LinkedBlockingQueue<>();
+        BlockingQueue<Map> inviterEvents = new LinkedBlockingQueue<>();
 
         inviteeSession.subscribe("/user/queue/game-events", new StompFrameHandler() {
             @Override
@@ -372,12 +372,12 @@ class GameControllerWebSocketTest {
                 inviteeEvents.add((Map) payload);
             }
         });
-        inviterSession.subscribe("/user/queue/game-status", new StompFrameHandler() {
+        inviterSession.subscribe("/user/queue/game-events", new StompFrameHandler() {
             @Override
             public Type getPayloadType(StompHeaders headers) { return Map.class; }
             @Override
             public void handleFrame(StompHeaders headers, Object payload) {
-                inviterStatus.add((Map) payload);
+                inviterEvents.add((Map) payload);
             }
         });
 
@@ -407,15 +407,18 @@ class GameControllerWebSocketTest {
         Map firstQ = gameMessages.poll(5, TimeUnit.SECONDS);
         assertNotNull(firstQ, "Should receive first question");
         Integer questionId = (Integer) firstQ.get("questionId");
+        inviterEvents.clear();
 
         inviterSession.send("/app/game.answer",
                 Map.of("sessionId", sessionId,
                        "questionId", questionId,
                        "answer", "A"));
 
-        Map confirmation = inviterStatus.poll(5, TimeUnit.SECONDS);
-        assertNotNull(confirmation, "Should receive answer confirmation");
-        assertEquals("ANSWER_RECORDED", confirmation.get("status"));
+        Map nextQuestion = inviterEvents.poll(5, TimeUnit.SECONDS);
+        assertNotNull(nextQuestion, "Answering player should receive their next question privately");
+        assertEquals("QUESTION", nextQuestion.get("type"));
+        assertEquals(2, nextQuestion.get("questionNumber"));
+        assertEquals("ROUND1", nextQuestion.get("round"));
 
         inviterSession.disconnect();
         inviteeSession.disconnect();

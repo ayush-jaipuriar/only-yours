@@ -16,13 +16,15 @@ export const useGame = () => {
 };
 
 export const GameProvider = ({ children }) => {
-  const { setGameContextRef } = useContext(AuthContext);
+  const { setGameContextRef, wsConnectionState } = useContext(AuthContext);
   const { triggerHaptic } = useHaptics();
+  const SUBMIT_SNAPSHOT_FALLBACK_MS = 2000;
 
   const [activeSession, setActiveSession] = useState(null);
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [myAnswer, setMyAnswer] = useState(null);
   const [waitingForPartner, setWaitingForPartner] = useState(false);
+  const [roundState, setRoundState] = useState(null);
   const [gameStatus, setGameStatus] = useState(null);
 
   const [round, setRound] = useState(null);
@@ -31,52 +33,129 @@ export const GameProvider = ({ children }) => {
   const [correctCount, setCorrectCount] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isInvitationPending, setIsInvitationPending] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const activeSessionRef = useRef(null);
   const topicSubRef = useRef(null);
-  const privateSubRef = useRef(null);
+  const submitRecoveryTimeoutRef = useRef(null);
+  const hydrationRequestIdRef = useRef(0);
+
+  const clearSubmitRecoveryTimeout = useCallback(() => {
+    if (submitRecoveryTimeoutRef.current) {
+      clearTimeout(submitRecoveryTimeoutRef.current);
+      submitRecoveryTimeoutRef.current = null;
+    }
+  }, []);
 
   const applyGamePayload = useCallback((payload) => {
-    console.log('[GameContext] Received message:', payload.type || payload.status);
+    if (!payload || !activeSessionRef.current) {
+      return false;
+    }
+
+    const payloadSessionId = payload.sessionId ? String(payload.sessionId) : null;
+    if (payloadSessionId && payloadSessionId !== String(activeSessionRef.current)) {
+      return false;
+    }
+
+    const payloadKey = payload.type || payload.status;
+    console.log('[GameContext] Received message:', payloadKey);
 
     if (payload.type === 'QUESTION') {
-      if (payload.round === 'ROUND2') {
-        setRound('round2');
-        setIsTransitioning(false);
-      }
+      clearSubmitRecoveryTimeout();
+      const nextRound = payload.round === 'ROUND2' ? 'round2' : 'round1';
+      setRound(nextRound);
       setCurrentQuestion(payload);
+      setRoundState(null);
       setMyAnswer(null);
       setWaitingForPartner(false);
+      setIsSubmitting(false);
       setGuessResult(null);
       setGameStatus('playing');
+      setCorrectCount(payload.round === 'ROUND2' ? payload.correctCountSoFar || 0 : 0);
+      setIsTransitioning(false);
       setIsInvitationPending(false);
-    } else if (payload.type === 'STATUS' && payload.status === 'ROUND1_COMPLETE') {
+      return true;
+    }
+
+    if (payload.type === 'ROUND_STATE') {
+      clearSubmitRecoveryTimeout();
+      setRound(payload.round === 'ROUND2' ? 'round2' : 'round1');
+      setCurrentQuestion(null);
+      setRoundState(payload);
+      setMyAnswer(null);
+      setWaitingForPartner(payload.status === 'WAITING_FOR_PARTNER');
+      setGuessResult(null);
+      setGameStatus('waiting');
+      setCorrectCount(payload.round === 'ROUND2' ? payload.correctCount || 0 : 0);
+      setIsTransitioning(false);
+      setIsInvitationPending(false);
+      setIsSubmitting(false);
+      return true;
+    }
+
+    if (payload.type === 'STATUS' && payload.status === 'ROUND1_COMPLETE') {
+      clearSubmitRecoveryTimeout();
       console.log('[GameContext] Round 1 complete, transitioning...');
       triggerHaptic(HAPTIC_EVENTS.ROUND_UNLOCKED);
+      setRound('round2');
       setIsTransitioning(true);
       setCurrentQuestion(null);
+      setRoundState(null);
       setMyAnswer(null);
       setWaitingForPartner(false);
       setGameStatus('playing');
       setIsInvitationPending(false);
-    } else if (payload.type === 'GAME_RESULTS') {
+      setIsSubmitting(false);
+      return true;
+    }
+
+    if (payload.type === 'GAME_RESULTS') {
+      clearSubmitRecoveryTimeout();
       console.log('[GameContext] Game completed:', payload);
       triggerHaptic(HAPTIC_EVENTS.GAME_COMPLETED);
+      setCurrentQuestion(null);
+      setRoundState(null);
+      setWaitingForPartner(false);
+      setIsSubmitting(false);
       setScores(payload);
       setGameStatus('completed');
       setIsTransitioning(false);
       setIsInvitationPending(false);
+      return true;
     }
-  }, []);
+
+    return false;
+  }, [clearSubmitRecoveryTimeout, triggerHaptic]);
+
+  const handleRealtimePayload = useCallback((payload) => applyGamePayload(payload), [applyGamePayload]);
 
   const hydrateCurrentQuestion = useCallback(async (sessionId) => {
+    const normalizedSessionId = sessionId ? String(sessionId) : null;
+    const requestId = hydrationRequestIdRef.current + 1;
+    hydrationRequestIdRef.current = requestId;
+
     try {
       const response = await api.get(`/game/${sessionId}/current-question`);
+      if (
+        requestId !== hydrationRequestIdRef.current ||
+        !activeSessionRef.current ||
+        String(activeSessionRef.current) !== normalizedSessionId
+      ) {
+        return;
+      }
       const payload = response?.data;
-      if (payload?.type === 'QUESTION') {
+      if (payload?.type === 'QUESTION' || payload?.type === 'ROUND_STATE' || payload?.type === 'GAME_RESULTS') {
         applyGamePayload(payload);
       }
     } catch (error) {
+      if (
+        requestId !== hydrationRequestIdRef.current ||
+        !activeSessionRef.current ||
+        String(activeSessionRef.current) !== normalizedSessionId
+      ) {
+        return;
+      }
+
       const status = error?.response?.status;
       if (status === 404 || status === 410) {
         return;
@@ -102,75 +181,81 @@ export const GameProvider = ({ children }) => {
     }
   }, [applyGamePayload]);
 
+  const scheduleSubmitRecovery = useCallback(() => {
+    clearSubmitRecoveryTimeout();
+
+    const sessionId = activeSessionRef.current;
+    if (!sessionId) {
+      return;
+    }
+
+    submitRecoveryTimeoutRef.current = setTimeout(() => {
+      console.log('[GameContext] No realtime follow-up after submit, refreshing snapshot:', sessionId);
+      hydrateCurrentQuestion(sessionId);
+    }, SUBMIT_SNAPSHOT_FALLBACK_MS);
+  }, [SUBMIT_SNAPSHOT_FALLBACK_MS, clearSubmitRecoveryTimeout, hydrateCurrentQuestion]);
+
+  const unsubscribeTopic = useCallback(() => {
+    if (!topicSubRef.current) {
+      return;
+    }
+
+    try {
+      topicSubRef.current.unsubscribe();
+    } catch (error) {
+      console.error('[GameContext] Error unsubscribing previous topic listener:', error);
+    } finally {
+      topicSubRef.current = null;
+    }
+  }, []);
+
+  const ensureTopicSubscription = useCallback((sessionId) => {
+    if (!sessionId || !WebSocketService.isConnected()) {
+      return false;
+    }
+
+    unsubscribeTopic();
+
+    const gameTopic = `/topic/game/${sessionId}`;
+    topicSubRef.current = WebSocketService.subscribe(gameTopic, (payload) => {
+      handleRealtimePayload(payload);
+    });
+    console.log('[GameContext] Subscribed to:', gameTopic);
+    return Boolean(topicSubRef.current);
+  }, [handleRealtimePayload, unsubscribeTopic]);
+
   const startGame = useCallback((sessionId) => {
     console.log('[GameContext] Starting game:', sessionId);
 
-    if (activeSessionRef.current === sessionId && topicSubRef.current) {
+    if (activeSessionRef.current === sessionId) {
       console.log('[GameContext] Session already active, refreshing snapshot:', sessionId);
+      ensureTopicSubscription(sessionId);
       hydrateCurrentQuestion(sessionId);
       return;
     }
 
-    if (topicSubRef.current) {
-      try {
-        topicSubRef.current.unsubscribe();
-      } catch (error) {
-        console.error('[GameContext] Error unsubscribing previous topic listener:', error);
-      } finally {
-        topicSubRef.current = null;
-      }
-    }
-
-    if (privateSubRef.current) {
-      try {
-        privateSubRef.current.unsubscribe();
-      } catch (error) {
-        console.error('[GameContext] Error unsubscribing previous private listener:', error);
-      } finally {
-        privateSubRef.current = null;
-      }
-    }
+    unsubscribeTopic();
 
     activeSessionRef.current = sessionId;
+    hydrationRequestIdRef.current += 1;
     setActiveSession(sessionId);
     setGameStatus('playing');
     setRound('round1');
     setCurrentQuestion(null);
     setMyAnswer(null);
     setWaitingForPartner(false);
+    setRoundState(null);
     setGuessResult(null);
     setScores(null);
     setCorrectCount(0);
     setIsTransitioning(false);
     setIsInvitationPending(false);
+    setIsSubmitting(false);
+    clearSubmitRecoveryTimeout();
 
-    const gameTopic = `/topic/game/${sessionId}`;
-    const sub = WebSocketService.subscribe(gameTopic, (payload) => {
-      applyGamePayload(payload);
-    });
-
-    topicSubRef.current = sub;
-
-    const privateSub = WebSocketService.subscribe(
-      '/user/queue/game-events',
-      (payload) => {
-        if (payload.type === 'GUESS_RESULT') {
-          console.log('[GameContext] Guess result:', payload.correct ? 'CORRECT' : 'WRONG');
-          triggerHaptic(payload.correct ? HAPTIC_EVENTS.GUESS_CORRECT : HAPTIC_EVENTS.GUESS_INCORRECT);
-          setGuessResult(payload);
-          setCorrectCount(payload.correctCount || 0);
-          setWaitingForPartner(true);
-        } else {
-          applyGamePayload(payload);
-        }
-      },
-    );
-    privateSubRef.current = privateSub;
-
-    console.log('[GameContext] Subscribed to:', gameTopic);
-
+    ensureTopicSubscription(sessionId);
     hydrateCurrentQuestion(sessionId);
-  }, [applyGamePayload, hydrateCurrentQuestion]);
+  }, [clearSubmitRecoveryTimeout, ensureTopicSubscription, hydrateCurrentQuestion, unsubscribeTopic]);
 
   const submitAnswer = (answer) => {
     if (!activeSession || !currentQuestion) {
@@ -183,7 +268,8 @@ export const GameProvider = ({ children }) => {
     console.log('[GameContext] Submitting answer:', answer);
 
     setMyAnswer(answer);
-    setWaitingForPartner(true);
+    setIsSubmitting(true);
+    setWaitingForPartner(false);
 
     try {
       const sent = WebSocketService.sendMessage('/app/game.answer', {
@@ -195,10 +281,14 @@ export const GameProvider = ({ children }) => {
         throw new Error('Realtime unavailable');
       }
       triggerHaptic(HAPTIC_EVENTS.ANSWER_SUBMITTED);
+      scheduleSubmitRecovery();
     } catch (error) {
       console.error('[GameContext] Error sending answer:', error);
       Alert.alert('Error', 'Failed to submit answer. Please try again.');
       triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
+      clearSubmitRecoveryTimeout();
+      setMyAnswer(null);
+      setIsSubmitting(false);
       setWaitingForPartner(false);
     }
   };
@@ -214,7 +304,8 @@ export const GameProvider = ({ children }) => {
     console.log('[GameContext] Submitting guess:', guess);
 
     setMyAnswer(guess);
-    setWaitingForPartner(true);
+    setIsSubmitting(true);
+    setWaitingForPartner(false);
 
     try {
       const sent = WebSocketService.sendMessage('/app/game.guess', {
@@ -226,10 +317,14 @@ export const GameProvider = ({ children }) => {
         throw new Error('Realtime unavailable');
       }
       triggerHaptic(HAPTIC_EVENTS.GUESS_SUBMITTED);
+      scheduleSubmitRecovery();
     } catch (error) {
       console.error('[GameContext] Error sending guess:', error);
       Alert.alert('Error', 'Failed to submit guess. Please try again.');
       triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
+      clearSubmitRecoveryTimeout();
+      setMyAnswer(null);
+      setIsSubmitting(false);
       setWaitingForPartner(false);
     }
   };
@@ -280,26 +375,15 @@ export const GameProvider = ({ children }) => {
   const endGame = useCallback(() => {
     console.log('[GameContext] Ending game');
 
-    if (topicSubRef.current) {
-      try { topicSubRef.current.unsubscribe(); } catch (error) {
-        console.error('[GameContext] Error unsubscribing:', error);
-      } finally {
-        topicSubRef.current = null;
-      }
-    }
-    if (privateSubRef.current) {
-      try { privateSubRef.current.unsubscribe(); } catch (error) {
-        console.error('[GameContext] Error unsubscribing private:', error);
-      } finally {
-        privateSubRef.current = null;
-      }
-    }
+    unsubscribeTopic();
 
     setActiveSession(null);
     activeSessionRef.current = null;
+    hydrationRequestIdRef.current += 1;
     setCurrentQuestion(null);
     setMyAnswer(null);
     setWaitingForPartner(false);
+    setRoundState(null);
     setGameStatus(null);
     setRound(null);
     setGuessResult(null);
@@ -307,39 +391,41 @@ export const GameProvider = ({ children }) => {
     setCorrectCount(0);
     setIsTransitioning(false);
     setIsInvitationPending(false);
-  }, []);
+    setIsSubmitting(false);
+    clearSubmitRecoveryTimeout();
+  }, [clearSubmitRecoveryTimeout, unsubscribeTopic]);
+
+  useEffect(() => {
+    if (wsConnectionState !== 'connected' || !activeSessionRef.current) {
+      return;
+    }
+
+    ensureTopicSubscription(activeSessionRef.current);
+    console.log('[GameContext] Realtime connected, refreshing active session snapshot:', activeSessionRef.current);
+    hydrateCurrentQuestion(activeSessionRef.current);
+  }, [ensureTopicSubscription, hydrateCurrentQuestion, wsConnectionState]);
 
   useEffect(() => {
     return () => {
-      if (topicSubRef.current) {
-        try { topicSubRef.current.unsubscribe(); } catch (error) {
-          console.error('[GameContext] Error during cleanup:', error);
-        } finally {
-          topicSubRef.current = null;
-        }
-      }
-      if (privateSubRef.current) {
-        try { privateSubRef.current.unsubscribe(); } catch (error) {
-          console.error('[GameContext] Error during private cleanup:', error);
-        } finally {
-          privateSubRef.current = null;
-        }
-      }
+      unsubscribeTopic();
+      clearSubmitRecoveryTimeout();
+      hydrationRequestIdRef.current += 1;
       activeSessionRef.current = null;
     };
-  }, []);
+  }, [clearSubmitRecoveryTimeout, unsubscribeTopic]);
 
   useEffect(() => {
     if (setGameContextRef) {
-      setGameContextRef({ startGame, endGame, submitAnswer });
+      setGameContextRef({ startGame, endGame, submitAnswer, handleRealtimePayload });
     }
-  }, [endGame, setGameContextRef, startGame, submitAnswer]);
+  }, [endGame, handleRealtimePayload, setGameContextRef, startGame, submitAnswer]);
 
   const value = {
     activeSession,
     currentQuestion,
     myAnswer,
     waitingForPartner,
+    roundState,
     gameStatus,
     round,
     guessResult,
@@ -347,6 +433,7 @@ export const GameProvider = ({ children }) => {
     correctCount,
     isTransitioning,
     isInvitationPending,
+    isSubmitting,
 
     startGame,
     submitAnswer,

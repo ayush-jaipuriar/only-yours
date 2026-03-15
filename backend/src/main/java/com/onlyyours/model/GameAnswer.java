@@ -6,7 +6,13 @@ import lombok.Data;
 import java.util.UUID;
 
 @Entity
-@Table(name = "game_answers")
+@Table(
+        name = "game_answers",
+        uniqueConstraints = @UniqueConstraint(
+                name = "uk_game_answers_session_question_user",
+                columnNames = {"game_session_id", "question_id", "user_id"}
+        )
+)
 @Data
 public class GameAnswer {
     @Id
@@ -30,4 +36,4 @@ public class GameAnswer {
 
     @Column(name = "round2_guess")
     private String round2Guess;
-} 
+}

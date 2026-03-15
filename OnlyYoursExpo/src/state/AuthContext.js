@@ -157,7 +157,16 @@ export const AuthProvider = ({ children }) => {
    * Handle incoming game invitation.
    * Shows alert with accept/decline options.
    */
-  const handleInvitation = (invitation) => {
+  const routeGameplayPayload = useCallback((payload) => {
+    if (!payload || payload.type === 'INVITATION') {
+      return false;
+    }
+
+    const handled = gameContextRef.current?.handleRealtimePayload?.(payload);
+    return handled === true;
+  }, []);
+
+  const handleInvitation = useCallback((invitation) => {
     console.log('[AuthContext] Game invitation received:', invitation);
 
     Alert.alert(
@@ -225,12 +234,12 @@ export const AuthProvider = ({ children }) => {
         },
       ]
     );
-  };
+  }, [triggerHaptic]);
 
   /**
    * Handle game status messages (invitation declined, etc.).
    */
-  const handleGameStatus = (status) => {
+  const handleGameStatus = useCallback((status) => {
     console.log('[AuthContext] Game status:', status.status);
 
     const openGameSession = (sessionId) => {
@@ -285,12 +294,16 @@ export const AuthProvider = ({ children }) => {
       default:
         break;
     }
-  };
+  }, [triggerHaptic]);
 
   /**
    * Subscribe to game events after WebSocket connects.
    */
-  const subscribeToGameEvents = () => {
+  const subscribeToGameEvents = useCallback(() => {
+    if (!isLoggedIn || !WebSocketService.isConnected()) {
+      return;
+    }
+
     console.log('[AuthContext] Subscribing to game events');
     
     try {
@@ -304,7 +317,9 @@ export const AuthProvider = ({ children }) => {
 
       gameEventsSubRef.current = WebSocketService.subscribe('/user/queue/game-events', (payload) => {
         console.log('[AuthContext] Game event received:', payload.type);
-        
+
+        routeGameplayPayload(payload);
+
         if (payload.type === 'INVITATION') {
           handleInvitation(payload);
         } else if (payload.type === 'STATUS') {
@@ -314,7 +329,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('[AuthContext] Error subscribing to game events:', error);
     }
-  };
+  }, [handleGameStatus, handleInvitation, isLoggedIn, routeGameplayPayload]);
 
   const persistAuthPayload = async (authPayload) => {
     const writes = [];
@@ -360,6 +375,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    WebSocketService.setConnectionStateListener(setWsConnectionState);
+
+    return () => {
+      WebSocketService.setConnectionStateListener(null);
+    };
+  }, []);
+
+  useEffect(() => {
     authStateRef.current = { isLoggedIn, isAuthLoading };
     if (isLoggedIn && !isAuthLoading) {
       flushPendingNotificationIntent();
@@ -401,11 +424,14 @@ export const AuthProvider = ({ children }) => {
   }, [handleNotificationIntent]);
 
   const connectRealtime = async () => {
-    if (connectingRef.current || WebSocketService.isConnected()) {
+    if (
+      connectingRef.current ||
+      WebSocketService.isConnected() ||
+      WebSocketService.hasActiveClient?.()
+    ) {
       return;
     }
     connectingRef.current = true;
-    WebSocketService.setConnectionStateListener(setWsConnectionState);
     try {
       let lastError = null;
       const maxAttempts = 3;
@@ -413,7 +439,6 @@ export const AuthProvider = ({ children }) => {
       for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
         try {
           await WebSocketService.connect(API_BASE_URL);
-          subscribeToGameEvents();
           registerPushNotifications();
           return;
         } catch (error) {
@@ -577,6 +602,14 @@ export const AuthProvider = ({ children }) => {
 
     return () => clearTimeout(timer);
   }, [isLoggedIn, isAuthLoading, wsConnectionState]);
+
+  useEffect(() => {
+    if (!isLoggedIn || isAuthLoading || wsConnectionState !== 'connected') {
+      return;
+    }
+
+    subscribeToGameEvents();
+  }, [isLoggedIn, isAuthLoading, subscribeToGameEvents, wsConnectionState]);
 
   const shouldShowOnboarding =
     isLoggedIn && onboardingStatus !== ONBOARDING_STATUS.COMPLETED;

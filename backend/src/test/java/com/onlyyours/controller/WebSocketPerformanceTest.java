@@ -103,6 +103,21 @@ class WebSocketPerformanceTest {
                 .get(5, TimeUnit.SECONDS);
     }
 
+    private Map awaitMessageOfType(BlockingQueue<Map> queue, String type, long timeoutSeconds) throws Exception {
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(timeoutSeconds);
+        while (System.nanoTime() < deadline) {
+            long remainingMillis = TimeUnit.NANOSECONDS.toMillis(deadline - System.nanoTime());
+            Map message = queue.poll(Math.max(1L, remainingMillis), TimeUnit.MILLISECONDS);
+            if (message == null) {
+                break;
+            }
+            if (type.equals(message.get("type"))) {
+                return message;
+            }
+        }
+        return null;
+    }
+
     @Test
     void testConnectionLatency() throws Exception {
         long start = System.nanoTime();
@@ -147,8 +162,14 @@ class WebSocketPerformanceTest {
         StompSession s1 = connect(token1);
         StompSession s2 = connect(token2);
 
+        BlockingQueue<Map> p1Events = new LinkedBlockingQueue<>();
         BlockingQueue<Map> p2Events = new LinkedBlockingQueue<>();
-        BlockingQueue<Map> p1GameTopic = new LinkedBlockingQueue<>();
+        BlockingQueue<Map> gameTopic = new LinkedBlockingQueue<>();
+
+        s1.subscribe("/user/queue/game-events", new StompFrameHandler() {
+            @Override public Type getPayloadType(StompHeaders h) { return Map.class; }
+            @Override public void handleFrame(StompHeaders h, Object p) { p1Events.add((Map) p); }
+        });
 
         s2.subscribe("/user/queue/game-events", new StompFrameHandler() {
             @Override public Type getPayloadType(StompHeaders h) { return Map.class; }
@@ -166,54 +187,98 @@ class WebSocketPerformanceTest {
 
         s1.subscribe("/topic/game/" + sessionId, new StompFrameHandler() {
             @Override public Type getPayloadType(StompHeaders h) { return Map.class; }
-            @Override public void handleFrame(StompHeaders h, Object p) { p1GameTopic.add((Map) p); }
+            @Override public void handleFrame(StompHeaders h, Object p) { gameTopic.add((Map) p); }
         });
 
         Thread.sleep(300);
 
         s2.send("/app/game.accept", Map.of("sessionId", sessionId));
 
+        Map p1Question = awaitMessageOfType(p1Events, "QUESTION", 5);
+        Map p2Question = awaitMessageOfType(p2Events, "QUESTION", 5);
+        assertNotNull(p1Question, "Player 1 should receive the first Round 1 question privately");
+        assertNotNull(p2Question, "Player 2 should receive the first Round 1 question privately");
+
         List<Long> answerLatencies = new ArrayList<>();
-
         for (int q = 1; q <= 8; q++) {
-            Map questionMsg = null;
-
-            while (questionMsg == null) {
-                Map msg = p1GameTopic.poll(5, TimeUnit.SECONDS);
-                assertNotNull(msg, "Should receive message for question " + q);
-                if ("QUESTION".equals(msg.get("type"))) {
-                    questionMsg = msg;
-                }
-            }
-
-            Integer questionId = (Integer) questionMsg.get("questionId");
-
             long answerStart = System.nanoTime();
 
             s1.send("/app/game.answer",
-                    Map.of("sessionId", sessionId, "questionId", questionId, "answer", "A"));
+                    Map.of("sessionId", sessionId, "questionId", p1Question.get("questionId"), "answer", "A"));
 
-            Thread.sleep(50);
+            if (q < 8) {
+                p1Question = awaitMessageOfType(p1Events, "QUESTION", 5);
+                assertNotNull(p1Question, "Player 1 should receive Round 1 question " + (q + 1));
+            } else {
+                Map p1Waiting = awaitMessageOfType(p1Events, "ROUND_STATE", 5);
+                assertNotNull(p1Waiting, "Player 1 should receive a round-end waiting state after finishing answers");
+            }
 
             s2.send("/app/game.answer",
-                    Map.of("sessionId", sessionId, "questionId", questionId, "answer", "B"));
+                    Map.of("sessionId", sessionId, "questionId", p2Question.get("questionId"), "answer", "B"));
 
-            long answerElapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - answerStart);
-            answerLatencies.add(answerElapsed);
+            if (q < 8) {
+                p2Question = awaitMessageOfType(p2Events, "QUESTION", 5);
+                assertNotNull(p2Question, "Player 2 should receive Round 1 question " + (q + 1));
+            }
 
-            Thread.sleep(200);
+            answerLatencies.add(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - answerStart));
         }
+
+        Map round1Complete = awaitMessageOfType(gameTopic, "STATUS", 5);
+        assertNotNull(round1Complete, "Both players should see the Round 1 completion broadcast");
+        assertEquals("ROUND1_COMPLETE", round1Complete.get("eventType"));
+
+        Map round2Question = awaitMessageOfType(gameTopic, "QUESTION", 5);
+        assertNotNull(round2Question, "Round 2 should start with a shared topic broadcast");
+
+        Map p1Round2Question = round2Question;
+        Map p2Round2Question = round2Question;
+        List<Long> guessLatencies = new ArrayList<>();
+
+        for (int q = 1; q <= 8; q++) {
+            long guessStart = System.nanoTime();
+
+            s1.send("/app/game.guess",
+                    Map.of("sessionId", sessionId, "questionId", p1Round2Question.get("questionId"), "guess", "B"));
+
+            if (q < 8) {
+                p1Round2Question = awaitMessageOfType(p1Events, "QUESTION", 5);
+                assertNotNull(p1Round2Question, "Player 1 should receive Round 2 question " + (q + 1));
+            } else {
+                Map p1Waiting = awaitMessageOfType(p1Events, "ROUND_STATE", 5);
+                assertNotNull(p1Waiting, "Player 1 should receive a round-end waiting state after finishing guesses");
+            }
+
+            s2.send("/app/game.guess",
+                    Map.of("sessionId", sessionId, "questionId", p2Round2Question.get("questionId"), "guess", "A"));
+
+            if (q < 8) {
+                p2Round2Question = awaitMessageOfType(p2Events, "QUESTION", 5);
+                assertNotNull(p2Round2Question, "Player 2 should receive Round 2 question " + (q + 1));
+            }
+
+            guessLatencies.add(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - guessStart));
+        }
+
+        Map results = awaitMessageOfType(gameTopic, "GAME_RESULTS", 5);
+        assertNotNull(results, "Game should broadcast final results when both players finish guessing");
 
         long totalElapsed = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - gameStart);
 
-        double avgLatency = answerLatencies.stream().mapToLong(Long::longValue).average().orElse(0);
-        long maxLatency = answerLatencies.stream().mapToLong(Long::longValue).max().orElse(0);
+        double avgAnswerLatency = answerLatencies.stream().mapToLong(Long::longValue).average().orElse(0);
+        long maxAnswerLatency = answerLatencies.stream().mapToLong(Long::longValue).max().orElse(0);
+        double avgGuessLatency = guessLatencies.stream().mapToLong(Long::longValue).average().orElse(0);
+        long maxGuessLatency = guessLatencies.stream().mapToLong(Long::longValue).max().orElse(0);
 
         System.out.println("============= PERFORMANCE REPORT =============");
-        System.out.println("[PERF] Total game time (8 questions): " + totalElapsed + "ms");
-        System.out.println("[PERF] Average answer submission latency: " + String.format("%.1f", avgLatency) + "ms");
-        System.out.println("[PERF] Max answer submission latency: " + maxLatency + "ms");
+        System.out.println("[PERF] Total game time (answers + guesses + results): " + totalElapsed + "ms");
+        System.out.println("[PERF] Average answer submission latency: " + String.format("%.1f", avgAnswerLatency) + "ms");
+        System.out.println("[PERF] Max answer submission latency: " + maxAnswerLatency + "ms");
+        System.out.println("[PERF] Average guess submission latency: " + String.format("%.1f", avgGuessLatency) + "ms");
+        System.out.println("[PERF] Max guess submission latency: " + maxGuessLatency + "ms");
         System.out.println("[PERF] Per-question latencies: " + answerLatencies);
+        System.out.println("[PERF] Per-guess latencies: " + guessLatencies);
 
         Runtime runtime = Runtime.getRuntime();
         long usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024);

@@ -81,4 +81,9 @@ public class QuestionPayloadDto {
      * Whether the question came from the custom couple deck.
      */
     private Boolean customQuestion;
+
+    /**
+     * Running count of correct guesses for this user so far in Round 2.
+     */
+    private Integer correctCountSoFar;
 }

@@ -1,6 +1,7 @@
 import { AccessibilityInfo, Platform } from 'react-native';
 
 const liveRegion = Platform.OS === 'android' ? 'polite' : undefined;
+const assertiveLiveRegion = Platform.OS === 'android' ? 'assertive' : undefined;
 
 const decorativeAccessibilityProps = {
   accessible: false,
@@ -9,12 +10,12 @@ const decorativeAccessibilityProps = {
 };
 
 const accessibilityAlertProps = {
-  accessibilityRole: 'alert',
-  ...(liveRegion ? { accessibilityLiveRegion: liveRegion } : {}),
+  accessible: true,
+  ...(assertiveLiveRegion ? { accessibilityLiveRegion: assertiveLiveRegion } : {}),
 };
 
 const accessibilityStatusProps = {
-  accessibilityRole: 'status',
+  accessible: true,
   ...(liveRegion ? { accessibilityLiveRegion: liveRegion } : {}),
 };
 

@@ -1,7 +1,7 @@
 # P2 Game Flow Restructure Plan - Independent Per-Round Progression
 
 **Created:** Mar 14, 2026  
-**Status:** Drafted; awaiting approval  
+**Status:** Implemented in code; automated validation passed; manual verification pending
 **Scope type:** Structural gameplay change request  
 **Supersedes when approved:** current lockstep per-question progression assumptions in `Phase A`
 
@@ -12,12 +12,42 @@
 This change follows your required workflow:
 
 - [x] Step 1: In-depth planning in a dedicated `.md` with implementation checklists
-- [ ] Step 2: User approval of this plan
-- [ ] Step 3: Implementation
-- [ ] Step 4: Comprehensive automated validation
+- [x] Step 2: User approval of this plan
+- [x] Step 3: Implementation
+- [x] Step 4: Comprehensive automated validation
 - [ ] Step 5: Completion report after tests pass
 
-Implementation must not begin until you approve this document.
+Implementation is complete in code. Manual verification remains pending.
+
+### Current implementation progress
+
+- [x] Backend service contract shifted from shared per-question lockstep to per-user round progression
+- [x] Backend current-state DTOs added for round-end waiting/review
+- [x] Backend service/controller tests updated for the new websocket/event topology
+- [x] Expo `GameContext` adapted to `QUESTION` / `ROUND_STATE` / `GAME_RESULTS`
+- [x] Expo `GameScreen` adapted to round-end waiting review UX
+- [x] Frontend regression tests updated for the new flow
+- [x] Full backend + Expo automated suites rerun after the full stack is wired
+
+### Implementation notes
+
+- Backend touched:
+  - `backend/src/main/java/com/onlyyours/service/GameService.java`
+  - `backend/src/main/java/com/onlyyours/controller/GameController.java`
+  - `backend/src/main/java/com/onlyyours/repository/GameAnswerRepository.java`
+  - `backend/src/main/java/com/onlyyours/dto/GameRoundStateDto.java`
+  - `backend/src/main/java/com/onlyyours/dto/GameReviewItemDto.java`
+  - `backend/src/main/java/com/onlyyours/dto/QuestionPayloadDto.java`
+- Frontend touched:
+  - `OnlyYoursExpo/src/state/GameContext.js`
+  - `OnlyYoursExpo/src/screens/GameScreen.js`
+- Manual-testing guidance updated:
+  - `MANUAL_TESTING_GUIDE_SPRINT6.md`
+
+### Automated validation summary
+
+- Backend: `./gradlew test --rerun-tasks`
+- Expo: `npm test -- --runInBand`
 
 ---
 

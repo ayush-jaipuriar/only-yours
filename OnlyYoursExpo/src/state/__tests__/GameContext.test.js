@@ -8,6 +8,8 @@ import { AuthContext } from '../AuthContext';
 import WebSocketService from '../../services/WebSocketService';
 import api from '../../services/api';
 
+let capturedGameContextRef = null;
+
 jest.mock('../../services/WebSocketService');
 jest.mock('../../services/api', () => ({
   __esModule: true,
@@ -24,8 +26,15 @@ jest.mock('react-native', () => {
   });
 });
 
-const MockAuthProvider = ({ children }) => (
-  <AuthContext.Provider value={{ setGameContextRef: jest.fn() }}>
+const MockAuthProvider = ({ children, wsConnectionState = 'connected' }) => (
+  <AuthContext.Provider
+    value={{
+      setGameContextRef: (ref) => {
+        capturedGameContextRef = ref;
+      },
+      wsConnectionState,
+    }}
+  >
     {children}
   </AuthContext.Provider>
 );
@@ -41,8 +50,11 @@ const wrapper = ({ children }) => (
 describe('GameContext', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.useRealTimers();
+    capturedGameContextRef = null;
     WebSocketService.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
     WebSocketService.sendMessage.mockReturnValue(true);
+    WebSocketService.isConnected.mockReturnValue(true);
     api.get.mockResolvedValue({ data: null });
   });
 
@@ -72,6 +84,7 @@ describe('GameContext', () => {
       '/topic/game/test-session-id',
       expect.any(Function),
     );
+    expect(WebSocketService.subscribe).toHaveBeenCalledTimes(1);
     expect(api.get).toHaveBeenCalledWith('/game/test-session-id/current-question');
   });
 
@@ -103,7 +116,8 @@ describe('GameContext', () => {
     });
 
     expect(result.current.myAnswer).toBe('B');
-    expect(result.current.waitingForPartner).toBe(true);
+    expect(result.current.waitingForPartner).toBe(false);
+    expect(result.current.isSubmitting).toBe(true);
     expect(WebSocketService.sendMessage).toHaveBeenCalledWith('/app/game.answer', {
       sessionId: 'test-session-id',
       questionId: 1,
@@ -171,12 +185,14 @@ describe('GameContext', () => {
         questionText: 'Round 2 question?',
         optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D',
         round: 'ROUND2',
+        correctCountSoFar: 2,
       });
     });
 
     expect(result.current.round).toBe('round2');
     expect(result.current.isTransitioning).toBe(false);
     expect(result.current.currentQuestion.round).toBe('ROUND2');
+    expect(result.current.correctCount).toBe(2);
   });
 
   it('should submit guess via /app/game.guess', () => {
@@ -205,7 +221,8 @@ describe('GameContext', () => {
     });
 
     expect(result.current.myAnswer).toBe('C');
-    expect(result.current.waitingForPartner).toBe(true);
+    expect(result.current.waitingForPartner).toBe(false);
+    expect(result.current.isSubmitting).toBe(true);
     expect(WebSocketService.sendMessage).toHaveBeenCalledWith('/app/game.guess', {
       sessionId: 'test-session-id',
       questionId: 5,
@@ -213,31 +230,183 @@ describe('GameContext', () => {
     });
   });
 
-  it('should handle GUESS_RESULT from private queue', () => {
+  it('refreshes the current snapshot if a submit follow-up payload is missed', async () => {
+    jest.useFakeTimers();
+
     const { result } = renderHook(() => useGame(), { wrapper });
 
     act(() => {
       result.current.startGame('test-session-id');
     });
 
-    const privateCallback = WebSocketService.subscribe.mock.calls[1][1];
-
     act(() => {
-      privateCallback({
-        type: 'GUESS_RESULT',
-        correct: true,
-        yourGuess: 'B',
-        partnerAnswer: 'B',
-        correctCount: 3,
-        questionText: 'Test?',
+      const topicCallback = WebSocketService.subscribe.mock.calls[0][1];
+      topicCallback({
+        type: 'QUESTION',
+        sessionId: 'test-session-id',
+        questionId: 5,
+        questionNumber: 1,
+        totalQuestions: 8,
+        questionText: 'Guess question?',
+        optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D',
+        round: 'ROUND2',
       });
     });
 
-    expect(result.current.guessResult).toBeTruthy();
-    expect(result.current.guessResult.correct).toBe(true);
+    api.get.mockResolvedValueOnce({
+      data: {
+        type: 'QUESTION',
+        sessionId: 'test-session-id',
+        questionId: 6,
+        questionNumber: 2,
+        totalQuestions: 8,
+        questionText: 'Next question?',
+        optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D',
+        round: 'ROUND2',
+        correctCountSoFar: 1,
+      },
+    });
+
+    act(() => {
+      result.current.submitGuess('C');
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+      await Promise.resolve();
+    });
+
+    expect(api.get).toHaveBeenLastCalledWith('/game/test-session-id/current-question');
+    expect(result.current.currentQuestion?.questionId).toBe(6);
+    expect(result.current.isSubmitting).toBe(false);
+  });
+
+  it('should handle ROUND_STATE routed from AuthContext', () => {
+    const { result } = renderHook(() => useGame(), { wrapper });
+
+    act(() => {
+      result.current.startGame('test-session-id');
+    });
+
+    act(() => {
+      capturedGameContextRef.handleRealtimePayload({
+        type: 'ROUND_STATE',
+        sessionId: 'test-session-id',
+        round: 'ROUND2',
+        status: 'WAITING_FOR_PARTNER',
+        message: 'Waiting for your partner to finish.',
+        totalQuestions: 8,
+        completedCount: 8,
+        correctCount: 3,
+        reviewItems: [
+          {
+            questionId: 7,
+            questionNumber: 1,
+            questionText: 'Test?',
+            submittedValue: 'B',
+          },
+        ],
+      });
+    });
+
+    expect(result.current.roundState).toBeTruthy();
+    expect(result.current.roundState.status).toBe('WAITING_FOR_PARTNER');
     expect(result.current.correctCount).toBe(3);
     expect(result.current.waitingForPartner).toBe(true);
-    expect(ExpoHaptics.notificationAsync).toHaveBeenCalledWith('Success');
+    expect(result.current.gameStatus).toBe('waiting');
+  });
+
+  it('does not let unrelated STATUS events cancel submit recovery', async () => {
+    jest.useFakeTimers();
+
+    const { result } = renderHook(() => useGame(), { wrapper });
+
+    act(() => {
+      result.current.startGame('test-session-id');
+    });
+
+    act(() => {
+      const topicCallback = WebSocketService.subscribe.mock.calls[0][1];
+      topicCallback({
+        type: 'QUESTION',
+        sessionId: 'test-session-id',
+        questionId: 5,
+        questionNumber: 1,
+        totalQuestions: 8,
+        questionText: 'Guess question?',
+        optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D',
+        round: 'ROUND2',
+      });
+    });
+
+    api.get.mockResolvedValueOnce({
+      data: {
+        type: 'QUESTION',
+        sessionId: 'test-session-id',
+        questionId: 6,
+        questionNumber: 2,
+        totalQuestions: 8,
+        questionText: 'Next question?',
+        optionA: 'A', optionB: 'B', optionC: 'C', optionD: 'D',
+        round: 'ROUND2',
+        correctCountSoFar: 1,
+      },
+    });
+
+    act(() => {
+      result.current.submitGuess('C');
+    });
+
+    act(() => {
+      capturedGameContextRef.handleRealtimePayload({
+        type: 'STATUS',
+        sessionId: 'test-session-id',
+        status: 'PARTNER_RETURNED',
+        message: 'Partner returned.',
+      });
+    });
+
+    await act(async () => {
+      jest.advanceTimersByTime(2000);
+      await Promise.resolve();
+    });
+
+    expect(api.get).toHaveBeenLastCalledWith('/game/test-session-id/current-question');
+    expect(result.current.currentQuestion?.questionId).toBe(6);
+    expect(result.current.isSubmitting).toBe(false);
+  });
+
+  it('hydrates a round review state from the current-question endpoint', async () => {
+    api.get.mockResolvedValueOnce({
+      data: {
+        type: 'ROUND_STATE',
+        sessionId: 'test-session-id',
+        round: 'ROUND1',
+        status: 'WAITING_FOR_PARTNER',
+        message: 'Waiting for your partner to finish.',
+        totalQuestions: 8,
+        completedCount: 8,
+        reviewItems: [
+          {
+            questionId: 1,
+            questionNumber: 1,
+            questionText: 'Question?',
+            submittedValue: 'A',
+          },
+        ],
+      },
+    });
+
+    const { result } = renderHook(() => useGame(), { wrapper });
+
+    await act(async () => {
+      result.current.startGame('test-session-id');
+      await Promise.resolve();
+    });
+
+    expect(result.current.roundState?.status).toBe('WAITING_FOR_PARTNER');
+    expect(result.current.currentQuestion).toBeNull();
+    expect(result.current.waitingForPartner).toBe(true);
   });
 
   it('should set completed status on GAME_RESULTS', () => {

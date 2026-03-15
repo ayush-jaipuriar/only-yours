@@ -125,6 +125,21 @@ describe('WebSocketService', () => {
       expect(config.forceBinaryWSFrames).toBe(true);
       expect(config.appendMissingNULLonIncoming).toBe(true);
     });
+
+    it('should wait for an already-active client to reconnect instead of creating a second one', async () => {
+      service.client = { active: true, deactivate: jest.fn() };
+      service.connected = false;
+
+      const connectPromise = service.connect('http://localhost:8080');
+
+      expect(Client).not.toHaveBeenCalled();
+      expect(service.pendingConnectWaiters.size).toBe(1);
+
+      service.connected = true;
+      service._resolvePendingConnectWaiters();
+
+      await expect(connectPromise).resolves.toBeUndefined();
+    });
   });
 
   describe('subscribe() — multiple subscriptions per destination', () => {

@@ -168,9 +168,10 @@ Cross-phase dependencies:
 #### A2) Backend game-state enforcement checklist
 
 - [x] Enforce one active session per couple at invitation/session creation.
-- [x] Keep sequential question progression contract:
-  - return only the current pending question
-  - unlock next question only after current question is answered by both required participants in that round logic
+- [x] Keep single-question-at-a-time gameplay UI while deriving progression per user:
+  - return only the next unanswered question for that specific player
+  - lock submitted answers/guesses and resume from the next unanswered question automatically
+  - wait only at round-end, not after every question
 - [x] Implement Round 2 unlock guard: only when both users complete all Round 1 answers.
 - [x] Implement final result unlock guard: only when both users complete Round 2.
 - [x] Add idempotency guards for repeated accept/answer/guess submissions.
@@ -189,8 +190,9 @@ Cross-phase dependencies:
 #### A4) Frontend experience checklist
 
 - [x] Add "Continue Game" CTA card on dashboard/home when a resumable session exists.
-- [x] Keep GameScreen in current sequential mode (single active question visible at a time).
+- [x] Keep GameScreen one-question-at-a-time while allowing each player to progress through a round independently.
 - [x] Add resume navigation logic from CTA to current game state.
+- [x] Add round-end waiting/review states for finished answers and finished guesses.
 - [x] Add UX prompt when partner leaves mid-session.
 - [x] Add reconnect prompt and retry CTA if realtime drops.
 - [x] Handle session-expired terminal state with actionable UI.

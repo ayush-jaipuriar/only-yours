@@ -119,7 +119,8 @@ grep "^EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/On
 
 - **WebSocket timeout:** restart backend + Metro using LAN host override (`REACT_NATIVE_PACKAGER_HOSTNAME`)
 - **Failed to connect to `127.0.0.1:8081`:** restart Metro with `LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)` and `REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c`
-- **Android dev build crashes with `property 'accessibilityRole' ...` on `RCTText` or other Fabric views:** pull the latest frontend fix, restart Metro with `-c`, and reload the dev client so it picks up the corrected JS bundle. Unsupported roles like `text` on generic views and `accessibilityRole` directly on `Text` nodes were removed for Android compatibility.
+- **Android dev build crashes with `property 'accessibilityRole' ...` or `Invalid accessibility role value` on Fabric views (`RCTText`, `RCTView`, etc.):** pull the latest frontend fix, restart Metro with `-c`, and reload the dev client so it picks up the corrected JS bundle. Unsupported roles such as `text`, `status`, and `alert` were removed from shared helper props and screen-level nodes for Android compatibility; live-region announcements are used instead.
+- **Game screen stays stuck on `Submitting answer...` or `Submitting guess...` after resume/reconnect:** pull the latest frontend fix, restart Metro with `-c`, and reload the dev client. Game submit flows now rehydrate the authoritative `/current-question` snapshot if the realtime follow-up payload is missed during resume/reconnect churn.
 - **Resend key missing in logs:** verify root `.env` has `RESEND_API_KEY`, then restart backend
 - **Node API errors (`toReversed`)**: run `nvm use 24` before Expo commands
 
@@ -1342,44 +1343,55 @@ Expected:
 Steps:
 
 1. Device B accepts new invite.
-2. Both users answer all Round 1 questions.
+2. Device A answers several Round 1 questions faster than Device B.
+3. Device B continues at a different pace.
 
 Expected:
 
-- Question index advances correctly.
-- Waiting indicator appears until partner submits.
+- Each device advances through its own one-question-at-a-time flow without per-question partner blocking.
+- After a submission, the same player moves to their own next unanswered question automatically.
+- No player is forced to wait after every question.
 
 ### M-203 Round transition
 
 Steps:
 
-1. Complete Round 1.
+1. Let one player finish all Round 1 answers before the other.
+2. After the second player finishes Round 1, observe both devices.
 
 Expected:
 
-- Transition UI appears.
-- Round 2 prompt changes to partner-guessing context.
+- The early finisher sees a waiting/review state with their submitted Round 1 answers.
+- `ROUND2` does not unlock until both players finish Round 1.
+- Once both are done, Round 2 starts and the prompt changes to partner-guessing context.
 
 ### M-204 Round 2 feedback
 
 Steps:
 
-1. Submit guesses on both devices.
+1. Submit guesses on both devices at different speeds.
+2. Let one player finish all Round 2 guesses before the other.
 
 Expected:
 
-- Feedback overlay appears per guess.
-- Correct count updates accurately.
+- Each player continues through Round 2 independently, one question at a time.
+- Running correct-count updates accurately as each player advances.
+- The early finisher lands on a Round 2 waiting/review state showing their submitted guesses.
+- No per-guess correctness overlay blocks progression.
 
 ### M-205 Results
 
 Steps:
 
-1. Complete full game.
+1. Complete full game while both devices remain open.
+2. Repeat once more with one device leaving the app after finishing early, then let the other device finish last.
 
 Expected:
 
-- Results screen appears.
+- When both remain active, results appear live when the second player finishes Round 2.
+- When one player left earlier, the last finisher sees the results screen immediately.
+- The earlier finisher receives a results notification with winner and score summary.
+- Tapping the notification should open the results screen directly.
 - Scores are plausible and consistent.
 - `Play Again` and `Back to Dashboard` both work.
 
@@ -1633,25 +1645,27 @@ Run this matrix after the Phase A continuation patch.
   - tapping it opens `GameScreen` for the existing `sessionId`,
   - app does not create a new game session implicitly.
 
-### C-1303 Resume from middle of round (sequential contract)
+### C-1303 Resume from middle of round (independent round contract)
 
 - Start round 1 and answer 2-3 questions.
 - Kill app on `User A` device (or logout/login), then return.
 - Tap Continue Game.
 - Expected:
-  - app restores current question from server snapshot,
+  - app restores the next unanswered question for that specific user from server snapshot,
   - only one current question is shown (no full question list),
-  - progress continues from persisted index without skipping/repeating incorrectly.
+  - progress continues without skipping or replaying already-submitted questions.
 
 ### C-1304 Round unlock guards
 
-- Complete only one player's answer for a question and verify no round transition.
-- Complete both players for all round 1 questions.
+- Complete only one player's answer for a question and verify the other player is not blocked on that same question.
+- Let one player finish all Round 1 answers while the partner still has questions left.
 - Expected:
-  - `ROUND2` starts only after both players complete round 1.
-- In round 2, complete guesses with only one player on last question first.
+  - the early finisher reaches a waiting/review state,
+  - `ROUND2` starts only after both players complete Round 1.
+- In Round 2, complete guesses with only one player on the last question first.
 - Expected:
-  - final result is emitted only after both players complete round 2.
+  - the early finisher reaches a waiting/review state,
+  - final result is emitted only after both players complete Round 2.
 
 ### C-1305 Session expiry behavior
 

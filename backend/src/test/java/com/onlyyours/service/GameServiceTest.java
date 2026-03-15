@@ -1,6 +1,7 @@
 package com.onlyyours.service;
 
 import com.onlyyours.dto.GameInvitationDto;
+import com.onlyyours.dto.GameRoundStateDto;
 import com.onlyyours.dto.GameResultsDto;
 import com.onlyyours.dto.GuessResultDto;
 import com.onlyyours.dto.ActiveGameSessionDto;
@@ -233,26 +234,38 @@ class GameServiceTest {
     }
 
     @Test
-    void testAcceptInvitation_WrongStatus() {
+    void testAcceptInvitation_AlreadyAccepted_ReturnsCurrentQuestion() {
         GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
-        
-        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
-        session.setStatus(GameSession.GameStatus.ROUND1);
-        sessionRepo.save(session);
 
-        assertThrows(IllegalStateException.class, () ->
-            gameService.acceptInvitation(invitation.getSessionId(), user2.getId())
-        );
+        QuestionPayloadDto firstQuestion = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+        QuestionPayloadDto resumedQuestion = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+
+        assertEquals(firstQuestion.getSessionId(), resumedQuestion.getSessionId());
+        assertEquals(firstQuestion.getQuestionId(), resumedQuestion.getQuestionId());
+        assertEquals("ROUND1", resumedQuestion.getRound());
     }
 
     @Test
     void testDeclineInvitation_Success() {
         GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
 
-        gameService.declineInvitation(invitation.getSessionId(), user2.getId());
+        boolean declined = gameService.declineInvitation(invitation.getSessionId(), user2.getId());
 
         GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertTrue(declined);
         assertEquals(GameSession.GameStatus.DECLINED, session.getStatus());
+    }
+
+    @Test
+    void testDeclineInvitation_AfterAcceptance_IsNoOp() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+
+        boolean declined = gameService.declineInvitation(invitation.getSessionId(), user2.getId());
+
+        GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertFalse(declined);
+        assertEquals(GameSession.GameStatus.ROUND1, session.getStatus());
     }
 
     @Test
@@ -264,7 +277,9 @@ class GameServiceTest {
         Optional<QuestionPayloadDto> nextQuestion = gameService.submitAnswer(
                 invitation.getSessionId(), user1.getId(), firstQ.getQuestionId(), "A");
 
-        assertFalse(nextQuestion.isPresent(), "Should wait for partner");
+        assertTrue(nextQuestion.isPresent(), "Player should immediately advance to their own next unanswered question");
+        assertEquals(2, nextQuestion.get().getQuestionNumber());
+        assertEquals("ROUND1", nextQuestion.get().getRound());
 
         long count = answerRepo.countByGameSession_IdAndQuestion_Id(
                 invitation.getSessionId(), firstQ.getQuestionId());
@@ -282,12 +297,16 @@ class GameServiceTest {
         Optional<QuestionPayloadDto> afterSecond = gameService.submitAnswer(
                 invitation.getSessionId(), user2.getId(), firstQ.getQuestionId(), "B");
 
-        assertFalse(afterFirst.isPresent(), "First answer should wait");
-        assertTrue(afterSecond.isPresent(), "Second answer should return next question");
-        
-        QuestionPayloadDto nextQ = afterSecond.get();
-        assertEquals(2, nextQ.getQuestionNumber());
-        assertEquals(invitation.getSessionId(), nextQ.getSessionId());
+        assertTrue(afterFirst.isPresent(), "First player should move ahead independently");
+        assertTrue(afterSecond.isPresent(), "Second player should also move to their own next question");
+
+        QuestionPayloadDto nextQForFirstPlayer = afterFirst.get();
+        assertEquals(2, nextQForFirstPlayer.getQuestionNumber());
+        assertEquals(invitation.getSessionId(), nextQForFirstPlayer.getSessionId());
+
+        QuestionPayloadDto nextQForSecondPlayer = afterSecond.get();
+        assertEquals(2, nextQForSecondPlayer.getQuestionNumber());
+        assertEquals(invitation.getSessionId(), nextQForSecondPlayer.getSessionId());
 
         long count = answerRepo.countByGameSession_IdAndQuestion_Id(
                 invitation.getSessionId(), firstQ.getQuestionId());
@@ -315,8 +334,10 @@ class GameServiceTest {
         Optional<QuestionPayloadDto> finalResult = gameService.submitAnswer(
                 invitation.getSessionId(), user2.getId(), currentQ.getQuestionId(), "D");
 
-        assertFalse(finalResult.isPresent(), "Should be no next question after Round 1");
-        
+        assertTrue(finalResult.isPresent(), "Last finisher should immediately receive the first Round 2 question");
+        assertEquals("ROUND2", finalResult.get().getRound());
+        assertEquals(1, finalResult.get().getQuestionNumber());
+
         GameSession session = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
         assertEquals(GameSession.GameStatus.ROUND2, session.getStatus());
     }
@@ -331,8 +352,10 @@ class GameServiceTest {
         Optional<QuestionPayloadDto> duplicate = gameService.submitAnswer(
                 invitation.getSessionId(), user1.getId(), firstQ.getQuestionId(), "A");
 
-        assertFalse(duplicate.isPresent());
-        
+        assertTrue(duplicate.isPresent(), "Duplicate submit should return the same player's next unanswered question");
+        assertEquals(2, duplicate.get().getQuestionNumber());
+        assertEquals("ROUND1", duplicate.get().getRound());
+
         long count = answerRepo.countByGameSession_IdAndQuestion_Id(
                 invitation.getSessionId(), firstQ.getQuestionId());
         assertEquals(1, count, "Should only have one answer despite duplicate submission");
@@ -373,7 +396,7 @@ class GameServiceTest {
 
         GameSession updated = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
         assertEquals(GameSession.GameStatus.ROUND1, updated.getStatus());
-        assertEquals(1, updated.getCurrentQuestionIndex());
+        assertEquals(0, updated.getCurrentQuestionIndex(), "Shared question index is no longer the source of truth");
     }
 
     @Test
@@ -447,13 +470,15 @@ class GameServiceTest {
         GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
         QuestionPayloadDto first = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
 
-        Optional<QuestionPayloadDto> currentQuestion =
+        Optional<Object> currentQuestion =
                 gameService.getCurrentQuestionForUser(invitation.getSessionId(), user1.getId());
 
         assertTrue(currentQuestion.isPresent());
-        assertEquals(first.getQuestionId(), currentQuestion.get().getQuestionId());
-        assertEquals("ROUND1", currentQuestion.get().getRound());
-        assertEquals(1, currentQuestion.get().getQuestionNumber());
+        assertInstanceOf(QuestionPayloadDto.class, currentQuestion.get());
+        QuestionPayloadDto payload = (QuestionPayloadDto) currentQuestion.get();
+        assertEquals(first.getQuestionId(), payload.getQuestionId());
+        assertEquals("ROUND1", payload.getRound());
+        assertEquals(1, payload.getQuestionNumber());
     }
 
     @Test
@@ -478,12 +503,44 @@ class GameServiceTest {
         user2Answer.setRound1Answer("B");
         answerRepo.save(user2Answer);
 
-        Optional<QuestionPayloadDto> recovered =
+        Optional<Object> recovered =
                 gameService.getCurrentQuestionForUser(invitation.getSessionId(), user1.getId());
 
         assertTrue(recovered.isPresent());
-        assertEquals("ROUND1", recovered.get().getRound());
-        assertEquals(2, recovered.get().getQuestionNumber());
+        assertInstanceOf(QuestionPayloadDto.class, recovered.get());
+        QuestionPayloadDto payload = (QuestionPayloadDto) recovered.get();
+        assertEquals("ROUND1", payload.getRound());
+        assertEquals(2, payload.getQuestionNumber());
+    }
+
+    @Test
+    void testGetCurrentQuestionForUser_WhenPlayerFinishesRound1Early_ReturnsWaitingReviewState() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        QuestionPayloadDto currentQuestion = gameService.acceptInvitation(invitation.getSessionId(), user2.getId());
+
+        for (int i = 0; i < 8; i++) {
+            Optional<QuestionPayloadDto> nextQuestion = gameService.submitAnswer(
+                    invitation.getSessionId(),
+                    user1.getId(),
+                    currentQuestion.getQuestionId(),
+                    "A"
+            );
+            if (nextQuestion.isPresent()) {
+                currentQuestion = nextQuestion.get();
+            }
+        }
+
+        Optional<Object> currentState =
+                gameService.getCurrentQuestionForUser(invitation.getSessionId(), user1.getId());
+
+        assertTrue(currentState.isPresent());
+        assertInstanceOf(GameRoundStateDto.class, currentState.get());
+        GameRoundStateDto roundState = (GameRoundStateDto) currentState.get();
+        assertEquals("ROUND1", roundState.getRound());
+        assertEquals("WAITING_FOR_PARTNER", roundState.getStatus());
+        assertEquals(8, roundState.getCompletedCount());
+        assertEquals(8, roundState.getReviewItems().size());
+        assertEquals("A", roundState.getReviewItems().get(0).getSubmittedValue());
     }
 
     @Test
@@ -662,6 +719,48 @@ class GameServiceTest {
 
         assertEquals(first.isCorrect(), duplicate.isCorrect());
         assertEquals("B", duplicate.getYourGuess());
+    }
+
+    @Test
+    void testResolveCurrentStateAfterGuessSubmission_CompletesGameOnFinalGuess() {
+        GameInvitationDto invitation = gameService.createInvitation(user1.getId(), category.getId());
+        playRound1ToCompletion(invitation.getSessionId());
+
+        QuestionPayloadDto user1Current = gameService.getFirstRound2Question(invitation.getSessionId());
+        QuestionPayloadDto user2Current = user1Current;
+        Optional<Object> user1View = Optional.empty();
+        Optional<Object> user2View = Optional.empty();
+
+        for (int i = 0; i < 8; i++) {
+            gameService.submitGuess(invitation.getSessionId(), user1.getId(), user1Current.getQuestionId(), "B");
+            user1View = gameService.resolveCurrentStateAfterGuessSubmission(
+                    invitation.getSessionId(),
+                    user1.getId()
+            );
+
+            gameService.submitGuess(invitation.getSessionId(), user2.getId(), user2Current.getQuestionId(), "A");
+            user2View = gameService.resolveCurrentStateAfterGuessSubmission(
+                    invitation.getSessionId(),
+                    user2.getId()
+            );
+
+            if (i < 7) {
+                assertTrue(user1View.isPresent());
+                assertTrue(user2View.isPresent());
+                assertInstanceOf(QuestionPayloadDto.class, user1View.get());
+                assertInstanceOf(QuestionPayloadDto.class, user2View.get());
+                user1Current = (QuestionPayloadDto) user1View.get();
+                user2Current = (QuestionPayloadDto) user2View.get();
+            }
+        }
+
+        assertTrue(user1View.isPresent());
+        assertInstanceOf(GameRoundStateDto.class, user1View.get());
+        assertTrue(user2View.isPresent());
+        assertInstanceOf(GameResultsDto.class, user2View.get());
+
+        GameSession completedSession = sessionRepo.findById(invitation.getSessionId()).orElseThrow();
+        assertEquals(GameSession.GameStatus.COMPLETED, completedSession.getStatus());
     }
 
     @Test
