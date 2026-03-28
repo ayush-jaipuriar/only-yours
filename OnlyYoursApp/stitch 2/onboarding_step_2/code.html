@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Onboarding - Step 2: Play Round-by-Round</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              colors: {
+                "surface-bright": "#3c364b",
+                "on-error": "#690005",
+                "on-error-container": "#ffdad6",
+                "surface-container-low": "#1e192c",
+                "on-secondary-container": "#ff96b1",
+                "on-primary": "#670024",
+                "inverse-on-surface": "#332d42",
+                "tertiary-fixed-dim": "#e8bacb",
+                "on-background": "#e8def9",
+                "inverse-surface": "#e8def9",
+                "on-tertiary": "#462734",
+                "on-surface-variant": "#e4bdc1",
+                "on-secondary-fixed-variant": "#8c0d42",
+                "surface-variant": "#373246",
+                "primary": "#ffb2bd",
+                "on-tertiary-fixed": "#2e131f",
+                "error": "#ffb4ab",
+                "error-container": "#93000a",
+                "on-tertiary-fixed-variant": "#5e3d4b",
+                "on-primary-fixed": "#400014",
+                "surface": "#151023",
+                "on-surface": "#e8def9",
+                "surface-dim": "#151023",
+                "surface-container-highest": "#373246",
+                "surface-container-high": "#2c273b",
+                "secondary-fixed-dim": "#ffb1c3",
+                "secondary": "#ffb1c3",
+                "on-secondary-fixed": "#3f0019",
+                "outline-variant": "#5c3f43",
+                "on-primary-container": "#5a001f",
+                "on-secondary": "#66002d",
+                "tertiary": "#e8bacb",
+                "tertiary-container": "#af8595",
+                "primary-fixed-dim": "#ffb2bd",
+                "surface-tint": "#ffb2bd",
+                "secondary-fixed": "#ffd9e0",
+                "on-primary-fixed-variant": "#900036",
+                "secondary-container": "#8c0d42",
+                "inverse-primary": "#bd004a",
+                "tertiary-fixed": "#ffd8e6",
+                "background": "#151023",
+                "surface-container": "#221d30",
+                "primary-container": "#ff4e7b",
+                "primary-fixed": "#ffd9dd",
+                "on-tertiary-container": "#3e212d",
+                "surface-container-lowest": "#100b1e",
+                "outline": "#ab888c"
+              },
+              fontFamily: {
+                "headline": ["Newsreader", "serif"],
+                "body": ["Manrope", "sans-serif"],
+                "label": ["Manrope", "sans-serif"]
+              },
+              borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+            },
+          },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-bar {
+            box-shadow: 0px 0px 8px rgba(255, 78, 123, 0.6);
+        }
+        .cinematic-gradient {
+            background: radial-gradient(60% 60% at 50% 50%, rgba(255, 46, 110, 0.12) 0%, rgba(21, 16, 35, 0) 100%);
+        }
+        .glass-card {
+            background: rgba(34, 29, 48, 0.6);
+            backdrop-filter: blur(20px);
+        }
+        .btn-primary-glow {
+            background: linear-gradient(135deg, #FF3B78 0%, #FF2E6E 100%);
+            box-shadow: 0px 20px 40px rgba(255, 46, 110, 0.15);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col overflow-hidden">
+<!-- Top Navigation (Contextually Hidden/Simplified for Onboarding) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-20 bg-gradient-to-b from-surface to-transparent">
+<div class="text-2xl font-headline italic tracking-tight text-[#FFF7F6]">Only Yours</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-label font-medium uppercase tracking-[0.2em] text-secondary/60">Step</span>
+<span class="text-lg font-headline italic text-primary">02</span>
+<span class="text-xs font-label font-medium uppercase tracking-[0.2em] text-secondary/60">/ 03</span>
+</div>
+</header>
+<main class="flex-grow flex flex-col items-center justify-center px-8 relative">
+<!-- Cinematic Background Texture -->
+<div class="absolute inset-0 cinematic-gradient pointer-events-none"></div>
+<!-- Progress Bar Section -->
+<div class="w-full max-w-xs mb-12">
+<div class="h-[2px] w-full bg-surface-container-highest/40 rounded-full relative overflow-hidden">
+<!-- 2 of 3 steps = 66% -->
+<div class="absolute top-0 left-0 h-full w-2/3 bg-primary-container glow-bar rounded-full"></div>
+</div>
+</div>
+<!-- Hero Visual: Cinematic Asymmetric Card Stack -->
+<div class="relative w-full max-w-md aspect-[4/3] mb-12 flex justify-center items-center">
+<!-- Decorative Glow -->
+<div class="absolute w-64 h-64 bg-primary/10 blur-[80px] rounded-full"></div>
+<!-- Interlocking Cards Visual -->
+<div class="relative w-full h-full flex items-center justify-center">
+<!-- Background Card -->
+<div class="absolute w-48 h-64 glass-card rounded-xl border border-outline-variant/10 -rotate-12 translate-x-[-20%] opacity-40 flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant/30">favorite</span>
+</div>
+<!-- Secondary Card -->
+<div class="absolute w-48 h-64 glass-card rounded-xl border border-outline-variant/10 rotate-6 translate-x-[20%] opacity-60 flex items-center justify-center">
+<span class="material-symbols-outlined text-4xl text-on-surface-variant/40">auto_awesome</span>
+</div>
+<!-- Primary Active Card -->
+<div class="z-10 w-52 h-72 surface-container-high rounded-[1.5rem] shadow-[0px_20px_40px_rgba(255,46,110,0.08)] flex flex-col items-center justify-center p-6 border border-outline-variant/15">
+<div class="w-full h-full rounded-lg overflow-hidden bg-surface-dim mb-4">
+<img alt="Intimate connection" class="w-full h-full object-cover opacity-80" data-alt="Close-up of two people's hands gently touching on a dark wooden table, soft warm candlelight, intimate romantic atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCy_zvNoTkWm4ubnR3mdp69Qpb_lK0Cobsjwn0hx_fdIOQ6Ru3YP6e27he3t3NniRgmf_Et1n4k2F8Awwsg-P4N9j9na6RMPtXUyh2ZCzZOkJE4uP3MUiFVl10e4q_cmyC8v3uX5pzP6sOLtNHoMfGroZmbR1qO8FQauu0EiLYhDGy9tYnsHRtBY8Trkqp8OuphUs21liNOGtEL2o_2h4kyiRq9MAA7nmOaOBIrMc4WeJbuuI7718sHvsp4OBSXTDFrynUAGATgAXA"/>
+</div>
+<div class="space-y-2 text-center">
+<div class="h-1.5 w-12 bg-primary/30 rounded-full mx-auto"></div>
+<div class="h-1.5 w-20 bg-primary/20 rounded-full mx-auto"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Content Section -->
+<div class="text-center max-w-sm space-y-6 z-20">
+<h1 class="text-4xl md:text-5xl font-headline italic text-on-surface leading-tight">
+                Discover Each Other
+            </h1>
+<p class="text-on-surface-variant font-body text-lg leading-relaxed px-4">
+                Play intimate rounds designed to spark deep conversation. Guess their answers and earn milestones as you grow closer.
+            </p>
+</div>
+</main>
+<!-- Footer Actions -->
+<footer class="w-full px-8 pb-12 pt-4 flex flex-col items-center gap-6 z-50">
+<button class="w-full max-w-xs h-16 rounded-full btn-primary-glow flex items-center justify-center gap-3 active:scale-95 transition-transform duration-150">
+<span class="font-label font-bold text-on-primary text-lg tracking-wide">Next</span>
+<span class="material-symbols-outlined text-on-primary">arrow_forward</span>
+</button>
+<button class="font-label font-medium text-secondary-fixed-dim/60 hover:text-secondary tracking-widest uppercase text-xs transition-colors py-2 active:scale-95 duration-150">
+            Skip for now
+        </button>
+</footer>
+<!-- Bottom Navigation Suppressed for Onboarding as per "Semantic Shell Mandate" -->
+</body></html>

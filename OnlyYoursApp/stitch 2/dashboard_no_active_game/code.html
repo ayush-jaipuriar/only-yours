@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Only Yours - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #151023;
+            color: #e8def9;
+            font-family: 'Manrope', sans-serif;
+        }
+        .serif-italic {
+            font-family: 'Newsreader', serif;
+            font-style: italic;
+        }
+        .hero-glow {
+            background: radial-gradient(circle at center, rgba(255, 46, 110, 0.15) 0%, rgba(21, 16, 35, 0) 70%);
+        }
+        .glass-panel {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-32">
+<!-- Top App Bar -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full no-border shadow-none bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<button class="text-[#FFF7F6] hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/20 hover:opacity-80 transition-opacity active:scale-95 active:duration-150 cursor-pointer">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a young man with a warm smile, Julian, in soft cinematic indoor lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgJ7SX_YQNnKxhEzj7B3Zvhk5tKSmNg13HnfdqZPAF6PTs1qmHbZsu7w3Q-x2VqrqzFSHyBMmUHz2x-tM3OrI0g2IGn37tkP9LFi88fH3sjAHGgneI01XrCYCL8UG96lYDFo7vkkiS7cziOGPqsgTWSJpf-WXV7IklMOfiwbsAt10zGSMhWAAHwwWZvLWuoh-Tqh4xs8xA_BFplGuFSsx3ocNxgomT_t9txPcpEFtCIaTva-dYmAUUf5xsLGzDp7BTu9Gada_VhXM"/>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto space-y-10 relative">
+<!-- Ambient Background Glow -->
+<div class="fixed inset-0 hero-glow pointer-events-none z-0"></div>
+<!-- Greeting Section -->
+<section class="relative z-10 space-y-2">
+<h2 class="text-4xl font-headline font-light tracking-tight text-on-surface">
+                Hello, <span class="serif-italic">Julian.</span>
+</h2>
+<div class="flex items-center gap-3 py-2 px-4 bg-surface-container-high/40 rounded-full w-fit backdrop-blur-sm">
+<div class="flex -space-x-2">
+<img alt="Julian" class="w-6 h-6 rounded-full border border-surface" data-alt="Julian's avatar thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBAyRsejVpBxgDzU_NQ1mGjBXU97AR8xWmdSRCFsXpmWTs7Us_xVTmHT1w8PJx8HRoBI_gq00ujdtXwK3-zb9J30eprklGB_hD3DDCZN0_1QNTQfWPMj0xTN8OF9UZDjQAAa4wEGAfhpErAKkVytrFxY7sVF7MGYt7ullfK6pT-TgSxa5PiKG2ZjcO83NS2Y7GQGnSB28D1zUVXyq1ereY8AckKBYluRNjWxT1pHKKtnLdxGtDYBZEhY478ug26Tn3b8QMurtASAQE"/>
+<img alt="Elena" class="w-6 h-6 rounded-full border border-surface" data-alt="Elena's avatar thumbnail" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAbTM1rrnAuuW2hCM7DLmnFsLJ4b27j26fG2KgzII1H9zHW_YlTEFcxo3ZpbU82d0_y0u36RSSqx_DAzlIquYhaFtqLKZtJuvbQ-LsK2UKbQvs8xXNex8v587MZ_zJLWTPq8Xcg4MtEAmxsluAqQDH-aUYLaAkaTc1bQ--YDIfq27ve5mnWjZVNUWMN1zBtpYCzeHo0QfFjkaz0EGqGUTFMtkFVFiy5bUd1WjmFcgd1wG7UY2gLfSDupXlAd-077XgGi9fWTazOSV4"/>
+</div>
+<p class="text-secondary font-medium text-sm tracking-wide">Connected with Elena</p>
+<span class="w-2 h-2 bg-primary-container rounded-full animate-pulse"></span>
+</div>
+</section>
+<!-- Hero Feature Card -->
+<section class="relative z-10 group">
+<div class="relative overflow-hidden rounded-[1.5rem] bg-surface-container-high border-none shadow-[0px_20px_40px_rgba(255,46,110,0.08)]">
+<div class="absolute inset-0 opacity-40 bg-gradient-to-tr from-surface-container-highest to-transparent"></div>
+<img alt="Start a New Ritual" class="w-full h-64 object-cover mix-blend-soft-light opacity-60" data-alt="Abstract intimate shot of two hands gently holding each other on a velvet surface with deep moody lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRXXjfbec5NoaP0964XWo-kGO-vJIoNhTTSfkqrArHkHHDt0d0GWiPng0JLmrKFn_MjbCdEGXNa3fLG8EzBhm8Ft2Zg5Sr_lBWGqx1cIBv4f0uVAb4MEgCaXea4tyi5KpDdsCo3WNHMT5cnHP2AX-ujAjQvGJbHY7-DyGVzg-Y1seVAftgoxlQvYToCL0b9fvWK2SyjLGsXRu5rSSreOnTMKmTd5W3mPR1jE5DQHJP1n_9wCZ64WE_34kL13b-KoSkZmYT2vHx2dE"/>
+<div class="absolute inset-0 p-8 flex flex-col justify-end space-y-4">
+<h3 class="text-3xl font-headline italic text-on-surface">Start a New Ritual</h3>
+<p class="text-on-surface-variant font-body leading-relaxed max-w-xs">
+                        Deepen your connection with tonight's curated exploration. No active game currently in progress.
+                    </p>
+<button class="bg-[#FF4E7B] text-on-primary font-body font-bold py-4 px-8 rounded-full w-full sm:w-fit transition-all duration-300 hover:scale-[1.02] active:scale-95 shadow-[0px_4px_15px_rgba(255,78,123,0.3)] bg-gradient-to-br from-[#FF4E7B] to-[#FF2E6E]">
+                        Start New Game
+                    </button>
+</div>
+</div>
+</section>
+<!-- Secondary Navigation Grid -->
+<section class="relative z-10 grid grid-cols-2 gap-4">
+<!-- Custom Questions -->
+<div class="p-6 rounded-[1.5rem] bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-tertiary-container/20 flex items-center justify-center text-tertiary mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+</div>
+<h4 class="font-headline italic text-xl text-on-surface mb-1">Custom Questions</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">Personalize your journey with your own prompts.</p>
+</div>
+<!-- Relationship History -->
+<div class="p-6 rounded-[1.5rem] bg-surface-container hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="w-12 h-12 rounded-xl bg-secondary-container/20 flex items-center justify-center text-secondary mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+</div>
+<h4 class="font-headline italic text-xl text-on-surface mb-1">History</h4>
+<p class="text-xs text-on-surface-variant leading-relaxed">Revisit the milestones of your shared story.</p>
+</div>
+</section>
+<!-- Relationship Progress Meta -->
+<section class="relative z-10 p-6 rounded-[1.5rem] bg-surface-container-low/50 border border-outline-variant/10">
+<div class="flex justify-between items-center mb-6">
+<div class="space-y-1">
+<p class="text-[10px] uppercase tracking-widest text-secondary font-bold">Relationship Progression</p>
+<p class="text-on-surface font-headline italic text-lg">Foundation Stage</p>
+</div>
+<div class="text-right">
+<p class="text-[10px] uppercase tracking-widest text-on-surface-variant">XP Gained</p>
+<p class="text-primary-container font-body font-bold">2,450</p>
+</div>
+</div>
+<div class="w-full h-1.5 bg-surface-container-highest/40 rounded-full overflow-hidden">
+<div class="h-full bg-primary-container shadow-[0px_0px_10px_rgba(255,78,123,0.5)] w-[65%] rounded-full"></div>
+</div>
+<p class="text-[10px] text-center mt-3 text-on-surface-variant/60">1,050 XP until Intimacy Level 4</p>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#221d30]/80 backdrop-blur-lg z-50 rounded-t-[1.5rem] shadow-[0px_-10px_30px_rgba(255,46,110,0.05)]">
+<!-- Dashboard (Active) -->
+<a class="flex flex-col items-center justify-center text-[#FF4E7B] after:content-[''] after:w-1 after:h-1 after:bg-[#FF4E7B] after:rounded-full after:mt-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard">dashboard</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">Dashboard</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">History</span>
+</a>
+<!-- Custom -->
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">Custom</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

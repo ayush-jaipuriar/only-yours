@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "1.5rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .bg-atmospheric {
+        background: radial-gradient(circle at 50% -20%, rgba(255, 46, 110, 0.12) 0%, transparent 50%),
+                    radial-gradient(circle at 0% 100%, rgba(255, 177, 195, 0.05) 0%, transparent 40%);
+      }
+      .input-glow:focus-within {
+        box-shadow: 0 0 15px rgba(255, 78, 123, 0.1);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col antialiased">
+<!-- Cinematic Background Visual -->
+<div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute inset-0 bg-surface"></div>
+<div class="absolute inset-0 bg-atmospheric"></div>
+<div class="absolute top-1/4 -right-20 w-96 h-96 bg-primary-container opacity-[0.03] blur-[120px] rounded-full"></div>
+<div class="absolute bottom-1/4 -left-20 w-80 h-80 bg-secondary opacity-[0.02] blur-[100px] rounded-full"></div>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-10 flex-grow flex items-center justify-center px-6 py-12">
+<div class="w-full max-w-md">
+<!-- Branding/Identity -->
+<div class="text-center mb-12">
+<span class="text-primary text-sm font-label tracking-[0.2em] uppercase mb-4 block">Only Yours</span>
+<h1 class="font-headline text-5xl md:text-6xl text-on-surface italic font-medium tracking-tight mb-2">Welcome Back</h1>
+<p class="text-on-surface-variant font-body text-lg opacity-80">Enter your sanctuary</p>
+</div>
+<!-- Login Form -->
+<div class="space-y-6">
+<!-- Email Input -->
+<div class="group">
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant mb-2 ml-1 opacity-70 group-focus-within:text-primary transition-colors" for="email">Email Address</label>
+<div class="relative flex items-center bg-surface-container-high rounded-xl px-4 h-14 input-glow transition-all duration-300">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 group-focus-within:text-primary transition-colors">mail</span>
+<input class="bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline-variant w-full font-body" id="email" placeholder="name@example.com" type="email"/>
+</div>
+</div>
+<!-- Password Input -->
+<div class="group">
+<div class="flex justify-between items-center mb-2 ml-1">
+<label class="block text-xs font-label uppercase tracking-widest text-on-surface-variant opacity-70 group-focus-within:text-primary transition-colors" for="password">Password</label>
+<a class="text-[11px] font-label uppercase tracking-widest text-secondary hover:text-primary transition-colors" href="#">Forgot Password?</a>
+</div>
+<div class="relative flex items-center bg-surface-container-high rounded-xl px-4 h-14 input-glow transition-all duration-300">
+<span class="material-symbols-outlined text-on-surface-variant mr-3 group-focus-within:text-primary transition-colors">lock</span>
+<input class="bg-transparent border-none focus:ring-0 text-on-surface placeholder:text-outline-variant w-full font-body" id="password" placeholder="••••••••" type="password"/>
+<button class="material-symbols-outlined text-on-surface-variant hover:text-on-surface transition-colors">visibility</button>
+</div>
+</div>
+<!-- Remember Me -->
+<div class="flex items-center px-1">
+<input class="w-4 h-4 rounded border-outline-variant bg-surface-container-high text-primary focus:ring-primary focus:ring-offset-surface" id="remember" type="checkbox"/>
+<label class="ml-3 text-sm text-on-surface-variant" for="remember">Keep me signed in</label>
+</div>
+<!-- Primary CTA -->
+<div class="pt-4">
+<button class="w-full h-14 bg-gradient-to-r from-primary-container to-[#FF2E6E] text-on-primary font-label font-bold uppercase tracking-widest rounded-xl shadow-[0px_10px_30px_rgba(255,46,110,0.15)] hover:shadow-[0px_15px_40px_rgba(255,46,110,0.25)] hover:scale-[1.01] active:scale-[0.98] transition-all duration-300">
+                        Sign In
+                    </button>
+</div>
+<!-- Divider -->
+<div class="flex items-center py-4">
+<div class="flex-grow h-[1px] bg-outline-variant opacity-20"></div>
+<span class="px-4 text-[10px] font-label uppercase tracking-[0.3em] text-outline-variant">OR</span>
+<div class="flex-grow h-[1px] bg-outline-variant opacity-20"></div>
+</div>
+<!-- Social/Alternative -->
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center h-12 bg-surface-container rounded-xl border border-outline-variant/10 hover:bg-surface-container-high transition-colors group">
+<img alt="Google Logo" class="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity" data-alt="Official Google icon logo in vibrant colors on a dark luxury interface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuHWmcDuQ9HJ_f2g8yIaupUKFZnFOBv2bHCK4ihp9ZCWE-9Hzg_aanvBUK36DcN2PEaxMlUbaRRYVRk4eDDdgrax3kXztQcDEBUohZ3me7Jwda8oAl9-12OHRMqgEQApSE4TtAuAlaHgZaw_7LYwKjVmryzgl4Gry0QidZxbxhzlgSdYq05_geSvVzuWoFCTNCQOrhnyc6jjgiDxj2lCixSa2xUSr_Zh7j_dYsSkTiDUb1H_cz385TwQ4gRtvgoYxDCZJ30NK1Bk8"/>
+</button>
+<button class="flex items-center justify-center h-12 bg-surface-container rounded-xl border border-outline-variant/10 hover:bg-surface-container-high transition-colors group">
+<span class="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors" style="font-variation-settings: 'FILL' 1;">ios</span>
+</button>
+</div>
+</div>
+<!-- Footer Link -->
+<div class="mt-12 text-center">
+<p class="text-on-surface-variant font-body">
+                    Don't have an account? 
+                    <a class="text-secondary font-semibold hover:text-primary-container transition-colors ml-1" href="#">Sign Up</a>
+</p>
+</div>
+</div>
+</main>
+<!-- Decorative Bottom Gradient -->
+<footer class="relative z-10 p-8 text-center">
+<div class="flex justify-center space-x-6">
+<a class="text-[10px] font-label uppercase tracking-widest text-outline-variant hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
+<a class="text-[10px] font-label uppercase tracking-widest text-outline-variant hover:text-on-surface transition-colors" href="#">Terms of Service</a>
+</div>
+</footer>
+<!-- Cinematic Background Image Overlay -->
+<div class="fixed inset-0 z-[-1] opacity-20 mix-blend-overlay">
+<div class="w-full h-full bg-cover bg-center" data-alt="Subtle soft-focus bokeh of city lights at night with deep violet and magenta tones, editorial luxe aesthetic" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDQMdmhT2K8pH-0qKdWbxfJUDEHybR-DjeMqlhhYKmK4wo-lfXNo82Sa8HqwmsRgHphVugLmkNBWMmNjJ-4RpPfoGY7oAdjfJjJ_kTPYEaNuNO30LbN44o3s4mErMww8X2qRX-4RCY5rdXrvXcdQNzQ_vukYnU4L3uycLus1gZl1vLjgTuiGqikcriKipnAqMmTrLymTiwFJLCrzf4uwnq-MWNlcPDnpnKBxh2_LU2U-6iB26Hh_zjiaHjJA_QnjmUrOWRcRX7VkSY')"></div>
+</div>
+</body></html>

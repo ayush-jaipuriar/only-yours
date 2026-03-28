@@ -67,6 +67,13 @@ This plan was approved and executed. The remaining open item is the manual two-d
   - Round 1 answers resolve through the Round 1 follow-up path instead of the Round 2 guess path
   - Round 2 guesses resolve through the explicit post-guess transition path so final results are emitted reliably
 
+### Post-Push Hotfix - Mar 19, 2026
+
+- Fixed backend startup failure in `backend/src/main/resources/db/migration/V14__Gameplay_Stabilization.sql`.
+- Root cause: PostgreSQL does not support `MIN(uuid)`, so Flyway failed while trying to choose a keeper row during duplicate-answer cleanup.
+- Resolution: replaced the UUID aggregation approach with a PostgreSQL-safe `DISTINCT ON (...) ORDER BY id` keeper selection plus windowed value merge before duplicate deletion.
+- Validation: local `./gradlew bootRun` now completes application startup successfully after Flyway runs.
+
 ---
 
 ## 1) Why This Plan Exists

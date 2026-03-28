@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glow-subtle {
+            box-shadow: 0px 20px 40px rgba(255, 46, 110, 0.08);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #FF3B78 0%, #FF2E6E 100%);
+        }
+        .bg-mesh-glow {
+            background: radial-gradient(circle at 50% 40%, rgba(255, 46, 110, 0.12) 0%, rgba(21, 16, 35, 0) 60%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface font-body text-on-surface selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col items-center">
+<!-- Top Navigation Shell (Linear/Transactional Context - No Bottom Nav) -->
+<nav class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-[#FFF7F6] hover:opacity-80 transition-opacity cursor-pointer">close</span>
+<div class="flex flex-col">
+<span class="font-label text-[10px] uppercase tracking-widest text-[#FFB1C3]/60 leading-none">Question 4 of 10</span>
+<span class="font-headline italic text-sm text-[#FFF7F6]">Round 1: You're Answering</span>
+</div>
+</div>
+<div class="w-8 h-8 rounded-full border border-outline-variant/30 overflow-hidden">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close up of a stylish young person looking into the distance with warm cinematic lighting and a dark plum background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDmBp3IOygjhqHgHsNXVvX_gE6uL1gIt8RszhPTVWpdGBQW-3ghoTeDY1e8ZQItCbYmzrV5Y0CjL82WZfDc4z0uBkYEFXOpBaYUKsWo-CWH0xS0ZG7z5yGek3VwRLN8tjb-5HQOmfQxOztu_AcyrJdMxTs5DbInjH0oW9ZDThnGfQXyfGiE2eTz0tmK2nTLhlMVSpfxlX8AxA53XYeb3pLObed_Xr7vQRsN-DYUmIF8AxsE44hXpjuJHBG7RO3xBOvUDU_a8cM7OHE"/>
+</div>
+</nav>
+<!-- Main Question Canvas -->
+<main class="flex-1 w-full max-w-2xl px-6 pt-24 pb-32 flex flex-col items-center bg-mesh-glow">
+<!-- Progress Indicator -->
+<div class="w-full h-1 bg-surface-container-highest/40 rounded-full mb-12 overflow-hidden">
+<div class="h-full w-[40%] primary-gradient shadow-[0_0_8px_rgba(255,78,123,0.6)]"></div>
+</div>
+<!-- Question Card -->
+<div class="w-full text-center mb-12">
+<h1 class="font-headline text-3xl md:text-4xl leading-snug text-[#FFF7F6] px-4">
+                "What is your favorite way to unwind after a long day?"
+            </h1>
+</div>
+<!-- Options Bento Grid-ish Layout -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+<!-- Option A (Standard) -->
+<button class="group relative flex items-center p-6 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 text-left active:scale-95 border border-transparent">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary font-bold mr-4 group-hover:bg-surface-bright transition-colors">A</div>
+<span class="text-on-surface font-medium text-lg">Curling up with a book</span>
+</button>
+<!-- Option B (Selected State) -->
+<button class="group relative flex items-center p-6 rounded-xl bg-surface-container-high transition-all duration-200 text-left scale-[1.02] border-2 border-primary-container glow-subtle">
+<div class="w-10 h-10 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container font-bold mr-4">B</div>
+<span class="text-on-surface font-semibold text-lg flex-1">A long, quiet walk outside</span>
+<span class="material-symbols-outlined text-primary-container" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</button>
+<!-- Option C (Standard) -->
+<button class="group relative flex items-center p-6 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 text-left active:scale-95 border border-transparent">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary font-bold mr-4 group-hover:bg-surface-bright transition-colors">C</div>
+<span class="text-on-surface font-medium text-lg">Watching a favorite series</span>
+</button>
+<!-- Option D (Standard) -->
+<button class="group relative flex items-center p-6 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 text-left active:scale-95 border border-transparent">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary font-bold mr-4 group-hover:bg-surface-bright transition-colors">D</div>
+<span class="text-on-surface font-medium text-lg">Cooking a delicious meal</span>
+</button>
+</div>
+</main>
+<!-- Fixed Action Bar -->
+<div class="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-surface via-surface/90 to-transparent flex flex-col items-center">
+<button class="w-full max-w-md h-16 rounded-full primary-gradient flex items-center justify-center text-[#FFF7F6] font-bold text-lg tracking-wide shadow-lg shadow-primary-container/20 active:scale-[0.98] transition-transform">
+            Lock Selection
+        </button>
+<p class="mt-4 font-label text-[11px] uppercase tracking-[0.2em] text-[#FFB1C3]/40">Your partner will guess your answer in Round 2</p>
+</div>
+<!-- Background Cinematic Glow Elements -->
+<div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary-container/5 rounded-full blur-[120px] pointer-events-none z-[-1]"></div>
+<div class="fixed bottom-[10%] right-[-10%] w-[50%] h-[50%] bg-primary/5 rounded-full blur-[150px] pointer-events-none z-[-1]"></div>
+</body></html>

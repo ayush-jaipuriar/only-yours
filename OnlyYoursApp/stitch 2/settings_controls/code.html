@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings - Only Yours</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        body {
+            background-color: #151023;
+            color: #e8def9;
+            font-family: 'Manrope', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #373246;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface custom-scrollbar">
+<!-- TopAppBar Navigation Shell -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined text-[#FFF7F6]">arrow_back</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Settings</h1>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a young man with a friendly expression in soft, warm indoor lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZpbQyRkOx7DPGG3NaaTHI75BCb4qC9H43ldkFh5M3NB7jQhE5M_eFefgTCNGhHa-q8ftyr7qxfSL0qZmhb2ic_Nu-wOwZuHKP3Y-qYb1cvpMX5MZ_s-cv6IthLXfsNz35bAq5KOQeXvSpdu6M75v5NAcc4r5hboRpvRSZBiGPGSriLTCJlJYsN_GbiiRF1OYAEI1UAhp1S1eo5Q4L9FH_kuXT9mwnyNWfFh4AyMBlQky4C0xNrG1Ykx-4C1H1wb_dyia2g6sI8bo"/>
+</div>
+</header>
+<main class="pt-24 pb-12 px-6 max-w-2xl mx-auto space-y-10">
+<!-- Account Section -->
+<section class="space-y-4">
+<h2 class="font-headline italic text-xl text-on-surface/60 px-2">Account</h2>
+<div class="bg-surface-container rounded-xl overflow-hidden">
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary">person</span>
+<div>
+<p class="font-body font-medium">Profile Information</p>
+<p class="text-sm text-on-surface/50">Julian &amp; Sarah</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface/30 group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+<div class="h-px bg-outline-variant/10 mx-4"></div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-high transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary">mail</span>
+<div>
+<p class="font-body font-medium">Email Address</p>
+<p class="text-sm text-on-surface/50">j.smith@digital-sanctuary.com</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface/30 group-hover:text-primary transition-colors">chevron_right</span>
+</div>
+</div>
+</section>
+<!-- Appearance Section -->
+<section class="space-y-4">
+<h2 class="font-headline italic text-xl text-on-surface/60 px-2">Theme</h2>
+<div class="grid grid-cols-3 gap-3">
+<div class="bg-surface-container-high border-2 border-primary-container p-4 rounded-xl flex flex-col items-center gap-3 cursor-pointer">
+<div class="w-full aspect-video bg-surface rounded-lg border border-outline-variant/20 flex items-center justify-center">
+<div class="w-8 h-8 rounded-full bg-primary-container/20 border border-primary-container"></div>
+</div>
+<span class="font-label text-xs uppercase tracking-widest text-primary-container font-bold">Dark</span>
+</div>
+<div class="bg-surface-container p-4 rounded-xl flex flex-col items-center gap-3 cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-full aspect-video bg-white rounded-lg border border-outline-variant/20 flex items-center justify-center">
+<div class="w-8 h-2 bg-slate-200 rounded-full"></div>
+</div>
+<span class="font-label text-xs uppercase tracking-widest text-on-surface/50">Light</span>
+</div>
+<div class="bg-surface-container p-4 rounded-xl flex flex-col items-center gap-3 cursor-pointer hover:bg-surface-container-high transition-colors">
+<div class="w-full aspect-video bg-gradient-to-br from-surface to-white rounded-lg border border-outline-variant/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-on-surface/30">settings_brightness</span>
+</div>
+<span class="font-label text-xs uppercase tracking-widest text-on-surface/50">System</span>
+</div>
+</div>
+</section>
+<!-- Notifications Section -->
+<section class="space-y-4">
+<h2 class="font-headline italic text-xl text-on-surface/60 px-2">Notifications</h2>
+<div class="bg-surface-container rounded-xl p-2">
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary">notifications_active</span>
+<p class="font-body font-medium">Daily Reminders</p>
+</div>
+<button class="w-12 h-6 bg-primary-container rounded-full relative p-1 flex items-center justify-end">
+<div class="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</button>
+</div>
+<div class="h-px bg-outline-variant/10 mx-4"></div>
+<div class="flex items-center justify-between p-4">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary">favorite</span>
+<p class="font-body font-medium">Activity Milestones</p>
+</div>
+<button class="w-12 h-6 bg-primary-container rounded-full relative p-1 flex items-center justify-end">
+<div class="w-4 h-4 bg-white rounded-full shadow-sm"></div>
+</button>
+</div>
+<div class="h-px bg-outline-variant/10 mx-4"></div>
+<div class="flex items-center justify-between p-4 opacity-50">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary">vibration</span>
+<p class="font-body font-medium">Haptic Feedback</p>
+</div>
+<button class="w-12 h-6 bg-surface-container-highest rounded-full relative p-1 flex items-center justify-start">
+<div class="w-4 h-4 bg-on-surface/20 rounded-full shadow-sm"></div>
+</button>
+</div>
+</div>
+</section>
+<!-- Relationship Controls -->
+<section class="space-y-4 pt-6">
+<div class="flex items-baseline justify-between px-2">
+<h2 class="font-headline italic text-xl text-on-surface/60">Relationship Controls</h2>
+<span class="text-[10px] font-label uppercase tracking-widest text-primary-container">Secure Zone</span>
+</div>
+<div class="bg-surface-container rounded-xl overflow-hidden border border-outline-variant/10">
+<div class="p-6 space-y-4">
+<div class="flex items-center gap-4 mb-2">
+<div class="flex -space-x-3">
+<img alt="User 1" class="w-10 h-10 rounded-full border-2 border-surface-container object-cover" data-alt="Portrait of a young man" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVw88t14wmNEan7Ve-L5ztU6C-KmHGRMDkhepJ17y2jJ1PimCTRoudg_nCkwVX-6kzDgZcpjmsA2DKcU0ihqa7Qd8C0T6SGcW1ZG5UdbddeV_6OdWVy-UmjB7mhcMnl2XKt4iK-f4TEQVgQxiQWjiPHBTZKmVa-LISBw-6v4jWioS1EqMB6KjbROGNwcOFQow2N3ivd83pzOjSZvZkgyzEZk0vCibtv8GiTvDNdzGbI1E-ZSIa3rx4wcoulzLXTU3OyPH1oVQGp4I"/>
+<img alt="User 2" class="w-10 h-10 rounded-full border-2 border-surface-container object-cover" data-alt="Portrait of a young woman with a warm smile" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7xES21G6mOJHLjUgTdbq5udDBWvzBrX7mSsvK6lexP56fVwr92mnR_IpHHOV7_4IUb4ZoYBwNzyeElejCeYVI0CafKNp45yRwCxDv2jGflQ0FVteBu9MSSfzLyjiiKFdYVZmUm1ssOtpmeDeM94J4nCxdupEP_jI2qETaBObcqGC-67a1i8UUZiqJcDzYbwU-kj4kmqhDexvlCE8gOA0cUOMD-JUQ-vkIAACDwkiaQb_fvYFZ78aWyt4V501mZPREXC6FHq8EWGg"/>
+</div>
+<div>
+<p class="font-body font-bold text-on-surface">Julian &amp; Sarah</p>
+<p class="text-xs text-on-surface/40 uppercase tracking-tighter">Connected since Oct 2023</p>
+</div>
+</div>
+<p class="text-sm text-on-surface/60 leading-relaxed">
+                        Relationship data is end-to-end encrypted. Only you and your partner can access shared memories, milestones, and chat history.
+                    </p>
+<div class="pt-4 grid grid-cols-1 gap-3">
+<button class="flex items-center justify-between p-4 bg-surface-container-high rounded-xl hover:bg-surface-bright transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">lock_reset</span>
+<span class="font-body">Change Secret Key</span>
+</div>
+<span class="material-symbols-outlined text-on-surface/20 group-hover:text-primary transition-colors">arrow_forward</span>
+</button>
+<button class="flex items-center justify-between p-4 bg-surface-container-high rounded-xl hover:bg-surface-bright transition-colors group">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary">download</span>
+<span class="font-body">Export Shared Data</span>
+</div>
+<span class="material-symbols-outlined text-on-surface/20 group-hover:text-primary transition-colors">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Danger Zone / Unlink -->
+<div class="bg-error-container/10 p-6 border-t border-error/10">
+<div class="flex items-start gap-4 mb-4">
+<span class="material-symbols-outlined text-error mt-0.5">warning</span>
+<div>
+<p class="font-body font-bold text-error">Unlink Partner</p>
+<p class="text-xs text-on-surface/60 mt-1">This action will permanently disconnect your accounts. Shared history will be archived for 30 days before deletion.</p>
+</div>
+</div>
+<button class="w-full py-3 px-4 border border-error/30 text-error font-label text-xs uppercase tracking-widest font-bold rounded-xl hover:bg-error/10 transition-colors flex items-center justify-center gap-2">
+                        Begin Unlinking Process
+                    </button>
+</div>
+</div>
+</section>
+<!-- Footer Info -->
+<footer class="text-center pt-8 pb-12">
+<p class="font-headline italic text-lg text-on-surface/40 mb-1">Only Yours</p>
+<p class="font-label text-[10px] uppercase tracking-[0.2em] text-on-surface/20">Version 2.4.0 — Build 882</p>
+<div class="flex justify-center gap-6 mt-6">
+<a class="text-xs text-on-surface/40 hover:text-primary transition-colors" href="#">Privacy Policy</a>
+<a class="text-xs text-on-surface/40 hover:text-primary transition-colors" href="#">Terms of Service</a>
+</div>
+</footer>
+</main>
+<!-- Background Decorative Glows -->
+<div class="fixed top-[-10%] left-[-10%] w-[50%] h-[50%] bg-primary-container/5 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+<div class="fixed bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-secondary/5 blur-[120px] rounded-full -z-10 pointer-events-none"></div>
+</body></html>

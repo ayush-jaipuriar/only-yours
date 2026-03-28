@@ -1249,6 +1249,7 @@ The React Native upgrade has been successfully completed:
 - [x] **Updated `MANUAL_TESTING_GUIDE_SPRINT6.md` Quick Start to the Wi-Fi-safe process:**
     - [x] Added `LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)` runtime resolution.
     - [x] Added `.env` rewrite step to keep `EXPO_PUBLIC_API_URL=http://$LAN_IP:8080` aligned with current Wi-Fi DHCP assignment.
+    - [x] Added matching `.env.local` rewrite guidance when that override file exists, because Expo loads `.env.local` before `.env`.
     - [x] Added `REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c` as the default Metro startup command.
     - [x] **Why this change:** physical phones cannot use loopback (`127.0.0.1`) to reach laptop-hosted Metro/backend; explicit LAN host advertisement removes a recurring setup failure.
 
@@ -1262,6 +1263,7 @@ The React Native upgrade has been successfully completed:
 - [x] **Removed stale machine-specific assumptions in the guide:**
     - [x] Replaced hardcoded sample check (`192.168.1.101`) with dynamic LAN-IP checks.
     - [x] Replaced `rg`-based env check with portable `grep` command in setup checks.
+    - [x] Added explicit warning that stale `OnlyYoursExpo/.env.local` can silently override `OnlyYoursExpo/.env` and cause `No connection` errors even when backend and Metro are healthy.
     - [x] **Why this change:** LAN IP changes between sessions and `rg` is not guaranteed in every local shell environment.
 
 - [ ] **Next manual validation step (outside this doc-only iteration):**

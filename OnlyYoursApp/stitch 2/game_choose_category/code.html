@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Only Yours - Category Selection</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .serif-italic { font-family: 'Newsreader', serif; font-style: italic; }
+        .bg-velvet-gradient {
+            background: radial-gradient(circle at top right, rgba(255, 46, 110, 0.12) 0%, transparent 70%),
+                        radial-gradient(circle at bottom left, rgba(140, 13, 66, 0.08) 0%, transparent 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 min-h-screen">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full shadow-none bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<button class="text-[#FFF7F6] hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined">menu</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/30 active:scale-95 transition-transform">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="close-up portrait of a woman with a warm smile and soft lighting against a dark elegant background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCfCBsQYjqXSnsnxQrksTgi4X86neyRC6XqOvZ4aFPDzBTs5l5ovXrMjp-Yloi3XmJpryRr9aHSKNfLVPHKBAJiAmS5aljSxTJpy8Kyl7uNLBUBv7FeWo-h7PNDOjt9o6zj4RYNCmre8ss9WX16wcTVCQt1D7vvI0JiagpPh4Sm9mv53k5_LCKrRhTyUuQrKpQ9CMqwRrJzuPFbU2gTb7LkLyGG_P3YCfDbiapNeLqDOVclQYrZBfBC2TPMw83QaRRqji_rv_VuKRQ"/>
+</div>
+</header>
+<main class="pt-24 pb-32 px-6 max-w-5xl mx-auto bg-velvet-gradient min-h-screen">
+<!-- Hero Section -->
+<section class="mb-12">
+<h2 class="font-headline text-4xl md:text-5xl text-on-surface mb-4 leading-tight">Choose your <span class="serif-italic">conversation</span> journey</h2>
+<p class="text-on-surface-variant max-w-md text-lg leading-relaxed">Select a deck designed to deepen your connection, one question at a time.</p>
+</section>
+<!-- Main Categories Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+<!-- Featured Card: Custom Couple Deck -->
+<div class="md:col-span-2 lg:col-span-3 relative overflow-hidden rounded-[1.5rem] bg-surface-container-high group border border-outline-variant/10 shadow-[0px_20px_40px_rgba(255,46,110,0.08)]">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container/20 to-transparent z-10 pointer-events-none"></div>
+<img alt="Custom Couple Deck" class="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:scale-105 transition-transform duration-700" data-alt="romantic couple holding hands while sitting in a dark cozy lounge with soft candlelight and deep shadows" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBw5HjfyTtA47aAChBzS_quuGIjjVG5S5bMk-S2Xxvhzxpt9NhlYeYAu10RJpnKX1f9gLddvRFdbf9zETmkmCgMTFpWPeO_8duOszmP_N-jkJHv8lgv-fa8zsz7D8KHCKrHoevEqE1mLDd5qa_YFzqHIG6ORrdBidirrBaPgHm-GMr9qEWKOi6cAYO-KU1TDZa6DS5SYQHZN5gBNV6K4pOFwvPFF6CH-a3GU3aAO6W6J5UYvvKSY2hO4MVz-IcaglQfT6z-qVcxKlU"/>
+<div class="relative z-20 p-8 md:p-12 h-full flex flex-col justify-center max-w-2xl">
+<div class="flex items-center gap-2 mb-4">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label text-xs uppercase tracking-[0.2em] text-primary font-bold">Featured Deck</span>
+</div>
+<h3 class="font-headline text-3xl md:text-4xl text-on-surface mb-4">Custom Couple Deck</h3>
+<p class="text-on-surface-variant text-lg mb-8">Create a personalized experience by mixing questions from all categories or adding your own intimate prompts.</p>
+<div class="flex items-center gap-6">
+<button class="bg-primary-container text-on-primary-container font-label font-bold py-3 px-8 rounded-xl shadow-lg hover:opacity-90 active:scale-95 transition-all">
+                            Start Building
+                        </button>
+<span class="font-label text-sm text-on-surface/60">Infinite Questions</span>
+</div>
+</div>
+</div>
+<!-- Deep Dives -->
+<div class="bg-surface-container-high rounded-[1.5rem] p-6 flex flex-col h-full border border-outline-variant/5 hover:border-primary/20 transition-colors group">
+<div class="mb-8 overflow-hidden rounded-xl h-48">
+<img alt="Deep Dives" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="abstract ripples in dark purple water with glowing neon pink reflections in a cinematic style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBO690EHTX_YLbKRmVMoGXPQukltzi_OKibP7M7ri3dgjt4Vj5pB4Lac_PdmFKfvglgJPZc_ukVrHmnTlZxhVRdd6j3Ll_QzON7z_z1QrX6rCKNGFict8KvjzszuuM4so7x2GhjsyZbfQxrORX2SuK5jfVpgdOiQabwvombOtHo3WOKrJ_0kIgoIdpAwgqAC5-9rGPBP_mEcbW5qyeEMbH9tjmOFEvgsoePfI8qmtCH3x65bAm8EUp0eccHOcEBSs-ILJLordOzTTc"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-headline text-2xl text-on-surface">Deep Dives</h4>
+<span class="bg-surface-container-highest px-2 py-1 rounded text-[10px] font-label font-bold text-secondary uppercase tracking-wider">Mature</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Explore the unexplored corners of your partner's mind and soul with probing questions.</p>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant/10">
+<span class="font-label text-xs text-secondary-fixed-dim">45 Questions</span>
+<button class="text-primary hover:translate-x-1 transition-transform">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Future Dreams -->
+<div class="bg-surface-container-high rounded-[1.5rem] p-6 flex flex-col h-full border border-outline-variant/5 hover:border-primary/20 transition-colors group">
+<div class="mb-8 overflow-hidden rounded-xl h-48">
+<img alt="Future Dreams" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="starry night sky with nebula clouds in shades of deep violet and magenta over a calm dark horizon" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0A66I9BuQyhPujrJVeBVYtefJWqh65qp-gpBNetcR2jMgEfxbmlgvHwN0lkPdt523U9fqu3VtIVFpVyRYPaUX3NsGIKNwoi40nAyKQ4jK67J3JYJ1qVsBK_0LSiZghfGDL5Hr6HL4T3R1JAdlxzX7VOKvNweMITMoICFsVMMYWk6RkHeJ9tKaRU2jOqh04O1scZpDPQQwD1K9uS91M10X-p5AMBdqQbwOOIZdhuda2XNY62e8S_gsp2endLBNIE04Z1_2vT2ed5E"/>
+</div>
+<div class="flex-grow">
+<h4 class="font-headline text-2xl text-on-surface mb-2">Future Dreams</h4>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Manifest your shared vision. Explore goals, travel plans, and the life you want to build together.</p>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant/10">
+<span class="font-label text-xs text-secondary-fixed-dim">32 Questions</span>
+<button class="text-primary hover:translate-x-1 transition-transform">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Daily Rituals -->
+<div class="bg-surface-container-high rounded-[1.5rem] p-6 flex flex-col h-full border border-outline-variant/5 hover:border-primary/20 transition-colors group">
+<div class="mb-8 overflow-hidden rounded-xl h-48">
+<img alt="Daily Rituals" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="steam rising from two elegant ceramic coffee mugs on a dark wooden table in soft morning light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBdlXY31uMJOhcPHMsNcji_3rHm9dsuCAefK8JPwgHxeaEehhdkGBObYG5BrBKTDA769JDrg3ZdkLdAUUaNViB7WHz_0HD499Qp_nIybTLI-NFssy3AuTIypAuv6ufr4kJqW9nBFAOSyoPsmDVlugOH25ftNZQwBgvkd6uKshmjuQyUPeFTtWaMv1NHYmqgl47iWlqOLIs_NfVBIWksVYfqkTG4Msg6EAI5i2l_vyYg94_GebZM89EThfFUx8L_qKQ4L1w-zKKLvd8"/>
+</div>
+<div class="flex-grow">
+<h4 class="font-headline text-2xl text-on-surface mb-2">Daily Rituals</h4>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Lighthearted prompts about your day-to-day life and small habits that make your bond unique.</p>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant/10">
+<span class="font-label text-xs text-secondary-fixed-dim">50 Questions</span>
+<button class="text-primary hover:translate-x-1 transition-transform">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Intimate Heat (Example of Sensitive) -->
+<div class="bg-surface-container-high rounded-[1.5rem] p-6 flex flex-col h-full border border-outline-variant/5 hover:border-primary/20 transition-colors group">
+<div class="mb-8 overflow-hidden rounded-xl h-48">
+<img alt="Intimate Heat" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="close-up of silky deep red fabric draped over a dark surface with dramatic shadows and highlights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDK5IUJol1s22BhNsASaPWYnVVPdONOSZGPw2V9jVEpwOYVWwkOQfMcA5eTCYZaVpmofrA3dnF78nW-Aq6-h8WFAt-SwW2hKHRCB9H42W-wh0yKzJUVsvtNQYjGlzBERHblP5g6bVhaFZ-cUJeVlOAKCYGBZM60h56-UZZNCTA4omDzyPc-Lce8MVDtDqxSFxUtEN7SAW2W-FRaR64kcNtdO5QFCE4kX-gkYuNImx1nQRu4dhBmRwD83TH0iSfgdoA7npSPp7vNf0E"/>
+</div>
+<div class="flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h4 class="font-headline text-2xl text-on-surface">Intimate Heat</h4>
+<span class="bg-error-container/20 px-2 py-1 rounded text-[10px] font-label font-bold text-error uppercase tracking-wider">18+ Sensitive</span>
+</div>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Deepen physical intimacy through vulnerable discussion and exploration of desires.</p>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant/10">
+<span class="font-label text-xs text-secondary-fixed-dim">28 Questions</span>
+<button class="text-primary hover:translate-x-1 transition-transform">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Core Memories -->
+<div class="bg-surface-container-high rounded-[1.5rem] p-6 flex flex-col h-full border border-outline-variant/5 hover:border-primary/20 transition-colors group">
+<div class="mb-8 overflow-hidden rounded-xl h-48">
+<img alt="Core Memories" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" data-alt="vintage film photographs scattered on a dark surface with warm light from a nearby window" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBOuYcF7wDpFKoOraUHw7Z3AcEn-Z3ddRkN2xAJpGV3j32-yatk13ie7Z3VZEl1RB-9fCIr9KXxKjzgGILNaw2CGyRyCz_cBRSzsN8BY4VmyVo7r_xBP0ID1mNPy8Dgxf_rWPl2jMMuRMIy286rtVSUdqM5QWwIHDD4E_RvtQA2bhsspzo_LVxFZaoi8Q9r89oBoWc0MZRbZ_HzpiNfC3hw0VBNpvgwpxrkmVzGDYEH_SPgVrCOjwXkxHiVd6UIBxnarsCMVhAn8mo"/>
+</div>
+<div class="flex-grow">
+<h4 class="font-headline text-2xl text-on-surface mb-2">Core Memories</h4>
+<p class="text-on-surface-variant text-sm mb-6 line-clamp-2">Relive the moments that defined you as a couple, from the first spark to recent milestones.</p>
+</div>
+<div class="flex justify-between items-center pt-4 border-t border-outline-variant/10">
+<span class="font-label text-xs text-secondary-fixed-dim">40 Questions</span>
+<button class="text-primary hover:translate-x-1 transition-transform">
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#221d30]/80 backdrop-blur-lg z-50 rounded-t-[1.5rem] shadow-[0px_-10px_30px_rgba(255,46,110,0.05)]">
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1">dashboard</span>
+<span class="font-medium text-[11px] tracking-wide uppercase">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1">history</span>
+<span class="font-medium text-[11px] tracking-wide uppercase">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#FF4E7B] after:content-[''] after:w-1 after:h-1 after:bg-[#FF4E7B] after:rounded-full after:mt-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined mb-1" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-medium text-[11px] tracking-wide uppercase">Custom</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 duration-200" href="#">
+<span class="material-symbols-outlined mb-1">person</span>
+<span class="font-medium text-[11px] tracking-wide uppercase">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .bg-radial-glow {
+        background: radial-gradient(circle at center, rgba(255, 46, 110, 0.15) 0%, rgba(21, 16, 35, 0) 70%);
+      }
+      .glass-card {
+        background: rgba(34, 29, 48, 0.6);
+        backdrop-filter: blur(12px);
+      }
+      .primary-gradient-btn {
+        background: linear-gradient(135deg, #FF3B78 0%, #FF2E6E 100%);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col overflow-hidden">
+<!-- Top App Bar -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 w-full bg-[#151023]/80 backdrop-blur-xl no-border shadow-none bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#FFF7F6] hover:opacity-80 transition-opacity cursor-pointer">menu</span>
+<h1 class="text-2xl font-headline italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="w-10 h-10 rounded-full border border-outline-variant/30 overflow-hidden hover:opacity-80 transition-opacity cursor-pointer">
+<img alt="User profile" data-alt="close-up portrait of a man with a kind expression and soft lighting in a modern interior" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6H0KO1pKUHMDdDcVJRwBBSRbmoZfMr_fmgljH8Y-pvcB4lN0WLNpZ9zvzX49IwsIVGVME6Vn64rzpWPcSlBoblBeepZKiE-0fN-yIkaAE7ZlyUBjMknxQz_uxs4q76BEci-8tmgJ2Hya_h8_LvQkL4EM2lNkaGGnkMchwf0fxuPw1RcCkN-pJR8NM8nr8mpGl-d_dBPSeGO-XAazurbioKGBDOl8GHvO5A7fdouL4XBuUIkDpjUFz400ksY98hr3RKiDZExXzlOE"/>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="relative flex-grow flex flex-col items-center justify-center px-6 pt-16 pb-24 overflow-y-auto">
+<!-- Soft focus atmospheric background -->
+<div class="absolute inset-0 z-0 bg-radial-glow"></div>
+<div class="relative z-10 w-full max-w-lg flex flex-col items-center text-center">
+<!-- Round Header -->
+<div class="mb-12">
+<p class="font-label text-secondary text-[11px] uppercase tracking-[0.2em] mb-2">Session Progress</p>
+<h2 class="font-headline text-4xl md:text-5xl italic text-on-surface">Round 1 Complete</h2>
+</div>
+<!-- Emotional Visual / Status Card -->
+<div class="w-full aspect-square md:aspect-[4/5] glass-card rounded-[1.5rem] p-8 flex flex-col items-center justify-center shadow-[0px_20px_40px_rgba(255,46,110,0.08)] mb-10">
+<div class="relative w-full h-full rounded-xl overflow-hidden mb-8">
+<img alt="Emotional visual" class="w-full h-full object-cover opacity-80" data-alt="cinematic shot of two hands gently holding each other against a soft focus sunset background with warm pink and purple tones" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCpcqUD2j1gVKEXCebBEnnlv6vp-G5iGNReddQEU2DSY6NvGz3btwNXEsm_vhXGtIyJxVy16pO47PlfV8xYw1kQ-s_J40DraFKCGf-BC5wU02c9cWHaaKjzKtF8eQsvMo1A28f-O4hLF8PFeff2TleE63mhawbIZ5zRFr374RpA1GNx3U6SbYiiKEyHNyCOOD6jbYrJhixhWZ1ayeCNccbrSsD2FhIf9HzmRIpaePa6VQ6lFbc76lMIoqzhtS2uUMngpshu7etM-fk"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container via-transparent to-transparent"></div>
+</div>
+<!-- Status Message -->
+<div class="space-y-4">
+<div class="flex items-center justify-center gap-2">
+<span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+<p class="font-body text-lg text-primary-fixed">Elena is still answering...</p>
+</div>
+<p class="font-body text-on-surface/70 text-sm max-w-xs mx-auto">
+                        Take a deep breath. Your results will be ready the moment she completes the final question.
+                    </p>
+</div>
+<!-- Glow Progress Bar -->
+<div class="w-full h-1 bg-surface-container-highest/40 rounded-full mt-8 relative overflow-hidden">
+<div class="absolute inset-y-0 left-0 w-3/4 bg-primary shadow-[0px_0px_10px_#FF4E7B]"></div>
+</div>
+</div>
+<!-- Secondary Action -->
+<div class="flex flex-col gap-4 w-full">
+<button class="w-full py-4 px-8 rounded-full border border-outline-variant/30 text-on-surface font-label font-medium uppercase tracking-wider text-xs hover:bg-white/5 active:scale-95 transition-all duration-200">
+                    Back to Dashboard
+                </button>
+<p class="text-[10px] font-label text-on-surface/40 uppercase tracking-widest">Wait time: ~2 minutes</p>
+</div>
+</div>
+</main>
+<!-- Note: Bottom Navigation suppressed per CRITICAL requirement -->
+</body></html>

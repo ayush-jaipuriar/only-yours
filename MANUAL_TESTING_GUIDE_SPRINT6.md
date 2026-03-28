@@ -39,6 +39,7 @@ npm run android:local-build
 [ -f .env ] || cp .env.example .env
 LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
 sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env
+[ -f .env.local ] && sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env.local
 REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
@@ -113,12 +114,16 @@ curl -s "http://$LAN_IP:8080/actuator/health"
 
 # confirm frontend env is set for phone-on-Wi-Fi
 grep "^EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/.env
+if [ -f /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/.env.local ]; then
+  grep "^EXPO_PUBLIC_API_URL" /Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/.env.local
+fi
 ```
 
 ### If you see common failures
 
 - **WebSocket timeout:** restart backend + Metro using LAN host override (`REACT_NATIVE_PACKAGER_HOSTNAME`)
 - **Failed to connect to `127.0.0.1:8081`:** restart Metro with `LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)` and `REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c`
+- **App says `No connection` even though backend is running:** check both `OnlyYoursExpo/.env` and `OnlyYoursExpo/.env.local`. Expo loads `.env.local` first, so a stale LAN IP there overrides `.env` and makes the phone call the wrong backend address.
 - **Android dev build crashes with `property 'accessibilityRole' ...` or `Invalid accessibility role value` on Fabric views (`RCTText`, `RCTView`, etc.):** pull the latest frontend fix, restart Metro with `-c`, and reload the dev client so it picks up the corrected JS bundle. Unsupported roles such as `text`, `status`, and `alert` were removed from shared helper props and screen-level nodes for Android compatibility; live-region announcements are used instead.
 - **Game screen stays stuck on `Submitting answer...` or `Submitting guess...` after resume/reconnect:** pull the latest frontend fix, restart Metro with `-c`, and reload the dev client. Game submit flows now rehydrate the authoritative `/current-question` snapshot if the realtime follow-up payload is missed during resume/reconnect churn.
 - **Resend key missing in logs:** verify root `.env` has `RESEND_API_KEY`, then restart backend
@@ -355,7 +360,7 @@ cd ../OnlyYoursExpo && npx expo start --dev-client -c
 
 **App cannot reach backend**
 
-- Check `OnlyYoursExpo/.env`:
+- Check `OnlyYoursExpo/.env` and, if present, `OnlyYoursExpo/.env.local`:
   - `EXPO_PUBLIC_API_URL=http://<LAPTOP_LAN_IP>:8080`
 - Verify backend health from laptop:
 
@@ -489,6 +494,8 @@ Update this file:
 
 - `OnlyYoursExpo/.env`
   - `EXPO_PUBLIC_API_URL=http://<your-laptop-lan-ip>:8080`
+- `OnlyYoursExpo/.env.local` (if present)
+  - `EXPO_PUBLIC_API_URL=http://<your-laptop-lan-ip>:8080`
 
 Example:
 
@@ -500,6 +507,9 @@ Quick verify (must match your current LAN IP):
 
 ```bash
 grep "^EXPO_PUBLIC_API_URL" OnlyYoursExpo/.env
+if [ -f OnlyYoursExpo/.env.local ]; then
+  grep "^EXPO_PUBLIC_API_URL" OnlyYoursExpo/.env.local
+fi
 ```
 
 Find your laptop LAN IP on macOS:
@@ -539,6 +549,7 @@ npm run android:local-build
 [ -f .env ] || cp .env.example .env
 LAN_IP=$(ipconfig getifaddr en0 || ipconfig getifaddr en1)
 sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env
+[ -f .env.local ] && sed -i '' "s|^EXPO_PUBLIC_API_URL=.*|EXPO_PUBLIC_API_URL=http://$LAN_IP:8080|" .env.local
 REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 ```
 
@@ -576,6 +587,7 @@ and then retry normal npm workflow.
 1. Ensure local dev client APK is installed on Device A and Device B.
 2. Ensure both phones are on the same Wi-Fi as your laptop.
 3. Confirm `OnlyYoursExpo/.env` uses laptop LAN IP (from Step 7).
+4. If `OnlyYoursExpo/.env.local` exists, confirm it uses the same laptop LAN IP and does not override `.env` with an older address.
 
 Optional validation:
 
@@ -627,6 +639,7 @@ For each new testing session:
 Check:
 
 - `EXPO_PUBLIC_API_URL` in `OnlyYoursExpo/.env` is `http://<your-laptop-lan-ip>:8080` (not localhost)
+- if `OnlyYoursExpo/.env.local` exists, it matches the same LAN IP instead of overriding `.env`
 - backend actually running on port 8080
 - phone and laptop are on same Wi-Fi network
 - no VPN/firewall is blocking LAN traffic
@@ -638,6 +651,7 @@ Check:
 - Backend is reachable from device (`/api/auth/register` and `/api/auth/login` should respond)
 - App host config is correct:
   - `OnlyYoursExpo/.env` -> `EXPO_PUBLIC_API_URL`
+  - `OnlyYoursExpo/.env.local` -> `EXPO_PUBLIC_API_URL` when present
 - DB migration `V5__Email_Auth_Foundation.sql` applied
   - `users` table includes `username`, `password_hash`, `auth_provider`
 - Password entered is at least 8 characters (minimum policy)
@@ -748,6 +762,7 @@ REACT_NATIVE_PACKAGER_HOSTNAME="$LAN_IP" npx expo start --dev-client -c
 If you see `Network Error` after app loads:
 
 - Verify LAN IP in `OnlyYoursExpo/.env` (`EXPO_PUBLIC_API_URL`)
+- If `OnlyYoursExpo/.env.local` exists, verify it matches the same LAN IP and is not stale
 - Verify backend health from laptop:
 
 ```bash
@@ -923,6 +938,7 @@ Use laptop LAN IP in app config and Metro host advertisement:
 Where to update:
 
 - `OnlyYoursExpo/.env` -> `EXPO_PUBLIC_API_URL`
+- `OnlyYoursExpo/.env.local` -> `EXPO_PUBLIC_API_URL` when present
 
 Requirements:
 

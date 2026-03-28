@@ -1,13 +1,17 @@
 WITH merged_answers AS (
-    SELECT
-        MIN(id) AS keeper_id,
+    SELECT DISTINCT ON (game_session_id, question_id, user_id)
+        id AS keeper_id,
         game_session_id,
         question_id,
         user_id,
-        MAX(round1_answer) AS merged_round1_answer,
-        MAX(round2_guess) AS merged_round2_guess
+        MAX(round1_answer) OVER (
+            PARTITION BY game_session_id, question_id, user_id
+        ) AS merged_round1_answer,
+        MAX(round2_guess) OVER (
+            PARTITION BY game_session_id, question_id, user_id
+        ) AS merged_round2_guess
     FROM game_answers
-    GROUP BY game_session_id, question_id, user_id
+    ORDER BY game_session_id, question_id, user_id, id
 )
 UPDATE game_answers AS ga
 SET

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,700;1,6..72,400;1,6..72,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#3c364b",
+            "on-error": "#690005",
+            "on-error-container": "#ffdad6",
+            "surface-container-low": "#1e192c",
+            "on-secondary-container": "#ff96b1",
+            "on-primary": "#670024",
+            "inverse-on-surface": "#332d42",
+            "tertiary-fixed-dim": "#e8bacb",
+            "on-background": "#e8def9",
+            "inverse-surface": "#e8def9",
+            "on-tertiary": "#462734",
+            "on-surface-variant": "#e4bdc1",
+            "on-secondary-fixed-variant": "#8c0d42",
+            "surface-variant": "#373246",
+            "primary": "#ffb2bd",
+            "on-tertiary-fixed": "#2e131f",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "on-tertiary-fixed-variant": "#5e3d4b",
+            "on-primary-fixed": "#400014",
+            "surface": "#151023",
+            "on-surface": "#e8def9",
+            "surface-dim": "#151023",
+            "surface-container-highest": "#373246",
+            "surface-container-high": "#2c273b",
+            "secondary-fixed-dim": "#ffb1c3",
+            "secondary": "#ffb1c3",
+            "on-secondary-fixed": "#3f0019",
+            "outline-variant": "#5c3f43",
+            "on-primary-container": "#5a001f",
+            "on-secondary": "#66002d",
+            "tertiary": "#e8bacb",
+            "tertiary-container": "#af8595",
+            "primary-fixed-dim": "#ffb2bd",
+            "surface-tint": "#ffb2bd",
+            "secondary-fixed": "#ffd9e0",
+            "on-primary-fixed-variant": "#900036",
+            "secondary-container": "#8c0d42",
+            "inverse-primary": "#bd004a",
+            "tertiary-fixed": "#ffd8e6",
+            "background": "#151023",
+            "surface-container": "#221d30",
+            "primary-container": "#ff4e7b",
+            "primary-fixed": "#ffd9dd",
+            "on-tertiary-container": "#3e212d",
+            "surface-container-lowest": "#100b1e",
+            "outline": "#ab888c"
+          },
+          fontFamily: {
+            "headline": ["Newsreader", "serif"],
+            "body": ["Manrope", "sans-serif"],
+            "label": ["Manrope", "sans-serif"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1.5rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .serif-italic { font-family: 'Newsreader'; font-style: italic; }
+    .bg-mesh {
+      background: radial-gradient(circle at 50% 0%, rgba(255, 46, 110, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 0% 100%, rgba(255, 177, 195, 0.05) 0%, transparent 40%);
+    }
+    .glow-box {
+      box-shadow: 0px 0px 20px rgba(255, 78, 123, 0.15);
+    }
+    .glass-effect {
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full shadow-none bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<button class="text-[#FFF7F6] hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="flex items-center">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant/20 hover:opacity-80 transition-opacity cursor-pointer">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a person with warm lighting and a soft-focus dark interior background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDjFEU1WtuN0okG6hAcsX1akmfcfG54-M1hPzESsP7AGvHjB_QA4HjNkchFRlS8qR9wY6kvxK7Gop2O8eFNo63bmG342AasujPu3VA-9gPq1lX4qKFGRWtjICCwGhINYC2WAWv_gW1CmC7ilBoc-65TIQo8L7D6sUTgyT3iYSVpU_9r2tatieGp27PihcsRubI_5gq9X62LUZtDfEXeA03rulZbUfaP7ZQIgpCK6TLKpoYV85qwtIiw6MF9kiA144JNRn0rywNZBfE"/>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow pt-24 pb-12 px-6 bg-mesh flex flex-col items-center max-w-2xl mx-auto w-full">
+<!-- Hero Section -->
+<section class="text-center mb-12">
+<h2 class="font-headline text-4xl md:text-5xl text-on-surface mb-4">Complete your sanctuary.</h2>
+<p class="font-body text-secondary-fixed-dim/70 max-w-md mx-auto leading-relaxed">
+        Connect with your partner to begin your private journey. Every message and moment shared here is protected by industry-leading end-to-end encryption.
+      </p>
+</section>
+<!-- Invite Section -->
+<div class="w-full mb-10">
+<div class="bg-surface-container-high rounded-2xl p-8 glow-box relative overflow-hidden group">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-8xl" data-icon="favorite">favorite</span>
+</div>
+<div class="relative z-10">
+<span class="font-label text-xs uppercase tracking-[0.2em] text-primary mb-2 block">Your Unique Invite</span>
+<h3 class="font-headline text-2xl mb-6">Invite Your Partner</h3>
+<div class="flex flex-col items-center justify-center py-8 px-4 bg-surface-container-highest/40 rounded-xl border border-outline-variant/10 mb-6">
+<span class="font-headline text-5xl md:text-6xl tracking-[0.25em] text-on-surface font-bold drop-shadow-[0_0_15px_rgba(255,178,189,0.3)]">
+              XJ9-R4L
+            </span>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<button class="flex items-center justify-center gap-2 py-4 px-6 rounded-full bg-surface-container-highest hover:bg-surface-bright transition-all active:scale-95 group/btn">
+<span class="material-symbols-outlined text-secondary" data-icon="content_copy">content_copy</span>
+<span class="font-label font-medium text-sm text-on-surface">Copy Code</span>
+</button>
+<button class="flex items-center justify-center gap-2 py-4 px-6 rounded-full bg-surface-container-highest hover:bg-surface-bright transition-all active:scale-95 group/btn">
+<span class="material-symbols-outlined text-secondary" data-icon="ios_share">ios_share</span>
+<span class="font-label font-medium text-sm text-on-surface">Share</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Divider Decor -->
+<div class="flex items-center gap-4 w-full mb-10">
+<div class="h-[1px] flex-grow bg-gradient-to-r from-transparent via-outline-variant/20 to-transparent"></div>
+<span class="font-headline italic text-on-surface-variant/40">or</span>
+<div class="h-[1px] flex-grow bg-gradient-to-r from-outline-variant/20 via-outline-variant/20 to-transparent"></div>
+</div>
+<!-- Entry Section -->
+<div class="w-full mb-12">
+<div class="bg-surface-container rounded-2xl p-8 border border-outline-variant/10">
+<h3 class="font-headline text-2xl mb-2">Already have a code?</h3>
+<p class="font-body text-sm text-on-surface-variant mb-6">Enter the code sent by your partner to link accounts instantly.</p>
+<div class="space-y-6">
+<div class="relative">
+<input class="w-full bg-surface-container-lowest border border-outline-variant/20 rounded-xl py-5 px-6 font-headline text-xl tracking-[0.1em] focus:outline-none focus:ring-2 focus:ring-primary-container/30 focus:border-primary-container transition-all placeholder:text-on-surface-variant/30 uppercase text-center" placeholder="Enter 6-digit code" type="text"/>
+</div>
+<button class="w-full py-5 rounded-full bg-gradient-to-br from-[#FF3B78] to-[#FF2E6E] text-on-primary-fixed font-label font-bold text-lg tracking-wide shadow-[0px_10px_30px_rgba(255,46,110,0.2)] hover:shadow-[0px_15px_40px_rgba(255,46,110,0.3)] transition-all active:scale-[0.98]">
+            Connect Now
+          </button>
+</div>
+</div>
+</div>
+<!-- Footer Security Note -->
+<footer class="mt-auto pt-8 flex flex-col items-center text-center gap-4 opacity-60">
+<div class="flex items-center gap-2 text-on-tertiary-fixed-variant">
+<span class="material-symbols-outlined text-lg" data-icon="encrypted">encrypted</span>
+<span class="font-label text-xs uppercase tracking-widest">End-to-End Encrypted</span>
+</div>
+<p class="font-body text-[11px] leading-relaxed max-w-xs">
+        Your data is encrypted before it leaves your device. Only you and your partner hold the keys to view your shared world.
+      </p>
+</footer>
+</main>
+<!-- Note: BottomNavBar is suppressed for this transactional flow to prioritize the partner linking task -->
+</body></html>

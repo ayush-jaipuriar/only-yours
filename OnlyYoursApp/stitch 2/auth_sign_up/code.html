@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&amp;family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,600;1,6..72,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .bg-cinematic-glow {
+        background: radial-gradient(circle at 50% -20%, rgba(255, 46, 110, 0.15) 0%, rgba(21, 16, 35, 0) 60%);
+      }
+      .bg-soft-texture {
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        opacity: 0.03;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+<!-- Cinematic Background Elements -->
+<div class="fixed inset-0 z-0 pointer-events-none">
+<div class="absolute inset-0 bg-cinematic-glow"></div>
+<div class="absolute inset-0 bg-soft-texture"></div>
+<!-- Ambient blurred orbs -->
+<div class="absolute top-1/4 -right-24 w-96 h-96 bg-primary-container/10 rounded-full blur-[120px]"></div>
+<div class="absolute bottom-1/4 -left-24 w-80 h-80 bg-secondary/5 rounded-full blur-[100px]"></div>
+</div>
+<!-- Main Content Canvas -->
+<main class="relative z-10 flex flex-col items-center justify-center min-h-screen px-6 py-12">
+<!-- Brand Identity -->
+<header class="mb-12 text-center">
+<h2 class="text-[#FFF7F6] font-headline italic text-3xl tracking-tight mb-2">Only Yours</h2>
+<div class="w-12 h-px bg-gradient-to-r from-transparent via-primary-container to-transparent mx-auto opacity-50"></div>
+</header>
+<!-- Sign Up Container -->
+<div class="w-full max-w-md">
+<!-- Header Section -->
+<div class="text-center mb-10">
+<h1 class="font-headline italic text-4xl md:text-5xl text-on-surface mb-4 leading-tight">Begin Your Journey</h1>
+<p class="font-body text-on-surface-variant text-sm tracking-wide">Enter the sanctuary of shared moments.</p>
+</div>
+<!-- Form Section -->
+<form class="space-y-6">
+<!-- Username -->
+<div class="space-y-2">
+<label class="block text-[11px] uppercase tracking-[0.2em] font-medium text-on-surface-variant ml-1" for="username">Username</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-1 focus:ring-primary-container transition-all outline-none" id="username" placeholder="Enter your name" type="text"/>
+<div class="absolute inset-0 rounded-xl bg-primary-container/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+</div>
+</div>
+<!-- Email -->
+<div class="space-y-2">
+<label class="block text-[11px] uppercase tracking-[0.2em] font-medium text-on-surface-variant ml-1" for="email">Email Address</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-1 focus:ring-primary-container transition-all outline-none" id="email" placeholder="hello@sanctuary.com" type="email"/>
+<div class="absolute inset-0 rounded-xl bg-primary-container/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+</div>
+</div>
+<!-- Password Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Password -->
+<div class="space-y-2">
+<label class="block text-[11px] uppercase tracking-[0.2em] font-medium text-on-surface-variant ml-1" for="password">Password</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-1 focus:ring-primary-container transition-all outline-none" id="password" placeholder="••••••••" type="password"/>
+<div class="absolute inset-0 rounded-xl bg-primary-container/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+</div>
+</div>
+<!-- Confirm Password -->
+<div class="space-y-2">
+<label class="block text-[11px] uppercase tracking-[0.2em] font-medium text-on-surface-variant ml-1" for="confirm-password">Confirm</label>
+<div class="relative group">
+<input class="w-full bg-surface-container-high border-none rounded-xl px-5 py-4 text-on-surface placeholder:text-on-surface-variant/30 focus:ring-1 focus:ring-primary-container transition-all outline-none" id="confirm-password" placeholder="••••••••" type="password"/>
+<div class="absolute inset-0 rounded-xl bg-primary-container/5 opacity-0 group-focus-within:opacity-100 transition-opacity pointer-events-none"></div>
+</div>
+</div>
+</div>
+<!-- CTA -->
+<div class="pt-4">
+<button class="w-full bg-gradient-to-br from-[#FF4E7B] to-[#FF2E6E] text-white font-medium py-4 rounded-xl shadow-[0px_20px_40px_rgba(255,46,110,0.15)] hover:shadow-[0px_20px_50px_rgba(255,46,110,0.25)] active:scale-[0.98] transition-all duration-200 tracking-wide" type="submit">
+                        Create Account
+                    </button>
+</div>
+</form>
+<!-- Footer Links -->
+<div class="mt-12 text-center space-y-6">
+<p class="text-on-surface-variant text-sm">
+                    Already have an account? 
+                    <a class="text-secondary font-semibold hover:text-primary transition-colors ml-1" href="#">Sign In</a>
+</p>
+<div class="flex items-center justify-center gap-6 opacity-40">
+<div class="h-px w-8 bg-on-surface-variant"></div>
+<span class="text-[10px] uppercase tracking-widest">Intimacy Guaranteed</span>
+<div class="h-px w-8 bg-on-surface-variant"></div>
+</div>
+</div>
+</div>
+<!-- Decorative Card (Editorial Touch) -->
+<div class="hidden lg:block fixed right-12 top-1/2 -translate-y-1/2 w-64 p-6 bg-surface-container-high rounded-[1.5rem] shadow-2xl rotate-3">
+<div class="aspect-[4/5] overflow-hidden rounded-xl mb-4 grayscale hover:grayscale-0 transition-all duration-700">
+<img class="w-full h-full object-cover" data-alt="Intimate close-up of two people holding hands in soft morning light with deep shadows and cinematic atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC3RrnzrIIAOguPr5bfFzzHY2vLLsdjApNAlsojHEJ17Wfn9JUpVfQs1cJ4N4VKMhKdWUu7_jFtS-ogp7TYT8HIDzjEPMzuJMtwaAZDRoK0iehpv9qv6Gc_g7TXoVmqcXnX9q5d8_qAsN5BgLXSYDqYPrM4jJpJ0DbS700ndCKOlNKHEnRfz17QWVgS4IKsagd9hKYS1M2T8KnjGiYEEFSei53teQuALXQSoPOlUQcBaqWidSzFXxwpiliq-3WAAcQFpVuNM0dyN6M"/>
+</div>
+<p class="font-headline italic text-on-surface-variant text-lg">"The best place to be is together."</p>
+</div>
+</main>
+<!-- Background Decoration -->
+<div class="fixed bottom-0 left-0 w-full h-32 bg-gradient-to-t from-surface to-transparent pointer-events-none z-0"></div>
+</body></html>

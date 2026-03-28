@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader"],
+              "body": ["Manrope"],
+              "label": ["Manrope"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .custom-focus:focus-within {
+            box-shadow: 0 0 0 2px rgba(255, 177, 195, 0.2);
+            border-color: #ffb1c3;
+        }
+        .editorial-gradient {
+            background: radial-gradient(circle at 50% 0%, rgba(255, 46, 110, 0.12) 0%, transparent 70%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary-container selection:text-on-primary-container min-h-screen">
+<!-- Top Navigation (Shared Component Logic: Transactional Suppression - Simplified for Editor) -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-4">
+<button class="text-[#FFF7F6] hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined">close</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="flex items-center gap-3">
+<span class="text-[11px] font-medium tracking-[0.2em] uppercase text-secondary/60">Draft Mode</span>
+<div class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="close up portrait of a stylish woman with soft cinematic lighting and elegant bokeh background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0lmaRA0OfOrLKK3DTsXVGJnKeeHA8BQKjPzpGKgvTEDQTP_R3fBSSRPqAX9FR5YSejM1UlcFlPQubsEuOiN6fM8A14CWFYegHMxMgUzNPRzkbDVq9cUkUUL6WH3m20tdOVDUbJm7kfpHQgIVZylDLvYo7ylJmXcOQTXIG7lRiVMMYeQ1IEDYk3Vnx0MXJ6rkNVO9lEGkDdeULZz9PdPgIk78hIWV5ZupMggo7AzBYBEEmpfYVba0Cigsuosez1gk9Q-8zTkKTNB4"/>
+</div>
+</div>
+</header>
+<main class="pt-24 pb-12 px-6 max-w-2xl mx-auto editorial-gradient">
+<!-- Header Section -->
+<section class="mb-12 text-center">
+<h2 class="font-headline text-4xl italic text-on-surface mb-3">Compose an Intimacy</h2>
+<p class="text-secondary/70 font-body text-sm tracking-wide">Craft a question that only the two of you would know.</p>
+</section>
+<!-- Editor Form -->
+<div class="space-y-10">
+<!-- Question Text Area -->
+<div class="group">
+<label class="block font-label text-[10px] uppercase tracking-[0.25em] text-secondary/50 mb-4 ml-1">The Question</label>
+<div class="relative bg-surface-container-low rounded-xl p-6 transition-all duration-300 hover:bg-surface-container border border-transparent focus-within:border-secondary/30">
+<textarea class="w-full bg-transparent border-none focus:ring-0 text-2xl font-headline italic placeholder:text-surface-bright resize-none h-32 leading-relaxed" placeholder="What was the exact moment you realized..."></textarea>
+<div class="absolute bottom-4 right-6 flex items-center gap-2">
+<span class="text-[10px] font-label text-surface-bright">0 / 240</span>
+</div>
+</div>
+</div>
+<!-- Options Grid -->
+<div class="space-y-6">
+<label class="block font-label text-[10px] uppercase tracking-[0.25em] text-secondary/50 ml-1">Possible Answers</label>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Option A -->
+<div class="relative bg-surface-container-high/50 rounded-xl p-1 group border border-outline-variant/10 focus-within:border-secondary/40 transition-all">
+<div class="flex items-center px-4 py-3">
+<span class="font-headline italic text-primary mr-4 text-xl">a.</span>
+<input class="w-full bg-transparent border-none focus:ring-0 p-0 text-on-surface placeholder:text-surface-bright font-body" placeholder="Add an option..." type="text"/>
+</div>
+</div>
+<!-- Option B (Validation State: Error Example) -->
+<div class="relative bg-surface-container-high/50 rounded-xl p-1 group border border-error/20 focus-within:border-error transition-all">
+<div class="flex items-center px-4 py-3">
+<span class="font-headline italic text-primary mr-4 text-xl">b.</span>
+<input class="w-full bg-transparent border-none focus:ring-0 p-0 text-on-surface font-body" type="text" value="Under the Eiffel Tower"/>
+</div>
+<p class="absolute -bottom-5 left-1 text-[9px] text-error uppercase tracking-widest font-bold">This field is required</p>
+</div>
+<!-- Option C -->
+<div class="relative bg-surface-container-high/50 rounded-xl p-1 group border border-outline-variant/10 focus-within:border-secondary/40 transition-all">
+<div class="flex items-center px-4 py-3">
+<span class="font-headline italic text-primary mr-4 text-xl">c.</span>
+<input class="w-full bg-transparent border-none focus:ring-0 p-0 text-on-surface placeholder:text-surface-bright font-body" placeholder="Add an option..." type="text"/>
+</div>
+</div>
+<!-- Option D -->
+<div class="relative bg-surface-container-high/50 rounded-xl p-1 group border border-outline-variant/10 focus-within:border-secondary/40 transition-all">
+<div class="flex items-center px-4 py-3">
+<span class="font-headline italic text-primary mr-4 text-xl">d.</span>
+<input class="w-full bg-transparent border-none focus:ring-0 p-0 text-on-surface placeholder:text-surface-bright font-body" placeholder="Add an option..." type="text"/>
+</div>
+</div>
+</div>
+</div>
+<!-- Settings / Metadata -->
+<div class="flex flex-wrap items-center justify-between gap-6 pt-6 border-t border-outline-variant/10">
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 text-secondary-fixed-dim hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">palette</span>
+<span class="font-label text-xs uppercase tracking-widest">Theme</span>
+</button>
+<button class="flex items-center gap-2 text-secondary-fixed-dim hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-xl">timer</span>
+<span class="font-label text-xs uppercase tracking-widest">30s</span>
+</button>
+</div>
+<div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-surface-container-highest/40 border border-outline-variant/20">
+<div class="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(255,78,123,0.6)]"></div>
+<span class="text-[10px] font-label uppercase tracking-widest text-on-surface/60">Auto-saving</span>
+</div>
+</div>
+<!-- Main CTA Section -->
+<div class="pt-8 flex flex-col items-center">
+<button class="group relative w-full max-w-sm overflow-hidden rounded-full p-[2px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-4 focus:ring-offset-surface transition-transform active:scale-95">
+<div class="absolute inset-0 bg-gradient-to-r from-primary-container via-[#FF2E6E] to-primary-container"></div>
+<div class="relative flex items-center justify-center gap-3 bg-primary-container px-8 py-4 rounded-full transition-all group-hover:bg-transparent">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="font-label text-sm font-bold uppercase tracking-[0.2em] text-white">Save to Deck</span>
+</div>
+</button>
+<button class="mt-6 text-secondary/40 hover:text-secondary/80 font-label text-[10px] uppercase tracking-widest transition-colors">
+                    Discard Draft
+                </button>
+</div>
+</div>
+</main>
+<!-- Visual Polish: Ambient Glows -->
+<div class="fixed top-1/4 -left-32 w-96 h-96 bg-primary/5 rounded-full blur-[100px] pointer-events-none"></div>
+<div class="fixed bottom-1/4 -right-32 w-96 h-96 bg-secondary/5 rounded-full blur-[100px] pointer-events-none"></div>
+<!-- Bottom Nav Suppression Notice (Implicitly hidden per task requirements for transactional flow) -->
+</body></html>

@@ -1,7 +1,10 @@
 # Only Yours - P2 Implementation Plan (Detailed)
 
 Date: Feb 22, 2026  
-Status: Active implementation plan; current repo audit aligned through `Phase I` on Mar 14, 2026
+Status: Active implementation plan; current repo audit aligned through `Phase J` on Mar 27, 2026
+
+Current audit reference:
+- Strict checklist proof matrix and repo-grounded status audit: `P2_PROGRESS_AUDIT.md`
 
 ---
 
@@ -941,23 +944,38 @@ Definition of done:
 Historical note:
 - This original kickoff slice is complete and automatedly validated.
 
-Current next-slice options (as of Mar 14, 2026):
+Current next-slice options (as of Mar 27, 2026):
 - Close deferred manual validation for already-built phases:
   - `Phase A` two-device continuation matrix
   - `Phase C` responsive/theme visual QA
   - `Phase D` two-device notification deep-link validation
   - `Phase E` manual dark-mode visual sign-off
   - `Phase F` manual screen-reader walkthroughs
-- Continue net-new implementation from the next unfinished roadmap blocks:
-  - `Phase G` haptics
-  - `Phase H` custom questions
-  - `Phase J` progression expansion
-  - `Phase I` sharing
+  - `Phase G` device haptics validation
+  - `Phase I` native share-flow device validation
+- Finish the remaining non-manual accessibility closure work:
+  - `F2` focus order/focus-trap fixes
+  - `F3` broader accessibility-oriented component/screen coverage
+- Complete the still-open implementation track:
   - `Phase K` release-safety hardening
+- Use `P2_PROGRESS_AUDIT.md` as the itemized source of truth for implemented vs partial vs pending checklist lines.
+
+P2 close-out action list (ordered by fastest path to real closure):
+- [ ] Run and record `Phase A` two-device async continuation validation.
+- [ ] Run and record `Phase D` notification deep-link validation using `PHASE_D_MANUAL_VALIDATION_RUN.md`.
+- [ ] Run `Phase E` visual QA across `system`, `light`, and `dark` on phone + tablet.
+- [ ] Finish remaining `Phase F` implementation closure:
+  - focus order / focus-trap fixes
+  - broader accessibility-oriented test coverage
+- [ ] Run `Phase F` TalkBack/VoiceOver walkthroughs and record findings.
+- [ ] Run `Phase G` manual haptics validation on enabled, disabled, and unsupported-device paths.
+- [ ] Run `Phase I` manual native share validation for results and milestone cards.
+- [ ] Create `Phase K` sprint plan and implement secrets, release gating, rollback runbook, and rollback drill evidence.
 
 Recommended tracker interpretation:
-- Weeks `0` through `6` below are now partly historical checkpoints.
-- Weeks `7` through `9` are the remaining forward roadmap, but they should be read alongside the still-open manual closure gates from earlier weeks.
+- Weeks `0` through `8` below are now historical implementation checkpoints.
+- Week `9` is the only still-open forward implementation roadmap block.
+- Deferred manual validation and user sign-off gates from earlier weeks remain active alongside Week `9`.
 
 ---
 
@@ -966,10 +984,10 @@ Recommended tracker interpretation:
 This schedule is a recommended cadence for sequencing work and validation.
 It is **checkpoint-driven**, not deadline-driven. If a gate is not satisfied, do not move forward.
 
-Current reading guide (Mar 14, 2026):
-- Weeks `0` through `4` are historical and mostly implemented, with some manual acceptance gates still open.
-- Week `5` and Week `6` are partially historical: implementation is present, but manual closure is still pending for `Phase E` and `Phase F`.
-- Weeks `7` through `9` remain the forward-looking roadmap for not-yet-implemented phases.
+Current reading guide (Mar 27, 2026):
+- Weeks `0` through `8` are historical and implemented in code, with some manual acceptance gates and user sign-off items still open.
+- Week `9` remains the forward-looking roadmap for the not-yet-implemented `Phase K` release-safety block.
+- For strict item-by-item status, use `P2_PROGRESS_AUDIT.md` alongside this plan.
 
 ### Week 0 - Planning and Readiness Gate
 
@@ -1063,7 +1081,7 @@ Checklist:
 - [x] Complete `D1` unlink + cooldown + recoverability.
 - [x] Complete `D2` profile/settings edits and reminder controls.
 - [x] Complete `D3` notification deep-link paths and fan-out correctness.
-- [x] Complete `D4` validation + docs.
+- [ ] Complete `D4` validation + docs (`manual deep-link notification validation` still pending).
 - [x] Create and review detailed Phase E sprint plan document before coding starts.
 - [x] Complete `E1` dark token expansion.
 - [x] Complete `E2` screen-level dark redesign pass.
@@ -1087,7 +1105,7 @@ Focus:
 Checklist:
 - [x] Create and review detailed Phase F sprint plan document before coding starts.
 - [x] Complete `F1` shared accessibility contract.
-- [x] Complete `F2` screen-reader baseline pass.
+- [ ] Complete `F2` screen-reader baseline pass (`focus order/focus-trap closure` still pending).
 - [ ] Complete `F3` validation + docs.
 - [x] Create and review detailed Phase G sprint plan document before coding starts.
 - [x] Complete `G1` haptic design map + preferences.
@@ -1146,7 +1164,7 @@ Checklist:
 - [x] Complete `I1` shareable content contract.
 - [x] Complete `I2` share-card rendering + UX.
 - [x] Complete `I3` native share flow integration.
-- [x] Complete `I4` validation + docs.
+- [ ] Complete `I4` validation + docs (`manual native share-flow validation` still pending).
 
 Status note (Mar 14, 2026):
 - `Phase J` is implemented in code and automatedly validated across backend and Expo.

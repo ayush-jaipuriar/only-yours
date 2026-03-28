@@ -76,6 +76,7 @@ npm run android
 ```
 
 The Expo app reads the backend host from `EXPO_PUBLIC_API_URL`, defaulting to `http://localhost:8080`.
+For physical-device testing, keep both `OnlyYoursExpo/.env` and `OnlyYoursExpo/.env.local` aligned if `.env.local` exists, because Expo gives `.env.local` higher priority and a stale LAN IP there will override `.env`.
 
 ### Legacy React Native CLI App
 

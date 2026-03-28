@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,500;1,6..72,600;1,6..72,700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .serif-italic { font-family: 'Newsreader', serif; font-style: italic; }
+      .primary-glow { text-shadow: 0 0 15px rgba(255, 78, 123, 0.4); }
+      .bg-cinematic {
+        background: radial-gradient(circle at 50% -20%, #2c273b 0%, #151023 70%);
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body min-h-screen flex flex-col items-center overflow-x-hidden">
+<!-- Top Navigation (Shell Suppressed for Onboarding context) -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 bg-gradient-to-b from-surface to-transparent">
+<div class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</div>
+<div class="flex items-center gap-2">
+<span class="text-xs font-label uppercase tracking-widest text-on-surface-variant/60">Step 1 of 3</span>
+</div>
+</header>
+<main class="flex-1 w-full max-w-xl px-6 pt-24 pb-12 flex flex-col items-center justify-between min-h-screen">
+<!-- Progress Bar Container -->
+<div class="w-full flex gap-2 mb-12">
+<div class="h-1 flex-1 rounded-full bg-primary-container shadow-[0_0_8px_rgba(255,78,123,0.6)]"></div>
+<div class="h-1 flex-1 rounded-full bg-surface-container-highest/40"></div>
+<div class="h-1 flex-1 rounded-full bg-surface-container-highest/40"></div>
+</div>
+<!-- Visual Anchor: Cinematic Illustration -->
+<div class="relative w-full aspect-square max-h-[360px] flex items-center justify-center mb-8">
+<div class="absolute inset-0 bg-primary-container/10 rounded-full blur-[80px]"></div>
+<div class="relative z-10 w-full h-full flex items-center justify-center">
+<div class="relative w-72 h-72">
+<!-- Symbolic Path Merging Visual -->
+<div class="absolute inset-0 border-[0.5px] border-outline-variant/20 rounded-full scale-110"></div>
+<div class="absolute inset-0 border-[0.5px] border-outline-variant/30 rounded-full scale-90"></div>
+<img alt="Cinematic abstract visual of two golden light paths converging in a deep purple cosmic void with soft bokeh" class="w-full h-full object-cover rounded-[1.5rem] mix-blend-lighten opacity-80" data-alt="Cinematic abstract visual of two golden light paths converging in a deep purple cosmic void with soft bokeh" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUcszL5Irq1T3UoMtcrm1qsTFkSmqWjD4cr2ZojBbIKFfCvA5XyCCzXk992XifqJqQXexyV3t3anepwybgU_7WqvI8BLO0p_imtu027J0nceQOnJ9VxpsmJRPezczsg2o0uk3WxsThLmz6ycixdLQWgU1l9asgJTMPLHcydt9DQS8Z1mp95whR5-x8A9tjLXaTLslR_kWycBkl79YLAkAp3pN5mK-EUioCvIk-_hunWBx3T-5QRAcWhwhYirzwfVTDHfyssDOiGRM"/>
+<!-- Decorative Icon Overlay -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-4">
+<div class="w-12 h-12 rounded-full bg-surface-container-high border border-outline-variant/30 flex items-center justify-center shadow-2xl">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">person</span>
+</div>
+<div class="h-[1px] w-8 bg-gradient-to-r from-secondary to-primary-container"></div>
+<div class="w-12 h-12 rounded-full bg-surface-container-high border border-outline-variant/30 flex items-center justify-center shadow-2xl">
+<span class="material-symbols-outlined text-primary-container" style="font-variation-settings: 'FILL' 1;">favorite</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Content Section -->
+<div class="w-full text-center space-y-6">
+<h1 class="text-4xl md:text-5xl font-serif italic text-on-surface leading-tight tracking-tight">
+                Connect Your Worlds
+            </h1>
+<p class="text-lg text-on-surface-variant font-body leading-relaxed max-w-[320px] mx-auto opacity-90">
+                Link with your partner to unlock a private digital sanctuary designed exclusively for the two of you.
+            </p>
+</div>
+<!-- Actions Section -->
+<div class="w-full flex flex-col items-center gap-6 mt-12 pb-8">
+<button class="w-full max-w-sm py-5 rounded-[1.5rem] bg-gradient-to-br from-[#FF4E7B] to-[#FF2E6E] text-on-primary font-label font-bold text-lg shadow-[0px_10px_30px_rgba(255,46,110,0.2)] active:scale-95 transition-all duration-200">
+                Next
+            </button>
+<button class="text-on-secondary-fixed-variant font-label text-sm tracking-widest uppercase hover:text-secondary transition-colors duration-200">
+                Skip for now
+            </button>
+</div>
+</main>
+<!-- Bottom Decorative Glow -->
+<div class="fixed bottom-0 left-0 w-full h-32 bg-gradient-to-t from-primary-container/5 to-transparent pointer-events-none"></div>
+</body></html>

@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@1,6..72,400;1,6..72,600;1,6..72,800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .cinematic-glow {
+            background: radial-gradient(circle at center, rgba(255, 46, 110, 0.15) 0%, rgba(21, 16, 35, 0) 70%);
+        }
+        .btn-gradient {
+            background: linear-gradient(135deg, #FF3B78 0%, #FF2E6E 100%);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 min-h-screen overflow-hidden flex flex-col items-center justify-center relative">
+<!-- Cinematic Background Element -->
+<div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[140%] h-[140%] cinematic-glow"></div>
+<div class="absolute top-0 left-0 w-full h-full opacity-20" data-alt="Dreamy soft focus of two hands reaching for each other against a dark twilight sky with subtle bokeh lights" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDcsbCq-j8-WCPdKgwyz5AEv8Ai1ZIfqgRhRA-075P4eCQ7IFbaOjIOIRuswFlu_Ym4mrj6_P1kTZoh_1nMLUDXKcyu-ZV7LHnxf0cGP4Prayt9LHyO4sv_QYw_DVN7GwQ6JsItRLdKFTyyKi7O0FRUXJGGyarEB7N5PYgyd7sWtcZBQKmlxJ0PoUQ8ecSmPgmMmH0KFh8UL_XF4zR7DILVMkRc6A1Bbl7zwuf_RzBSouwMnmV-uWbuQNPyGPenBiV6lJV5fyAsSjQ'); background-size: cover; background-position: center;">
+</div>
+<div class="absolute inset-0 bg-gradient-to-b from-surface/80 via-surface to-surface"></div>
+</div>
+<!-- Content Canvas -->
+<main class="relative z-10 w-full max-w-md px-8 flex flex-col items-center text-center">
+<!-- Connection Visual -->
+<div class="relative mb-12 group">
+<!-- Ambient Glow behind icon -->
+<div class="absolute inset-0 blur-3xl bg-primary-container/20 scale-150 rounded-full"></div>
+<div class="relative flex items-center justify-center">
+<div class="w-32 h-32 rounded-full bg-surface-container-high flex items-center justify-center shadow-[0px_20px_40px_rgba(255,46,110,0.08)]">
+<span class="material-symbols-outlined text-primary-container text-6xl" style="font-variation-settings: 'FILL' 1;">
+                        favorite
+                    </span>
+<div class="absolute -right-2 -top-2 w-12 h-12 rounded-full bg-surface-container-highest flex items-center justify-center border border-primary/20">
+<span class="material-symbols-outlined text-secondary text-2xl">
+                            link
+                        </span>
+</div>
+</div>
+</div>
+</div>
+<!-- Typography Anchor -->
+<div class="space-y-4 mb-16">
+<h1 class="font-headline italic text-4xl md:text-5xl text-on-surface tracking-tight leading-tight">
+                You're Connected!
+            </h1>
+<p class="text-on-surface-variant font-body text-lg leading-relaxed max-w-[280px] mx-auto">
+                Welcome to your private sanctuary. Your shared world starts now.
+            </p>
+</div>
+<!-- Action Cluster -->
+<div class="w-full space-y-6">
+<!-- Primary CTA -->
+<button class="w-full py-5 px-8 rounded-xl font-body font-bold text-white text-lg btn-gradient shadow-[0px_10px_30px_rgba(255,46,110,0.3)] active:scale-95 transition-all duration-200 uppercase tracking-widest flex items-center justify-center gap-3">
+<span>Start Your First Game</span>
+<span class="material-symbols-outlined text-xl">play_circle</span>
+</button>
+<!-- Secondary CTA -->
+<a class="inline-block w-full py-4 text-secondary font-label font-medium text-sm tracking-widest uppercase hover:text-primary transition-colors active:scale-95" href="#">
+                Go to Dashboard
+            </a>
+</div>
+<!-- Bottom Detail -->
+<div class="mt-20 flex flex-col items-center gap-4">
+<div class="flex -space-x-3">
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container overflow-hidden">
+<img alt="User 1" class="w-full h-full object-cover" data-alt="Close up portrait of a smiling woman with warm lighting and soft background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBdiMvxusujLhex-MeOBRGgE786c-_K3OAie1EbfmZVAguTH6SplgUKpr-uzYeDy_fxZOZEBBpXMz3TG5FfeWoxHQGkPwGUTnVTyr0TEWtDI9uT_NS-hdyue5BMnRT8bAOQ8Ol8jqz-ZJdCDsXY38poicYARb06lgNJWCPlhWgS3CIK2759XJq7J3YSjR5XK1eC_8zuNTozxheCx7oZCiK38gnihrNhAe4mmQN3o0ivSlz6wJ9z4_pH7QFMpTwb9Z2cPKeQ3xX-vI"/>
+</div>
+<div class="w-10 h-10 rounded-full border-2 border-surface bg-surface-container overflow-hidden">
+<img alt="User 2" class="w-full h-full object-cover" data-alt="Close up portrait of a man with gentle expression in elegant evening lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCgoSzjODRG6sU4qqB9WoRZdzrGgNmitrCXDlBHKFM3HOYMygf_Jc4EWuo0NUpao5EKcW-9c1L5XubPGajzlz5XwHNTWoE4Lmjpsqc8G2Pmess143V0N1DB8f-0OIhCbsSjc_m6NhdoharD3lojXR7e30yIkOBkKAih5HrUe0maygHgeC55OWM6y5srkhpMbIvC1rDfrI1w2SKqWrisTMobwpup6m4td4hzh3viez5DWOHPd4_Ig5RhrQq9nNRNAEpU5ygSNOC9VDE"/>
+</div>
+</div>
+<p class="text-[11px] font-label font-medium uppercase tracking-[0.2em] text-on-surface/40">
+                Connection established
+            </p>
+</div>
+</main>
+<!-- Decorative Corner Accents -->
+<div class="fixed top-0 left-0 w-64 h-64 bg-primary-container/5 blur-[120px] rounded-full -translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
+<div class="fixed bottom-0 right-0 w-96 h-96 bg-secondary/5 blur-[150px] rounded-full translate-x-1/3 translate-y-1/3 pointer-events-none"></div>
+</body></html>

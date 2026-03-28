@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Only Yours - Round 2 Guessing</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#3c364b",
+                        "on-error": "#690005",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#1e192c",
+                        "on-secondary-container": "#ff96b1",
+                        "on-primary": "#670024",
+                        "inverse-on-surface": "#332d42",
+                        "tertiary-fixed-dim": "#e8bacb",
+                        "on-background": "#e8def9",
+                        "inverse-surface": "#e8def9",
+                        "on-tertiary": "#462734",
+                        "on-surface-variant": "#e4bdc1",
+                        "on-secondary-fixed-variant": "#8c0d42",
+                        "surface-variant": "#373246",
+                        "primary": "#ffb2bd",
+                        "on-tertiary-fixed": "#2e131f",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#5e3d4b",
+                        "on-primary-fixed": "#400014",
+                        "surface": "#151023",
+                        "on-surface": "#e8def9",
+                        "surface-dim": "#151023",
+                        "surface-container-highest": "#373246",
+                        "surface-container-high": "#2c273b",
+                        "secondary-fixed-dim": "#ffb1c3",
+                        "secondary": "#ffb1c3",
+                        "on-secondary-fixed": "#3f0019",
+                        "outline-variant": "#5c3f43",
+                        "on-primary-container": "#5a001f",
+                        "on-secondary": "#66002d",
+                        "tertiary": "#e8bacb",
+                        "tertiary-container": "#af8595",
+                        "primary-fixed-dim": "#ffb2bd",
+                        "surface-tint": "#ffb2bd",
+                        "secondary-fixed": "#ffd9e0",
+                        "on-primary-fixed-variant": "#900036",
+                        "secondary-container": "#8c0d42",
+                        "inverse-primary": "#bd004a",
+                        "tertiary-fixed": "#ffd8e6",
+                        "background": "#151023",
+                        "surface-container": "#221d30",
+                        "primary-container": "#ff4e7b",
+                        "primary-fixed": "#ffd9dd",
+                        "on-tertiary-container": "#3e212d",
+                        "surface-container-lowest": "#100b1e",
+                        "outline": "#ab888c"
+                    },
+                    fontFamily: {
+                        "headline": ["Newsreader", "serif"],
+                        "body": ["Manrope", "sans-serif"],
+                        "label": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #151023;
+            color: #e8def9;
+            font-family: 'Manrope', sans-serif;
+        }
+        .serif-italic {
+            font-family: 'Newsreader', serif;
+            font-style: italic;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .primary-glow {
+            box-shadow: 0px 20px 40px rgba(255, 46, 110, 0.08);
+        }
+        .guessing-highlight {
+            background: linear-gradient(135deg, rgba(255, 78, 123, 0.15) 0%, rgba(255, 46, 110, 0.05) 100%);
+            border: 1px solid rgba(255, 78, 123, 0.3);
+        }
+        .progress-glow {
+            box-shadow: 0 0 8px #FF4E7B;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface min-h-screen selection:bg-primary-container selection:text-on-primary-container">
+<!-- Top Navigation Anchor (Supressed Bottom Nav for Task Focus) -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full">
+<div class="flex items-center gap-3">
+<button class="text-[#FFF7F6] hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined" data-icon="close">close</span>
+</button>
+<div class="flex flex-col">
+<span class="text-[10px] uppercase tracking-widest text-primary font-bold">Question 4 of 10</span>
+<span class="text-xs text-on-surface-variant font-medium">Round 2: Guess Elena's Answer</span>
+</div>
+</div>
+<div class="flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full">
+<span class="material-symbols-outlined text-primary text-sm" data-icon="favorite" style="font-variation-settings: 'FILL' 1;">favorite</span>
+<span class="text-sm font-bold text-on-surface tracking-tight">85% Match</span>
+</div>
+</header>
+<main class="pt-24 pb-12 px-6 max-w-2xl mx-auto flex flex-col min-h-screen">
+<!-- Score Indicator / Progress -->
+<div class="w-full h-1 bg-surface-container-highest/40 rounded-full mb-12 overflow-hidden">
+<div class="h-full w-2/5 bg-primary-container progress-glow rounded-full"></div>
+</div>
+<!-- Gameplay Hero Section -->
+<section class="flex-grow flex flex-col justify-center gap-8">
+<div class="relative group">
+<!-- Decorative Glow Background -->
+<div class="absolute -inset-10 bg-primary-container/5 blur-[100px] rounded-full pointer-events-none"></div>
+<h1 class="text-4xl md:text-5xl font-headline italic text-on-surface text-center leading-tight">
+                    What is Elena's favorite way to unwind?
+                </h1>
+</div>
+<!-- Answer Options Bento-ish Layout -->
+<div class="grid grid-cols-1 gap-4 mt-8">
+<!-- Option A -->
+<button class="w-full text-left p-6 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-all duration-300 group flex items-center gap-4">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant font-label text-sm border border-outline-variant/20">A</span>
+<span class="text-lg font-body text-on-surface">Reading a classic novel by the fire</span>
+</button>
+<!-- Option B (The "Guessing" Selection Style) -->
+<button class="w-full text-left p-6 rounded-xl guessing-highlight transition-all duration-300 group flex items-center gap-4 relative overflow-hidden">
+<div class="absolute right-6 top-1/2 -translate-y-1/2">
+<span class="material-symbols-outlined text-primary-container" data-icon="radio_button_checked">radio_button_checked</span>
+</div>
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-primary-container/20 text-primary font-bold font-label text-sm border border-primary/40">B</span>
+<span class="text-lg font-body text-on-surface font-semibold">Taking a long solo walk in the rain</span>
+</button>
+<!-- Option C -->
+<button class="w-full text-left p-6 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-all duration-300 group flex items-center gap-4">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant font-label text-sm border border-outline-variant/20">C</span>
+<span class="text-lg font-body text-on-surface">Cooking a complex 5-course meal</span>
+</button>
+<!-- Option D -->
+<button class="w-full text-left p-6 rounded-xl bg-surface-container-high hover:bg-surface-container-highest transition-all duration-300 group flex items-center gap-4">
+<span class="w-10 h-10 flex items-center justify-center rounded-full bg-surface-container text-on-surface-variant font-label text-sm border border-outline-variant/20">D</span>
+<span class="text-lg font-body text-on-surface">Binge-watching 90s sit-coms</span>
+</button>
+</div>
+</section>
+<!-- Fixed Action Footer -->
+<footer class="mt-12 flex flex-col items-center gap-6">
+<button class="w-full py-5 rounded-xl bg-primary-container text-on-primary-container font-label font-bold text-lg tracking-wide shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
+<span>Submit Guess</span>
+<span class="material-symbols-outlined" data-icon="send">send</span>
+</button>
+<p class="text-xs text-on-surface-variant font-label uppercase tracking-widest opacity-60">
+                Elena answered this 2 minutes ago
+            </p>
+</footer>
+</main>
+<!-- Visual Polish: Soft Ambient Blurs -->
+<div class="fixed top-[-10%] left-[-10%] w-[40%] h-[40%] bg-[#FF2E6E]/5 blur-[120px] rounded-full pointer-events-none z-0"></div>
+<div class="fixed bottom-[-10%] right-[-10%] w-[30%] h-[30%] bg-[#FFB1C3]/5 blur-[100px] rounded-full pointer-events-none z-0"></div>
+</body></html>

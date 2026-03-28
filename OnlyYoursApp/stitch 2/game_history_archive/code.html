@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,wght@0,400;0,600;0,700;1,400;1,600&amp;family=Manrope:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "surface-bright": "#3c364b",
+              "on-error": "#690005",
+              "on-error-container": "#ffdad6",
+              "surface-container-low": "#1e192c",
+              "on-secondary-container": "#ff96b1",
+              "on-primary": "#670024",
+              "inverse-on-surface": "#332d42",
+              "tertiary-fixed-dim": "#e8bacb",
+              "on-background": "#e8def9",
+              "inverse-surface": "#e8def9",
+              "on-tertiary": "#462734",
+              "on-surface-variant": "#e4bdc1",
+              "on-secondary-fixed-variant": "#8c0d42",
+              "surface-variant": "#373246",
+              "primary": "#ffb2bd",
+              "on-tertiary-fixed": "#2e131f",
+              "error": "#ffb4ab",
+              "error-container": "#93000a",
+              "on-tertiary-fixed-variant": "#5e3d4b",
+              "on-primary-fixed": "#400014",
+              "surface": "#151023",
+              "on-surface": "#e8def9",
+              "surface-dim": "#151023",
+              "surface-container-highest": "#373246",
+              "surface-container-high": "#2c273b",
+              "secondary-fixed-dim": "#ffb1c3",
+              "secondary": "#ffb1c3",
+              "on-secondary-fixed": "#3f0019",
+              "outline-variant": "#5c3f43",
+              "on-primary-container": "#5a001f",
+              "on-secondary": "#66002d",
+              "tertiary": "#e8bacb",
+              "tertiary-container": "#af8595",
+              "primary-fixed-dim": "#ffb2bd",
+              "surface-tint": "#ffb2bd",
+              "secondary-fixed": "#ffd9e0",
+              "on-primary-fixed-variant": "#900036",
+              "secondary-container": "#8c0d42",
+              "inverse-primary": "#bd004a",
+              "tertiary-fixed": "#ffd8e6",
+              "background": "#151023",
+              "surface-container": "#221d30",
+              "primary-container": "#ff4e7b",
+              "primary-fixed": "#ffd9dd",
+              "on-tertiary-container": "#3e212d",
+              "surface-container-lowest": "#100b1e",
+              "outline": "#ab888c"
+            },
+            fontFamily: {
+              "headline": ["Newsreader", "serif"],
+              "body": ["Manrope", "sans-serif"],
+              "label": ["Manrope", "sans-serif"]
+            },
+            borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+          },
+        },
+      }
+    </script>
+<style>
+      .material-symbols-outlined {
+        font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      }
+      .bg-glass {
+        background: rgba(34, 29, 48, 0.8);
+        backdrop-filter: blur(20px);
+      }
+      .text-glow {
+        text-shadow: 0 0 15px rgba(255, 78, 123, 0.3);
+      }
+      body {
+        background-color: #151023;
+        color: #e8def9;
+        font-family: 'Manrope', sans-serif;
+      }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-32">
+<!-- Top Navigation Shell -->
+<nav class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 w-full bg-[#151023]/80 backdrop-blur-xl no-border shadow-none bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<button class="text-[#FFF7F6] hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary/20">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close up portrait of a stylish woman with soft lighting and professional photographic depth of field" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAtoV6TgMo_SiD7DKGjYtURIkDAR2OVHNFjMUjGoc6nI2i5oMix4FuJjfycEKFi9Pxd24OH-1pb4kl4BkWpks8hfuFggF_w73CuqEAA-tu9IEcrBPTTpqgmlSar6JSSr8K3bC5Ax1SQ3FMgTPa62GuodKCk9Yj0i-Gcwv6gjyfjT-3loYFfqQx5xmYk6PBcQqVKb6WMOtF0XKrx2um79DH1XllNwK0CQCSCxEXUZE1WaxwloJs5uD8NqjOlpMViQlqmdVDlJxlvzCg"/>
+</div>
+</nav>
+<main class="pt-24 px-6 max-w-2xl mx-auto">
+<!-- Header Section -->
+<header class="mb-8">
+<h2 class="font-headline text-4xl font-semibold mb-2 text-on-surface">Game History</h2>
+<p class="font-body text-secondary-fixed-dim/70">Revisit the moments that brought you closer together.</p>
+</header>
+<!-- Filters & Sorting (Bento-inspired minimal layout) -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+<div class="bg-surface-container-high rounded-xl p-4 flex items-center justify-between">
+<span class="text-sm font-label text-secondary-fixed-dim/60 uppercase tracking-widest">Sort By</span>
+<div class="flex gap-2">
+<button class="bg-primary-container text-on-primary-container px-3 py-1 rounded-full text-xs font-medium transition-all active:scale-90">Recent</button>
+<button class="bg-surface-container-highest text-on-surface-variant px-3 py-1 rounded-full text-xs font-medium hover:bg-surface-bright transition-all">Match Rate</button>
+</div>
+</div>
+<div class="bg-surface-container-high rounded-xl p-4 flex items-center justify-between">
+<span class="text-sm font-label text-secondary-fixed-dim/60 uppercase tracking-widest">Timeframe</span>
+<button class="text-on-surface flex items-center gap-1 text-sm font-medium">
+                    All Time <span class="material-symbols-outlined text-sm" data-icon="expand_more">expand_more</span>
+</button>
+</div>
+</section>
+<!-- History List -->
+<div class="space-y-6">
+<!-- Card 1 -->
+<div class="group relative bg-surface-container-high rounded-[1.5rem] p-6 transition-all hover:bg-surface-container-highest shadow-[0px_20px_40px_rgba(255,46,110,0.03)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-[11px] font-label tracking-[0.2em] text-secondary-fixed-dim/50 uppercase mb-1">October 24, 2023</p>
+<h3 class="font-headline text-2xl text-on-surface">Evening Reflections</h3>
+<p class="text-sm font-body text-secondary-fixed-dim/70 mt-1">Played with <span class="text-secondary-fixed-dim">Julian</span></p>
+</div>
+<div class="flex flex-col items-end">
+<div class="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center relative">
+<span class="text-primary font-bold text-lg">94%</span>
+<div class="absolute inset-0 rounded-full border-2 border-primary border-t-transparent -rotate-45"></div>
+</div>
+<span class="text-[10px] font-label text-primary/60 mt-2 tracking-widest uppercase">Match Rate</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="User" class="w-full h-full object-cover rounded-full" data-alt="Portrait of a young person with soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDD9we2iNkOXf00PNLKSKyHSHJoCROPmtVPD5NAUwkJyjMYmJkdpcQodvMcxiJCwjGlKLS5lX5jpME35Dc2lIdJW2lGsCQhaAMJxlZB9ajzhGfKdMGpHW1J8NQt0Y8zhTvlk738YDkVTiAYOGmfgZ6mcmfhxCgK0LHxWDlT9w57MD3w3KJ3O85soXUYEp_TkHUNpG8cRdyd2F4OHgg2Ne8W-Nl91msz6zU_dj85JRgpovJsGZppDj7D75Ys55gURCvaPtr05HIejsU"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="Partner" class="w-full h-full object-cover rounded-full" data-alt="Portrait of a man with warm natural sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCg9lUxrBwO1pzICnH6ZYsZPEbhcwUg5_-SsLRP2pulrT8QaPndgqXTDVlnk1KLTe7RnAsQDWd-wLy-2uCYxRsr3kcP0tZIzFr_wvPEjKRdF4nqvoMivEvaIi53c8lgoxIWmVVRSydbLfNh6gUaG5FYEX1HNvDyLnPWdhU5Qvx35qhAVOiS7km13GiF_3ZKKqhibq16oSXaWxLlP8fvsIEIPEivbfuiZPSbvz4sLqAXBm8n29IJcRBhRcyZmQRLu354nt6W6TpZyXo"/>
+</div>
+</div>
+<button class="bg-primary-container text-on-primary-container px-6 py-2.5 rounded-full font-label text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-primary/10">
+                        View Results
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="group relative bg-surface-container-high rounded-[1.5rem] p-6 transition-all hover:bg-surface-container-highest shadow-[0px_20px_40px_rgba(255,46,110,0.03)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-[11px] font-label tracking-[0.2em] text-secondary-fixed-dim/50 uppercase mb-1">September 12, 2023</p>
+<h3 class="font-headline text-2xl text-on-surface">Future Visions</h3>
+<p class="text-sm font-body text-secondary-fixed-dim/70 mt-1">Played with <span class="text-secondary-fixed-dim">Julian</span></p>
+</div>
+<div class="flex flex-col items-end">
+<div class="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center relative">
+<span class="text-primary font-bold text-lg">82%</span>
+<div class="absolute inset-0 rounded-full border-2 border-primary border-t-transparent border-l-transparent -rotate-90"></div>
+</div>
+<span class="text-[10px] font-label text-primary/60 mt-2 tracking-widest uppercase">Match Rate</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="User" class="w-full h-full object-cover rounded-full" data-alt="Portrait of a young person with soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAQmWKMZGjfQamdVPr9wW26fABHM5mZ-b1LkLZCq7kc4EkSkt415C1Pc-PALmB3hUIwzborVr9LBv6itYiCdWnHoPUxaQEUur3AwLQpNyqKOCd6cbS7A2_zRisH44f7W7pd0yoCdXNyb-NHzrOK0uloxoQoCF93Kwi_AiHz6F9jIpSyPSk2BjpTYpO0gwgXEKQZugrqlrvl7F1RnHfJs8Wd53Wh60eW9f8SzDp1t39L7nSQe6xqmtiP57TRdv_OG6bpVSqjcWEBTtE"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="Partner" class="w-full h-full object-cover rounded-full" data-alt="Portrait of a man with warm natural sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDo3Ep98fhPhUA-_OlRlHimIb6H0G8iAXTpQeQQ7EhI6jaOIQN16kUJOLTyRWdET0Fsgp-DexAqEyW0HxtoJMdQmFy8cRDuO56Qs8CluiZcVyNwg_VQHDw3JAZaNmhh2n9G60k1yryzQROjR2eYqLOlOp-QLZ05nv-aYk3pdMt5WRKgBm-6tyrHKLL_G31bkSdvtTfPAziog6WMdCRuhGY32NszH1W1LsEU2AtptSc8gcqvCTNkCm3oFD15dkNtj-I_J7il7VlTo0k"/>
+</div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-6 py-2.5 rounded-full font-label text-sm font-semibold flex items-center gap-2 border border-outline-variant/20 hover:bg-surface-bright transition-all active:scale-95">
+                        View Results
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="group relative bg-surface-container-high rounded-[1.5rem] p-6 transition-all hover:bg-surface-container-highest shadow-[0px_20px_40px_rgba(255,46,110,0.03)] border border-outline-variant/10">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-[11px] font-label tracking-[0.2em] text-secondary-fixed-dim/50 uppercase mb-1">August 05, 2023</p>
+<h3 class="font-headline text-2xl text-on-surface">First Connections</h3>
+<p class="text-sm font-body text-secondary-fixed-dim/70 mt-1">Played with <span class="text-secondary-fixed-dim">Julian</span></p>
+</div>
+<div class="flex flex-col items-end">
+<div class="w-16 h-16 rounded-full border-2 border-primary/20 flex items-center justify-center relative">
+<span class="text-primary font-bold text-lg">76%</span>
+<div class="absolute inset-0 rounded-full border-2 border-primary border-t-transparent border-l-transparent border-b-transparent"></div>
+</div>
+<span class="text-[10px] font-label text-primary/60 mt-2 tracking-widest uppercase">Match Rate</span>
+</div>
+</div>
+<div class="flex items-center justify-between pt-4 border-t border-outline-variant/10">
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="User" class="w-full h-full object-cover rounded-full" data-alt="Portrait of a young person with soft studio lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCjekTnYMdbeVHt08YMT5-ljVUbUJp_gWmofk-xjbvf3YG4KO3IZET7u4nfV_S_Pxmo51JAQlOrWoyRnhPqctIP85iH0_QC0VzOsgc5WbfwkJI4MktXXd4PMEKkbSCNumYOxu6zfj0SlaNXYEFBXakLvb431FdueOvjjr2DNDeS4JdFS5_Lg0dzykmHUGD31uLmMq_dsKY0WWJ1WHUCCadsDg9W5Qa9IQTJiiEjrwGzwKYnVHK-zHuZUeS1Ap1W0aUG8dKW0dXZkEs"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-container">
+<img alt="Partner" class="w-full h-full object-cover rounded-full" data-alt="Portrait of a man with warm natural sunlight" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZT11c0aPlNJE7WTFt78OMhdpl7C1v1Hd1d5RvswZrEipQZfHzzOyYHu6s40zqFEXJ1cq1BUsGpvX3yhGrGQTTRJ3AwL7kkbvkw7jQsdEDqjQtBTODsoJee_T-7hMJNGd1vOKJoZdbTq-hS43JKRK9QVwiBAwUxkgy3T3VsEsu1qa7toehVw9yC1cg95WIdHVTGVH2h9ysEtO-pRP8l5TfzKF5GYkk-iGhHhVVij4OeYWhvQyyOfSz3kspbMvP0axfFj3UyccRT8M"/>
+</div>
+</div>
+<button class="bg-surface-container-highest text-on-surface px-6 py-2.5 rounded-full font-label text-sm font-semibold flex items-center gap-2 border border-outline-variant/20 hover:bg-surface-bright transition-all active:scale-95">
+                        View Results
+                        <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Pagination / Load More -->
+<div class="mt-12 text-center">
+<button class="text-secondary-fixed-dim font-label text-xs uppercase tracking-[0.3em] hover:text-primary transition-colors py-4">
+                Load Older Memories
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#221d30]/80 backdrop-blur-lg z-50 rounded-t-[1.5rem] shadow-[0px_-10px_30px_rgba(255,46,110,0.05)] tonal-shift-no-border">
+<!-- Dashboard -->
+<div class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="dashboard">dashboard</span>
+<span class="Labels: Manrope font-medium text-[11px] tracking-wide uppercase">Dashboard</span>
+</div>
+<!-- History (Active) -->
+<div class="flex flex-col items-center justify-center text-[#FF4E7B] after:content-[''] after:w-1 after:h-1 after:bg-[#FF4E7B] after:rounded-full after:mt-1 active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="history" style="font-variation-settings: 'FILL' 1;">history</span>
+<span class="Labels: Manrope font-medium text-[11px] tracking-wide uppercase">History</span>
+</div>
+<!-- Custom -->
+<div class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="auto_awesome">auto_awesome</span>
+<span class="Labels: Manrope font-medium text-[11px] tracking-wide uppercase">Custom</span>
+</div>
+<!-- Profile -->
+<div class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200 cursor-pointer">
+<span class="material-symbols-outlined mb-1" data-icon="person">person</span>
+<span class="Labels: Manrope font-medium text-[11px] tracking-wide uppercase">Profile</span>
+</div>
+</nav>
+<!-- Decorative background glow -->
+<div class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-primary/5 rounded-full blur-[120px] -z-10 pointer-events-none"></div>
+</body></html>

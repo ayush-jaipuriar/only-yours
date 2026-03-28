@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Only Yours - Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-bright": "#3c364b",
+                        "on-error": "#690005",
+                        "on-error-container": "#ffdad6",
+                        "surface-container-low": "#1e192c",
+                        "on-secondary-container": "#ff96b1",
+                        "on-primary": "#670024",
+                        "inverse-on-surface": "#332d42",
+                        "tertiary-fixed-dim": "#e8bacb",
+                        "on-background": "#e8def9",
+                        "inverse-surface": "#e8def9",
+                        "on-tertiary": "#462734",
+                        "on-surface-variant": "#e4bdc1",
+                        "on-secondary-fixed-variant": "#8c0d42",
+                        "surface-variant": "#373246",
+                        "primary": "#ffb2bd",
+                        "on-tertiary-fixed": "#2e131f",
+                        "error": "#ffb4ab",
+                        "error-container": "#93000a",
+                        "on-tertiary-fixed-variant": "#5e3d4b",
+                        "on-primary-fixed": "#400014",
+                        "surface": "#151023",
+                        "on-surface": "#e8def9",
+                        "surface-dim": "#151023",
+                        "surface-container-highest": "#373246",
+                        "surface-container-high": "#2c273b",
+                        "secondary-fixed-dim": "#ffb1c3",
+                        "secondary": "#ffb1c3",
+                        "on-secondary-fixed": "#3f0019",
+                        "outline-variant": "#5c3f43",
+                        "on-primary-container": "#5a001f",
+                        "on-secondary": "#66002d",
+                        "tertiary": "#e8bacb",
+                        "tertiary-container": "#af8595",
+                        "primary-fixed-dim": "#ffb2bd",
+                        "surface-tint": "#ffb2bd",
+                        "secondary-fixed": "#ffd9e0",
+                        "on-primary-fixed-variant": "#900036",
+                        "secondary-container": "#8c0d42",
+                        "inverse-primary": "#bd004a",
+                        "tertiary-fixed": "#ffd8e6",
+                        "background": "#151023",
+                        "surface-container": "#221d30",
+                        "primary-container": "#ff4e7b",
+                        "primary-fixed": "#ffd9dd",
+                        "on-tertiary-container": "#3e212d",
+                        "surface-container-lowest": "#100b1e",
+                        "outline": "#ab888c"
+                    },
+                    fontFamily: {
+                        "headline": ["Newsreader", "serif"],
+                        "body": ["Manrope", "sans-serif"],
+                        "label": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            background-color: #151023;
+            color: #e8def9;
+            font-family: 'Manrope', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+        .serif-italic { font-family: 'Newsreader', serif; font-style: italic; }
+        .hero-gradient {
+            background: linear-gradient(135deg, rgba(255, 78, 123, 0.1) 0%, rgba(21, 16, 35, 0) 100%);
+        }
+        .cta-glow {
+            background: linear-gradient(135deg, #FF3B78 0%, #FF2E6E 100%);
+            box-shadow: 0px 10px 20px rgba(255, 46, 110, 0.2);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen pb-32">
+<!-- TopAppBar -->
+<header class="fixed top-0 w-full z-50 bg-[#151023]/80 backdrop-blur-xl flex justify-between items-center px-6 h-16 w-full shadow-none bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-[#FFF7F6] hover:opacity-80 transition-opacity active:duration-150 scale-95 cursor-pointer" data-icon="menu">menu</span>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant/15 hover:opacity-80 transition-opacity active:duration-150 scale-95 cursor-pointer">
+<img alt="User profile" data-alt="Close-up portrait of a woman with soft lighting and a moody dark background, editorial style" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAQwUL9hI7R3XQuUkGSXrDPiiAyG4KuIFcrDcMgFKGcKtjzcR58rQC_jTCf3bUqTyTE59nGMY2Ph8CnCLBx4v2RQCTrfqF3V6_DqAkebn0TKR5xYZNr0QzNX82IXR3x5fstv1mNwzZuWIGAyhAcbo893U3kwkEHsQwjOWD-8YhRea1TgjRti40j5pmUMmQPqTOQZYnq8Mi_uuinEViwVjVoLUzj8t93PiA15TVjm9ExZvqBBxMskJt-J32dP-UfgNPvqU7VKCj8co"/>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto space-y-10">
+<!-- Greeting Section -->
+<section class="space-y-1">
+<p class="font-label text-secondary-fixed-dim/60 text-xs tracking-[0.2em] uppercase">Private Space</p>
+<h2 class="font-headline text-4xl text-on-surface italic">Welcome home.</h2>
+</section>
+<!-- Hero Card: Invite Your Partner -->
+<div class="relative overflow-hidden rounded-[1.5rem] bg-surface-container-high p-8 hero-gradient">
+<div class="absolute -top-24 -right-24 w-64 h-64 bg-primary-container/10 rounded-full blur-[80px]"></div>
+<div class="relative z-10 space-y-6">
+<div class="space-y-2">
+<h3 class="font-headline text-3xl text-on-surface leading-tight">Invite Your Partner</h3>
+<p class="font-body text-on-surface-variant text-lg leading-relaxed max-w-[85%]">
+                        Create a private sanctuary for two. A digital space designed exclusively for your shared memories, growth, and intimacy.
+                    </p>
+</div>
+<button class="cta-glow px-8 py-4 rounded-full font-label font-bold text-on-primary tracking-wide active:scale-95 transition-transform">
+                    Link with Partner
+                </button>
+</div>
+<div class="mt-8 flex -space-x-3 opacity-60">
+<div class="w-12 h-12 rounded-full border-2 border-surface-container-high bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="person">person</span>
+</div>
+<div class="w-12 h-12 rounded-full border-2 border-surface-container-high bg-surface-container-highest flex items-center justify-center border-dashed">
+<span class="material-symbols-outlined text-outline" data-icon="add">add</span>
+</div>
+</div>
+</div>
+<!-- Value Prop Bento Grid -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Play Together -->
+<div class="bg-surface-container p-6 rounded-xl space-y-4 border-l-2 border-primary-container/20">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-primary" data-icon="auto_awesome" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<h4 class="font-headline text-xl text-on-surface italic">Play Together</h4>
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">
+                    Rediscover each other through curated daily questions and intimate games designed to spark meaningful connection.
+                </p>
+</div>
+<!-- Track Growth -->
+<div class="bg-surface-container p-6 rounded-xl space-y-4 border-l-2 border-secondary/20">
+<div class="w-10 h-10 rounded-lg bg-surface-container-highest flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary" data-icon="insights">insights</span>
+</div>
+<h4 class="font-headline text-xl text-on-surface italic">Track Growth</h4>
+<p class="font-body text-sm text-on-surface-variant leading-relaxed">
+                    Visualize your relationship journey. Celebrate milestones and see how your bond evolves over time.
+                </p>
+</div>
+</section>
+<!-- Placeholder Section for Content Depth -->
+<section class="space-y-6 pt-4">
+<div class="flex items-center justify-between">
+<h5 class="font-label text-sm font-medium tracking-wide text-on-surface/80">RELATIONSHIP ESSENTIALS</h5>
+<span class="text-[10px] text-primary uppercase font-bold tracking-tighter bg-primary/10 px-2 py-0.5 rounded">Pending Link</span>
+</div>
+<div class="space-y-4">
+<div class="flex items-center gap-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/5">
+<div class="bg-surface-container-highest p-3 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="lock">lock</span>
+</div>
+<div>
+<p class="font-label text-sm text-on-surface">Shared Calendar</p>
+<p class="text-xs text-on-surface-variant/60">Unlock after linking with partner</p>
+</div>
+</div>
+<div class="flex items-center gap-4 p-4 rounded-xl bg-surface-container-low border border-outline-variant/5">
+<div class="bg-surface-container-highest p-3 rounded-full">
+<span class="material-symbols-outlined text-on-surface-variant" data-icon="favorite">favorite</span>
+</div>
+<div>
+<p class="font-label text-sm text-on-surface">Memory Vault</p>
+<p class="text-xs text-on-surface-variant/60">Unlock after linking with partner</p>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 rounded-t-[1.5rem] bg-[#221d30]/80 backdrop-blur-lg flex justify-around items-center px-4 pb-6 pt-3 shadow-[0px_-10px_30px_rgba(255,46,110,0.05)]">
+<!-- Dashboard (Active) -->
+<a class="flex flex-col items-center justify-center text-[#FF4E7B] after:content-[''] after:w-1 after:h-1 after:bg-[#FF4E7B] after:rounded-full after:mt-1 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="dashboard" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+<span class="font-label font-medium text-[11px] tracking-wide uppercase mt-1">Dashboard</span>
+</a>
+<!-- History -->
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+<span class="font-label font-medium text-[11px] tracking-wide uppercase mt-1">History</span>
+</a>
+<!-- Custom -->
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="auto_awesome">auto_awesome</span>
+<span class="font-label font-medium text-[11px] tracking-wide uppercase mt-1">Custom</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label font-medium text-[11px] tracking-wide uppercase mt-1">Profile</span>
+</a>
+</nav>
+</body></html>

@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,200..800;1,6..72,200..800&amp;family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "surface-bright": "#3c364b",
+            "on-error": "#690005",
+            "on-error-container": "#ffdad6",
+            "surface-container-low": "#1e192c",
+            "on-secondary-container": "#ff96b1",
+            "on-primary": "#670024",
+            "inverse-on-surface": "#332d42",
+            "tertiary-fixed-dim": "#e8bacb",
+            "on-background": "#e8def9",
+            "inverse-surface": "#e8def9",
+            "on-tertiary": "#462734",
+            "on-surface-variant": "#e4bdc1",
+            "on-secondary-fixed-variant": "#8c0d42",
+            "surface-variant": "#373246",
+            "primary": "#ffb2bd",
+            "on-tertiary-fixed": "#2e131f",
+            "error": "#ffb4ab",
+            "error-container": "#93000a",
+            "on-tertiary-fixed-variant": "#5e3d4b",
+            "on-primary-fixed": "#400014",
+            "surface": "#151023",
+            "on-surface": "#e8def9",
+            "surface-dim": "#151023",
+            "surface-container-highest": "#373246",
+            "surface-container-high": "#2c273b",
+            "secondary-fixed-dim": "#ffb1c3",
+            "secondary": "#ffb1c3",
+            "on-secondary-fixed": "#3f0019",
+            "outline-variant": "#5c3f43",
+            "on-primary-container": "#5a001f",
+            "on-secondary": "#66002d",
+            "tertiary": "#e8bacb",
+            "tertiary-container": "#af8595",
+            "primary-fixed-dim": "#ffb2bd",
+            "surface-tint": "#ffb2bd",
+            "secondary-fixed": "#ffd9e0",
+            "on-primary-fixed-variant": "#900036",
+            "secondary-container": "#8c0d42",
+            "inverse-primary": "#bd004a",
+            "tertiary-fixed": "#ffd8e6",
+            "background": "#151023",
+            "surface-container": "#221d30",
+            "primary-container": "#ff4e7b",
+            "primary-fixed": "#ffd9dd",
+            "on-tertiary-container": "#3e212d",
+            "surface-container-lowest": "#100b1e",
+            "outline": "#ab888c"
+          },
+          fontFamily: {
+            "headline": ["Newsreader"],
+            "body": ["Manrope"],
+            "label": ["Manrope"]
+          },
+          borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .serif-italic { font-family: 'Newsreader'; font-style: italic; }
+    .bg-midnight-glow {
+      background: radial-gradient(circle at 50% 50%, rgba(255, 46, 110, 0.08) 0%, rgba(21, 16, 35, 0) 70%);
+    }
+    .glossy-card {
+      background: linear-gradient(135deg, rgba(44, 39, 59, 0.4) 0%, rgba(34, 29, 48, 0.2) 100%);
+      backdrop-filter: blur(12px);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface font-body selection:bg-primary/30 selection:text-primary min-h-screen pb-32">
+<!-- TopAppBar Shell -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 h-16 w-full bg-[#151023]/80 backdrop-blur-xl bg-gradient-to-b from-[#151023] to-transparent">
+<div class="flex items-center gap-4">
+<button class="hover:opacity-80 transition-opacity active:scale-95 active:duration-150">
+<span class="material-symbols-outlined text-[#FF2E6E]">menu</span>
+</button>
+<h1 class="text-2xl font-serif italic tracking-tight text-[#FFF7F6]">Only Yours</h1>
+</div>
+<div class="flex items-center">
+<div class="w-8 h-8 rounded-full border border-primary/20 overflow-hidden">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="Close-up portrait of a woman with soft lighting and a warm, intimate atmosphere" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9xf_3MhdLQZFzuB3OxYPKG1UW_7OyiDyCioZDSxktJKfURXfAFPPg_O_jwij8wqx8bOOg0F4V9165wKw4zvLnv5OfF8J7FIMA21ElLO3-_AgCMx4pSjukL6yDYK3AoQRi22Gr2DUpZFGAoyZd65QEc4q-WEh60RDJP7b5zGuCJVlPEvhut_IS2nXd7AlD6a-F7s1Qg3a2veYeNYQNq4IyHUAcy2h27jb95q1OVv1uprS15LKn_HyQL72z-bzpVNN6pOl8Uuj5UEc"/>
+</div>
+</div>
+</header>
+<main class="pt-24 px-6 max-w-2xl mx-auto space-y-12">
+<!-- Personal Identity Section -->
+<section class="flex flex-col items-center text-center space-y-4">
+<div class="relative">
+<div class="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-125"></div>
+<div class="relative w-32 h-32 rounded-full p-1 bg-gradient-to-tr from-primary via-secondary to-primary-fixed-dim">
+<div class="w-full h-full rounded-full bg-surface overflow-hidden p-1">
+<img alt="User Avatar" class="w-full h-full rounded-full object-cover" data-alt="Professional aesthetic portrait of a person with stylish glasses in a moody, dimly lit studio" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDciadkUgYJ4iClvvSfLsERPYEOYCI3HouMGBOZebA5djb4N7j5DGRuzDDGALIOQGKWkYz9cGbT-qvdimkJHNOzMGXZnmuBZu1UNUY_7XaUnTjVP-X5BCeqUKNdBmM7LKBpROBhuYjBcGrDG46HyE7Lp9qMrAZT0h_EnY4gWU6_LbcTMOvAvt8hBp2ziR6GfC-VqcVQq7aAf8uGvby71WQ8N0l8SnVAO_4xmgvcnw5Vp6ynzFFPhoJFl_xXcdK_fVMXiE4o1TFCBgE"/>
+</div>
+</div>
+</div>
+<div class="space-y-1">
+<h2 class="text-4xl font-headline font-semibold text-on-surface tracking-tight">Julianne Doe</h2>
+<p class="text-secondary/60 font-label tracking-widest text-xs uppercase">@jules_and_mark</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2 rounded-full border border-outline-variant/30 text-sm font-medium hover:bg-surface-container-high transition-colors active:scale-95">
+          Edit Profile
+        </button>
+<button class="w-10 h-10 rounded-full border border-outline-variant/30 flex items-center justify-center hover:bg-surface-container-high transition-colors active:scale-95">
+<span class="material-symbols-outlined text-on-surface-variant text-sm">settings</span>
+</button>
+</div>
+</section>
+<!-- Shared Journey Section -->
+<section class="relative">
+<div class="absolute -top-24 left-1/2 -translate-x-1/2 w-full h-64 bg-midnight-glow pointer-events-none"></div>
+<div class="relative glossy-card rounded-[1.5rem] p-8 space-y-8 border border-outline-variant/10 shadow-2xl">
+<div class="flex justify-between items-end">
+<div class="space-y-1">
+<span class="text-xs font-label uppercase tracking-widest text-secondary/70">Current Phase</span>
+<h3 class="text-3xl font-headline italic text-on-surface">Soul Bound</h3>
+</div>
+<div class="text-right">
+<span class="text-4xl font-headline font-bold text-primary">Lv. 24</span>
+</div>
+</div>
+<!-- XP Bar -->
+<div class="space-y-3">
+<div class="flex justify-between items-center text-xs font-label tracking-wider text-on-surface-variant/80">
+<span>Progress to Level 25</span>
+<span>2,450 / 3,000 XP</span>
+</div>
+<div class="h-2 w-full bg-surface-container-highest/40 rounded-full overflow-hidden">
+<div class="h-full bg-primary-container rounded-full shadow-[0px_0px_12px_rgba(255,78,123,0.5)]" style="width: 81.6%;"></div>
+</div>
+</div>
+<!-- Milestone Highlights (Asymmetric Bento) -->
+<div class="grid grid-cols-2 gap-4">
+<div class="col-span-1 bg-surface-container-low/50 p-4 rounded-xl space-y-2 border border-outline-variant/5">
+<span class="material-symbols-outlined text-primary text-xl">favorite</span>
+<p class="text-[10px] uppercase tracking-tighter text-secondary/50 font-label">Days Together</p>
+<p class="text-xl font-headline italic">482 Days</p>
+</div>
+<div class="col-span-1 bg-surface-container-low/50 p-4 rounded-xl space-y-2 border border-outline-variant/5">
+<span class="material-symbols-outlined text-primary text-xl">auto_awesome</span>
+<p class="text-[10px] uppercase tracking-tighter text-secondary/50 font-label">Moments Created</p>
+<p class="text-xl font-headline italic">127 Total</p>
+</div>
+<div class="col-span-2 bg-gradient-to-r from-surface-container-high to-surface-container-low p-5 rounded-xl flex items-center justify-between border border-outline-variant/5">
+<div class="space-y-1">
+<p class="text-[10px] uppercase tracking-tighter text-secondary/50 font-label">Next Milestone</p>
+<p class="text-lg font-headline">500 Day Anniversary</p>
+</div>
+<div class="flex -space-x-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface bg-surface-variant flex items-center justify-center text-[10px] font-bold">18d</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Menu Links -->
+<section class="space-y-2">
+<a class="flex items-center justify-between p-4 rounded-xl hover:bg-surface-container-high transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary/80 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">history_edu</span>
+</div>
+<span class="font-medium text-on-surface">Journal Archives</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</a>
+<a class="flex items-center justify-between p-4 rounded-xl hover:bg-surface-container-high transition-colors group" href="#">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-secondary/80 group-hover:text-primary transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</div>
+<span class="font-medium text-on-surface">Notification Preferences</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</a>
+<div class="pt-6">
+<button class="w-full flex items-center justify-center gap-3 p-4 rounded-xl border border-error/20 text-error hover:bg-error/5 transition-colors active:scale-95">
+<span class="material-symbols-outlined">logout</span>
+<span class="font-bold tracking-wide uppercase text-xs">Sign Out</span>
+</button>
+</div>
+</section>
+</main>
+<!-- BottomNavBar Shell -->
+<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-4 pb-6 pt-3 bg-[#221d30]/80 backdrop-blur-lg rounded-t-[1.5rem] z-50 shadow-[0px_-10px_30px_rgba(255,46,110,0.05)]">
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">Dashboard</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">History</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#FFB1C3]/60 hover:text-[#FFB1C3] transition-colors active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">Custom</span>
+</a>
+<a class="flex flex-col items-center justify-center text-[#FF4E7B] after:content-[''] after:w-1 after:h-1 after:bg-[#FF4E7B] after:rounded-full after:mt-1 active:scale-90 transition-transform duration-200" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-medium text-[11px] tracking-wide uppercase mt-1">Profile</span>
+</a>
+</nav>
+</body></html>
