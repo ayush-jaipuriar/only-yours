@@ -1,39 +1,45 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  FlatList,
-  TouchableOpacity,
   Alert,
+  FlatList,
   Platform,
+  StyleSheet,
+  Text,
   ToastAndroid,
+  View,
   useWindowDimensions,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
+import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
+import {
+  VelvetFocusedScreen,
+  VelvetHeroCard,
+  VelvetOptionCard,
+  VelvetPrimaryButton,
+  VelvetSectionCard,
+  VelvetSecondaryButton,
+  VelvetStatusPill,
+} from '../components/velvet';
+import { announceForAccessibility } from '../accessibility';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
-import LoadingSpinner from '../components/LoadingSpinner';
-import EmptyState from '../components/EmptyState';
-import { VelvetFocusedScreen, VelvetOptionCard } from '../components/velvet';
-import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
-import { announceForAccessibility } from '../accessibility';
 
-/**
- * CategorySelectionScreen displays available question categories.
- * 
- * Sprint 4 Update:
- * - Sends game invitation via WebSocket when category selected
- * - Shows confirmation dialog for sensitive categories
- * - Displays "Invitation sent..." alert
- * 
- * Flow:
- * 1. User selects category
- * 2. If sensitive: show confirmation dialog
- * 3. Send /app/game.invite WebSocket message
- * 4. Show "Waiting for partner..." alert
- */
+const getCustomDeckDescription = (customDeckSummary) => {
+  if (!customDeckSummary) {
+    return 'Create private prompts that become a shared deck once your couple is ready to play them together.';
+  }
+
+  if (customDeckSummary.playable) {
+    return `${customDeckSummary.deckDescription} Your private deck is ready to play tonight.`;
+  }
+
+  return `${customDeckSummary.deckDescription} Add ${customDeckSummary.questionsNeededToPlay} more question${customDeckSummary.questionsNeededToPlay === 1 ? '' : 's'} to unlock play.`;
+};
+
+// eslint-disable-next-line react/prop-types
 const CategorySelectionScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { triggerHaptic } = useHaptics();
@@ -48,74 +54,169 @@ const CategorySelectionScreen = ({ navigation }) => {
   const styles = useMemo(
     () =>
       StyleSheet.create({
-        container: {
-          flex: 1,
-          backgroundColor: theme.colors.background,
-        },
         list: {
           flex: 1,
         },
         listContent: {
-          paddingHorizontal: 15,
-          paddingTop: 12,
-          paddingBottom: 20,
-          alignSelf: 'center',
+          paddingHorizontal: 20,
+          paddingTop: 24,
+          paddingBottom: 32,
           width: '100%',
-          maxWidth: isTablet ? 760 : 520,
+          maxWidth: isTablet ? 820 : 560,
+          alignSelf: 'center',
         },
-        categoryCard: {
-          marginBottom: 15,
+        introSection: {
+          width: '100%',
+          marginBottom: 16,
         },
-        sensitiveCard: {
-          borderWidth: 2,
-          borderColor: theme.colors.warning,
-        },
-        categoryName: {
-          fontSize: 20,
-          fontWeight: '600',
-          color: theme.colors.textPrimary,
+        eyebrow: {
+          color: theme.colors.textTertiary,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1.2,
+          textTransform: 'uppercase',
           marginBottom: 8,
         },
-        categoryDescription: {
-          fontSize: 14,
+        title: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 38 : 32,
+          lineHeight: isTablet ? 42 : 36,
+          marginBottom: 10,
+        },
+        titleAccent: {
+          color: theme.colors.primary,
+        },
+        body: {
           color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+        },
+        heroCard: {
+          width: '100%',
+          marginBottom: 16,
+          overflow: 'hidden',
+        },
+        heroGlow: {
+          position: 'absolute',
+          top: -36,
+          right: -18,
+          width: isTablet ? 220 : 170,
+          height: isTablet ? 220 : 170,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowPrimary,
+          opacity: 0.45,
+        },
+        heroTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 30 : 28,
+          lineHeight: isTablet ? 34 : 32,
+          marginTop: 12,
+          marginBottom: 8,
+        },
+        heroBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+        },
+        heroButtonRow: {
+          flexDirection: isTablet ? 'row' : 'column',
+          marginTop: 18,
+        },
+        heroPrimary: {
+          flex: 1,
+          marginRight: isTablet ? 10 : 0,
+          marginBottom: isTablet ? 0 : 10,
+        },
+        heroSecondary: {
+          flex: isTablet ? 0.75 : 1,
+        },
+        sectionCard: {
+          width: '100%',
+          marginBottom: 14,
+        },
+        sectionTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 24,
+          lineHeight: 28,
+          marginBottom: 4,
+        },
+        sectionBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 13,
           lineHeight: 20,
+          marginBottom: 12,
         },
-        sensitiveLabel: {
-          marginTop: 10,
+        statusRow: {
+          marginBottom: 4,
+        },
+        categoryCard: {
+          marginBottom: 12,
+        },
+        categoryHeader: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginBottom: 8,
+        },
+        categoryHeaderCopy: {
+          flex: 1,
+          paddingRight: 12,
+        },
+        categoryName: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 24,
+          lineHeight: 28,
+          marginBottom: 4,
+        },
+        categoryDescription: {
+          color: theme.colors.textSecondary,
+          fontSize: 14,
+          lineHeight: 21,
+        },
+        categoryFooter: {
+          flexDirection: isTablet ? 'row' : 'column',
+          alignItems: isTablet ? 'center' : 'flex-start',
+          justifyContent: 'space-between',
+          marginTop: 14,
+        },
+        categoryMeta: {
+          color: theme.colors.textTertiary,
           fontSize: 12,
-          color: theme.colors.warning,
-          fontWeight: '600',
-        },
-        customDeckCard: {
-          borderWidth: 2,
-          borderColor: theme.colors.accent,
-          backgroundColor: theme.colors.badgeSurfaceMint,
-        },
-        customDeckLabel: {
-          marginTop: 10,
-          fontSize: 12,
-          color: theme.colors.accentContrast,
+          letterSpacing: 0.7,
+          textTransform: 'uppercase',
           fontWeight: '700',
+          marginBottom: isTablet ? 0 : 8,
         },
-        disabledCard: {
-          opacity: 0.6,
+        categoryAction: {
+          color: theme.colors.primary,
+          fontSize: 12,
+          fontWeight: '700',
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
+        },
+        helperCard: {
+          width: '100%',
+          marginTop: 2,
+        },
+        helperTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 22,
+          lineHeight: 26,
+          marginBottom: 8,
+        },
+        helperBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 14,
+          lineHeight: 21,
+          marginBottom: 14,
         },
       }),
     [isTablet, theme]
-  );
-
-  /**
-   * Load categories from backend on mount.
-   */
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      setIsInviteInFlight(false);
-    }, [])
   );
 
   const loadCategories = async () => {
@@ -138,49 +239,17 @@ const CategorySelectionScreen = ({ navigation }) => {
     }
   };
 
-  /**
-   * Handle category selection.
-   * Shows confirmation for sensitive categories, then sends invitation.
-   */
-  const handleCategorySelect = (category) => {
-    if (category.isCustomDeck) {
-      if (!customDeckSummary?.playable) {
-        const questionsNeeded = customDeckSummary?.questionsNeededToPlay ?? 8;
-        Alert.alert(
-          'Custom Deck Not Ready Yet',
-          `Your couple needs ${questionsNeeded} more custom question${questionsNeeded === 1 ? '' : 's'} before you can start a custom game.`,
-          [
-            { text: 'Later', style: 'cancel' },
-            { text: 'Manage Questions', onPress: () => navigation.navigate('CustomQuestions') },
-          ]
-        );
-        return;
-      }
-      sendInvitation(category);
-      return;
-    }
+  useEffect(() => {
+    loadCategories();
+  }, []);
 
-    if (category.sensitive) {
-      Alert.alert(
-        'Sensitive Content',
-        `${category.name} contains mature topics. Continue?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          { text: 'Continue', onPress: () => sendInvitation(category) },
-        ]
-      );
-    } else {
-      sendInvitation(category);
-    }
-  };
+  useFocusEffect(
+    useCallback(() => {
+      setIsInviteInFlight(false);
+    }, [])
+  );
 
-  /**
-   * Send game invitation via WebSocket.
-   * Shows alert with option to cancel while waiting.
-   */
   const sendInvitation = (category) => {
-    console.log('[CategorySelection] Sending invitation for:', category.name);
-
     try {
       if (isInviteInFlight) {
         if (Platform.OS === 'android') {
@@ -206,7 +275,6 @@ const CategorySelectionScreen = ({ navigation }) => {
         return;
       }
 
-      // Send invitation via WebSocket
       const payload = category.isCustomDeck
         ? { deckType: 'CUSTOM_COUPLE' }
         : { categoryId: category.id.toString() };
@@ -228,50 +296,131 @@ const CategorySelectionScreen = ({ navigation }) => {
     }
   };
 
-  /**
-   * Render a single category card.
-   */
+  const handleCategorySelect = (category) => {
+    if (category.isCustomDeck) {
+      if (!customDeckSummary?.playable) {
+        const questionsNeeded = customDeckSummary?.questionsNeededToPlay ?? 8;
+        Alert.alert(
+          'Custom Deck Not Ready Yet',
+          `Your couple needs ${questionsNeeded} more custom question${questionsNeeded === 1 ? '' : 's'} before you can start a custom game.`,
+          [
+            { text: 'Later', style: 'cancel' },
+            { text: 'Manage Questions', onPress: () => navigation.navigate('CustomQuestions') },
+          ]
+        );
+        return;
+      }
+
+      sendInvitation(category);
+      return;
+    }
+
+    if (category.sensitive) {
+      Alert.alert(
+        'Sensitive Content',
+        `${category.name} contains mature topics. Continue?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Continue', onPress: () => sendInvitation(category) },
+        ]
+      );
+      return;
+    }
+
+    sendInvitation(category);
+  };
+
   const customDeckCard = {
     id: 'custom-deck',
     name: customDeckSummary?.deckName || 'Custom Couple Questions',
-    description: customDeckSummary
-      ? customDeckSummary.playable
-        ? `${customDeckSummary.deckDescription} Your deck is ready to play.`
-        : `${customDeckSummary.deckDescription} Add ${customDeckSummary.questionsNeededToPlay} more question${customDeckSummary.questionsNeededToPlay === 1 ? '' : 's'} to unlock play.`
-      : 'Create private questions that become part of a shared couple deck when played.',
+    description: getCustomDeckDescription(customDeckSummary),
     isCustomDeck: true,
     sensitive: false,
   };
-  const displayItems = [customDeckCard, ...categories];
+
+  const displayItems = categories || [];
 
   const renderCategory = ({ item }) => (
     <VelvetOptionCard
-      style={[
-        styles.categoryCard,
-        item.isCustomDeck && styles.customDeckCard,
-        item.sensitive && styles.sensitiveCard,
-        isInviteInFlight && styles.disabledCard,
-      ]}
+      style={styles.categoryCard}
       onPress={() => handleCategorySelect(item)}
       disabled={isInviteInFlight}
-      activeOpacity={0.7}
+      activeOpacity={0.82}
+      selected={item.sensitive}
+      tone={item.sensitive ? 'accent' : 'primary'}
       accessibilityRole="button"
-      accessibilityLabel={`${item.name}. ${item.description}${item.sensitive ? '. Mature content.' : ''}${item.isCustomDeck ? '. Custom couple deck.' : ''}`}
-      accessibilityHint={item.isCustomDeck
-        ? 'Double tap to start a custom-deck invitation if your deck is ready, or manage your custom questions if it is not.'
-        : 'Double tap to send a game invitation with this category.'}
-      accessibilityState={{ disabled: isInviteInFlight }}>
-      <Text style={styles.categoryName}>{item.name}</Text>
-      <Text style={styles.categoryDescription}>{item.description}</Text>
-      {item.isCustomDeck ? (
-        <Text style={styles.customDeckLabel}>
-          {customDeckSummary?.playable ? 'Custom Deck Ready' : 'Build Your Private Deck'}
-        </Text>
-      ) : null}
-      {item.sensitive && (
-        <Text style={styles.sensitiveLabel}>Mature Content</Text>
-      )}
+      accessibilityLabel={`${item.name}. ${item.description}${item.sensitive ? '. Mature content.' : ''}`}
+      accessibilityHint="Double tap to send a game invitation with this category."
+      accessibilityState={{ disabled: isInviteInFlight }}
+    >
+      <View style={styles.categoryHeader}>
+        <View style={styles.categoryHeaderCopy}>
+          <Text style={styles.categoryName}>{item.name}</Text>
+          <Text style={styles.categoryDescription}>{item.description}</Text>
+        </View>
+        {item.sensitive ? <VelvetStatusPill label="Mature" tone="warning" /> : null}
+      </View>
+      <View style={styles.categoryFooter}>
+        <Text style={styles.categoryMeta}>{item.id ? `Category ${item.id}` : 'Conversation Deck'}</Text>
+        <Text style={styles.categoryAction}>{isInviteInFlight ? 'Invitation Pending' : 'Invite Partner'}</Text>
+      </View>
     </VelvetOptionCard>
+  );
+
+  const listHeader = (
+    <>
+      <View style={styles.introSection}>
+        <Text style={styles.eyebrow}>Next Session</Text>
+        <Text style={styles.title}>
+          Choose your <Text style={styles.titleAccent}>conversation</Text> journey.
+        </Text>
+        <Text style={styles.body}>
+          Pick a deck that matches the energy of tonight&apos;s connection. Each category shapes a different rhythm of questions, guesses, and reveals.
+        </Text>
+      </View>
+
+      <VelvetHeroCard style={styles.heroCard}>
+        <View style={styles.heroGlow} />
+        <VelvetStatusPill
+          label={customDeckSummary?.playable ? 'Custom deck ready' : 'Build your private deck'}
+          tone={customDeckSummary?.playable ? 'success' : 'accent'}
+        />
+        <Text style={styles.heroTitle}>{customDeckCard.name}</Text>
+        <Text style={styles.heroBody}>{customDeckCard.description}</Text>
+
+        <View style={styles.heroButtonRow}>
+          <VelvetPrimaryButton
+            label={customDeckSummary?.playable ? 'Play Custom Deck' : 'Manage Questions'}
+            onPress={
+              customDeckSummary?.playable
+                ? () => handleCategorySelect(customDeckCard)
+                : () => navigation.navigate('CustomQuestions')
+            }
+            style={styles.heroPrimary}
+            disabled={isInviteInFlight}
+          />
+          <VelvetSecondaryButton
+            label={isInviteInFlight ? 'Invite Pending' : 'Browse Standard Decks'}
+            onPress={() => null}
+            style={styles.heroSecondary}
+            disabled
+          />
+        </View>
+      </VelvetHeroCard>
+
+      <VelvetSectionCard style={styles.sectionCard}>
+        <Text style={styles.sectionTitle}>Standard Categories</Text>
+        <Text style={styles.sectionBody}>
+          Choose a mood, send the invite, and wait for your partner to join. Sensitive categories will ask for confirmation before they are sent.
+        </Text>
+        <View style={styles.statusRow}>
+          <VelvetStatusPill
+            label={isInviteInFlight ? 'Invitation in flight' : 'Ready to invite'}
+            tone={isInviteInFlight ? 'warning' : 'primary'}
+          />
+        </View>
+      </VelvetSectionCard>
+    </>
   );
 
   if (loading) {
@@ -290,7 +439,7 @@ const CategorySelectionScreen = ({ navigation }) => {
     );
   }
 
-  if (displayItems.length === 0) {
+  if (!customDeckSummary && displayItems.length === 0) {
     return (
       <EmptyState
         icon="📂"
@@ -305,13 +454,28 @@ const CategorySelectionScreen = ({ navigation }) => {
       navigation={navigation}
       title="Choose a Category"
       subtitle="Pick the mood for your next game"
+      withAtmosphere
+      atmosphere="focused"
     >
       <FlatList
         data={displayItems}
         style={styles.list}
         renderItem={renderCategory}
-        keyExtractor={item => item.id.toString()}
+        keyExtractor={(item) => item.id.toString()}
         contentContainerStyle={styles.listContent}
+        ListHeaderComponent={listHeader}
+        ListFooterComponent={(
+          <VelvetSectionCard style={styles.helperCard}>
+            <Text style={styles.helperTitle}>Need a more personal session?</Text>
+            <Text style={styles.helperBody}>
+              Custom questions are private prompts you author yourselves. They become part of your couple deck and create a more intimate, tailored game flow over time.
+            </Text>
+            <VelvetSecondaryButton
+              label="Open Custom Questions"
+              onPress={() => navigation.navigate('CustomQuestions')}
+            />
+          </VelvetSectionCard>
+        )}
       />
     </VelvetFocusedScreen>
   );

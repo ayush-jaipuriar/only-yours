@@ -74,7 +74,7 @@ describe('CategorySelectionScreen custom deck flow', () => {
   };
 
   it('sends a custom deck invitation when the deck is playable', async () => {
-    const { getByText } = renderScreen({
+    const { getByText, getByLabelText } = renderScreen({
       deckName: 'Custom Couple Questions',
       deckDescription: 'Play your private deck.',
       playable: true,
@@ -85,7 +85,7 @@ describe('CategorySelectionScreen custom deck flow', () => {
       expect(getByText('Custom Couple Questions')).toBeTruthy();
     });
 
-    fireEvent.press(getByText('Custom Couple Questions'));
+    fireEvent.press(getByLabelText('Play Custom Deck'));
 
     expect(WebSocketService.sendMessage).toHaveBeenCalledWith('/app/game.invite', {
       deckType: 'CUSTOM_COUPLE',
@@ -105,6 +105,6 @@ describe('CategorySelectionScreen custom deck flow', () => {
     });
 
     expect(getByText(/Add 3 more questions to unlock play\./)).toBeTruthy();
-    expect(getByText('Build Your Private Deck')).toBeTruthy();
+    expect(getByText('Build your private deck')).toBeTruthy();
   });
 });

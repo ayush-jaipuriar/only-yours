@@ -52,6 +52,10 @@ const ProfileScreen = ({ navigation }) => {
           paddingBottom: 28,
           flexGrow: 1,
         },
+        stateContent: {
+          width: '100%',
+          minHeight: 360,
+        },
         card: {
           width: '100%',
           maxWidth: 700,
@@ -347,18 +351,42 @@ const ProfileScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading your profile..." />;
+    return (
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="profile"
+        headerTitle="Profile"
+        headerSubtitle="Your growth and celebrations"
+        contentContainerStyle={styles.container}
+        contentMaxWidth={760}
+      >
+        <View style={styles.stateContent}>
+          <LoadingSpinner message="Loading your profile..." />
+        </View>
+      </VelvetBrowseLayout>
+    );
   }
 
   if (loadError || !profile) {
     return (
-      <EmptyState
-        icon="⚠️"
-        title="Couldn't Load Profile"
-        message="Something went wrong. Please check your connection."
-        actionLabel="Retry"
-        onAction={fetchProfile}
-      />
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="profile"
+        headerTitle="Profile"
+        headerSubtitle="Your growth and celebrations"
+        contentContainerStyle={styles.container}
+        contentMaxWidth={760}
+      >
+        <View style={styles.stateContent}>
+          <EmptyState
+            icon="⚠️"
+            title="Couldn't Load Profile"
+            message="Something went wrong. Please check your connection."
+            actionLabel="Retry"
+            onAction={fetchProfile}
+          />
+        </View>
+      </VelvetBrowseLayout>
     );
   }
 

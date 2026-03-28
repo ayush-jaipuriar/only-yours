@@ -151,64 +151,64 @@ Status convention:
 ## Phase 4. Dashboard and Core Navigation Surfaces
 
 ### Implementation
-- [ ] Rebuild [`DashboardScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/DashboardScreen.js) with Velvet browse shell
-- [ ] Implement `linked + active game` dashboard state
-- [ ] Implement `linked + no active game` dashboard state
-- [ ] Implement `not linked yet` dashboard state
-- [ ] Restyle progression section
-- [ ] Restyle milestone section
-- [ ] Restyle stats section
-- [ ] Restyle achievements section
-- [ ] Restyle dashboard entry-point cards/buttons
-- [ ] Finalize bottom nav behavior for browse surfaces
+- [x] Rebuild [`DashboardScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/DashboardScreen.js) with Velvet browse shell
+- [x] Implement `linked + active game` dashboard state
+- [x] Implement `linked + no active game` dashboard state
+- [x] Implement `not linked yet` dashboard state
+- [x] Restyle progression section
+- [x] Restyle milestone section
+- [x] Restyle stats section
+- [x] Restyle achievements section
+- [x] Restyle dashboard entry-point cards/buttons
+- [x] Finalize bottom nav behavior for browse surfaces
 
 ### Validation
-- [ ] Active game CTA routes correctly
-- [ ] Link with partner CTA routes correctly
-- [ ] Start new game CTA routes correctly
-- [ ] Dashboard still works with real progression/stats data
-- [ ] All three main dashboard states render correctly
+- [x] Active game CTA routes correctly
+- [x] Link with partner CTA routes correctly
+- [x] Start new game CTA routes correctly
+- [x] Dashboard still works with real progression/stats data
+- [x] All three main dashboard states render correctly
 
 ### Docs
-- [ ] Record any dashboard-state deviations from Stitch 2
-- [ ] Update spec if bottom-nav decisions change from plan assumptions
+- [x] Record any dashboard-state deviations from Stitch 2
+- [x] Update spec if bottom-nav decisions change from plan assumptions
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: `DashboardScreen` now uses a state-driven Velvet Midnight structure instead of a mostly linear utility stack. The screen keeps the existing `useDashboardGameFlow` contract and navigation behavior, but reorganizes the content into a stronger browse-home shape: editorial greeting, stateful hero (`active game`, `ready to start`, `not linked`), quick destination cards, progression as a richer narrative section, a bento-style celebration area, denser stats lower in the scroll, and achievements with clearer section framing. The implementation now consumes more of the shared primitive layer directly: `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` alongside the existing browse shell and card primitives. Automated validation now covers both halves of the dashboard contract: `DashboardScreen.test.js` verifies the three main screen states plus their primary CTAs, and `useDashboardGameFlow.test.js` continues to cover the underlying data/loading behavior. Neighboring browse-surface flow tests (`ProfileScreenFlow`, `useGameHistoryFlow`) also remain green after the redesign.
+- Blockers: Manual/runtime dashboard visual QA is still recommended before we call the broader Phase 4 browse-surface work fully closed.
 
 ---
 
 ## Phase 5. Partner Linking and Category Selection
 
 ### Implementation
-- [ ] Rebuild [`PartnerLinkScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/PartnerLinkScreen.js)
-- [ ] Implement focused shell for linking flow
-- [ ] Restyle generate/share code state
-- [ ] Restyle enter partner code state
-- [ ] Implement success / connected state
-- [ ] Rebuild [`CategorySelectionScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/CategorySelectionScreen.js)
-- [ ] Restyle standard category cards
-- [ ] Restyle custom deck featured card
-- [ ] Implement custom deck ready state
-- [ ] Implement custom deck not-ready state
-- [ ] Restyle loading/error/empty states
+- [x] Rebuild [`PartnerLinkScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/PartnerLinkScreen.js)
+- [x] Implement focused shell for linking flow
+- [x] Restyle generate/share code state
+- [x] Restyle enter partner code state
+- [x] Implement success / connected state
+- [x] Rebuild [`CategorySelectionScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/CategorySelectionScreen.js)
+- [x] Restyle standard category cards
+- [x] Restyle custom deck featured card
+- [x] Implement custom deck ready state
+- [x] Implement custom deck not-ready state
+- [x] Restyle loading/error/empty states
 
 ### Validation
-- [ ] Generate code works
+- [x] Generate code works
 - [ ] Copy/share code works
-- [ ] Enter/connect flow works
-- [ ] Connected success flow works
-- [ ] Category selection works for standard categories
-- [ ] Category selection handles custom deck readiness correctly
+- [x] Enter/connect flow works
+- [x] Connected success flow works
+- [x] Category selection works for standard categories
+- [x] Category selection handles custom deck readiness correctly
 
 ### Docs
-- [ ] Record any linking-flow UX adjustments made for real constraints
-- [ ] Record any category-state additions needed beyond Stitch 2
+- [x] Record any linking-flow UX adjustments made for real constraints
+- [x] Record any category-state additions needed beyond Stitch 2
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: `PartnerLinkScreen` now uses the focused Velvet Midnight shell and has been reframed as a true two-step transactional flow: editorial intro, generated-code hero, explicit enter-their-code panel, and a calmer explanatory helper card. The previous success alert has been replaced with an in-screen connected state that gives the user a clean next choice between starting the first game and returning to the dashboard. `CategorySelectionScreen` has also been rebuilt around clearer hierarchy: a stronger intro, a featured custom-deck hero, a standard-category section with better readiness/invite status treatment, and a helper panel that explains the role of authored custom prompts. The new design keeps all prior behavior contracts intact: custom-deck readiness gating, sensitive-content confirmation, invite-in-flight locking, WebSocket invite sending, and existing loading/error/empty fallbacks.
+- Blockers: Manual verification is still recommended for native copy/share behavior on a real device. Automated coverage currently proves generate, connect, success-state rendering, standard-category invites, and custom-deck readiness paths.
 
 ---
 

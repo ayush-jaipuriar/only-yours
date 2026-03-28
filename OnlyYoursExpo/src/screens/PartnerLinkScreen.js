@@ -1,68 +1,31 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  Alert,
-  Share,
-  StyleSheet,
-  Animated,
   ActivityIndicator,
-  ScrollView,
+  Alert,
   Clipboard,
   Platform,
+  ScrollView,
+  Share,
+  StyleSheet,
+  Text,
+  View,
   useWindowDimensions,
 } from 'react-native';
 import api from '../services/api';
-import { VelvetFocusedScreen } from '../components/velvet';
+import {
+  VelvetFocusedScreen,
+  VelvetHeroCard,
+  VelvetPrimaryButton,
+  VelvetSectionCard,
+  VelvetSecondaryButton,
+  VelvetStatusPill,
+  VelvetTextField,
+} from '../components/velvet';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { announceForAccessibility } from '../accessibility';
 
-const HeartIllustration = ({ primaryColor, linkColor }) => {
-  const pulse = useRef(new Animated.Value(1)).current;
-  const float = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.12, duration: 600, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 600, useNativeDriver: true }),
-      ])
-    ).start();
-
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(float, { toValue: -6, duration: 1800, useNativeDriver: true }),
-        Animated.timing(float, { toValue: 6, duration: 1800, useNativeDriver: true }),
-      ])
-    ).start();
-
-    return () => {
-      pulse.stopAnimation();
-      float.stopAnimation();
-    };
-  }, []);
-
-  return (
-    <Animated.View
-      style={[
-        styles.heartContainer,
-        { transform: [{ scale: pulse }, { translateY: float }] },
-      ]}
-    >
-      <View style={styles.heartRow}>
-        <View style={[styles.heartHalf, styles.heartLeft, { backgroundColor: primaryColor }]} />
-        <View style={[styles.heartHalf, styles.heartRight, { backgroundColor: primaryColor }]} />
-      </View>
-      <View style={[styles.heartBottom, { borderTopColor: primaryColor }]} />
-      <View style={[styles.linkLine, { backgroundColor: linkColor }]} />
-      <View style={[styles.linkDot, { backgroundColor: linkColor }]} />
-    </Animated.View>
-  );
-};
-
+// eslint-disable-next-line react/prop-types
 const PartnerLinkScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { triggerHaptic } = useHaptics();
@@ -73,37 +36,251 @@ const PartnerLinkScreen = ({ navigation }) => {
   const [loadingGen, setLoadingGen] = useState(false);
   const [loadingLink, setLoadingLink] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
 
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(30)).current;
-  const codeReveal = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 500,
-        useNativeDriver: true,
+  const dynamicStyles = useMemo(
+    () =>
+      StyleSheet.create({
+        scrollContent: {
+          paddingHorizontal: 20,
+          paddingTop: 24,
+          paddingBottom: 44,
+          alignSelf: 'center',
+          width: '100%',
+          maxWidth: isTablet ? 780 : 540,
+        },
+        introWrap: {
+          width: '100%',
+          marginBottom: 16,
+        },
+        eyebrow: {
+          color: theme.colors.textTertiary,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1.2,
+          textTransform: 'uppercase',
+          marginBottom: 8,
+        },
+        title: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 38 : 32,
+          lineHeight: isTablet ? 42 : 36,
+          marginBottom: 10,
+        },
+        body: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+        },
+        introMeta: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginTop: 14,
+        },
+        introDot: {
+          width: 8,
+          height: 8,
+          borderRadius: 999,
+          backgroundColor: theme.colors.primary,
+          marginRight: 8,
+          shadowColor: theme.colors.glowPrimary,
+          shadowOpacity: 0.7,
+          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 0 },
+        },
+        introMetaText: {
+          color: theme.colors.textTertiary,
+          fontSize: 13,
+        },
+        heroCard: {
+          width: '100%',
+          marginBottom: 14,
+          overflow: 'hidden',
+        },
+        heroGlow: {
+          position: 'absolute',
+          top: -34,
+          right: -16,
+          width: isTablet ? 220 : 170,
+          height: isTablet ? 220 : 170,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowPrimary,
+          opacity: 0.45,
+        },
+        heroTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 30 : 28,
+          lineHeight: isTablet ? 34 : 32,
+          marginTop: 12,
+          marginBottom: 8,
+        },
+        heroBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+        },
+        heroActionRow: {
+          flexDirection: isTablet ? 'row' : 'column',
+          marginTop: 18,
+        },
+        heroPrimary: {
+          flex: 1,
+          marginRight: isTablet ? 10 : 0,
+          marginBottom: isTablet ? 0 : 10,
+        },
+        heroSecondary: {
+          flex: isTablet ? 0.8 : 1,
+        },
+        panel: {
+          width: '100%',
+          marginBottom: 14,
+        },
+        panelHeader: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 12,
+        },
+        panelHeaderCopy: {
+          flex: 1,
+          paddingRight: 12,
+        },
+        panelTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 22,
+          lineHeight: 26,
+          marginBottom: 4,
+        },
+        panelBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 13,
+          lineHeight: 20,
+        },
+        codeBadge: {
+          borderRadius: 20,
+          borderWidth: 1,
+          borderStyle: 'dashed',
+          borderColor: theme.colors.borderAccent,
+          backgroundColor: theme.colors.surfaceEmphasis,
+          paddingVertical: 20,
+          paddingHorizontal: 18,
+          marginTop: 4,
+          marginBottom: 16,
+        },
+        codeText: {
+          color: theme.colors.textPrimary,
+          textAlign: 'center',
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 34 : 30,
+          letterSpacing: 4,
+        },
+        actionRow: {
+          flexDirection: isTablet ? 'row' : 'column',
+        },
+        rowButton: {
+          flex: 1,
+          marginRight: isTablet ? 10 : 0,
+          marginBottom: isTablet ? 0 : 10,
+        },
+        dividerRow: {
+          width: '100%',
+          flexDirection: 'row',
+          alignItems: 'center',
+          marginBottom: 14,
+        },
+        dividerLine: {
+          flex: 1,
+          height: 1,
+          backgroundColor: theme.colors.border,
+        },
+        dividerText: {
+          marginHorizontal: 14,
+          color: theme.colors.textTertiary,
+          fontSize: 13,
+          fontWeight: '600',
+        },
+        field: {
+          textAlign: 'center',
+          letterSpacing: 2.2,
+          fontSize: 18,
+          fontWeight: '700',
+          textTransform: 'uppercase',
+        },
+        helperCard: {
+          minHeight: 172,
+          justifyContent: 'space-between',
+        },
+        helperTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 22,
+          lineHeight: 26,
+          marginBottom: 8,
+        },
+        helperBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 14,
+          lineHeight: 21,
+        },
+        securityNote: {
+          width: '100%',
+          alignItems: 'center',
+          paddingHorizontal: 12,
+          paddingTop: 8,
+        },
+        securityText: {
+          color: theme.colors.textTertiary,
+          fontSize: 12,
+          lineHeight: 18,
+          textAlign: 'center',
+          marginTop: 8,
+          maxWidth: 360,
+        },
+        successWrap: {
+          width: '100%',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flex: 1,
+          paddingHorizontal: 20,
+          paddingTop: 24,
+          paddingBottom: 44,
+        },
+        successCard: {
+          width: '100%',
+          maxWidth: 520,
+          alignItems: 'center',
+          paddingTop: 30,
+          paddingBottom: 24,
+        },
+        successIcon: {
+          fontSize: 42,
+          marginBottom: 16,
+        },
+        successTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 34,
+          lineHeight: 38,
+          textAlign: 'center',
+          marginBottom: 10,
+        },
+        successBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: 'center',
+          marginBottom: 20,
+        },
+        successRow: {
+          flexDirection: isTablet ? 'row' : 'column',
+          width: '100%',
+        },
       }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }),
-    ]).start();
-  }, []);
-
-  useEffect(() => {
-    if (generatedCode) {
-      codeReveal.setValue(0);
-      Animated.spring(codeReveal, {
-        toValue: 1,
-        tension: 50,
-        friction: 7,
-        useNativeDriver: true,
-      }).start();
-    }
-  }, [generatedCode]);
+    [isTablet, theme]
+  );
 
   const generateCode = async () => {
     setLoadingGen(true);
@@ -121,22 +298,30 @@ const PartnerLinkScreen = ({ navigation }) => {
   };
 
   const shareCode = async () => {
-    if (!generatedCode) return;
+    if (!generatedCode) {
+      return;
+    }
     try {
       await Share.share({
-        message: `Hey! Let's connect on Only Yours \u2764\uFE0F\nUse my partner code: ${generatedCode}`,
+        message: `Hey! Let's connect on Only Yours ❤️\nUse my partner code: ${generatedCode}`,
       });
       triggerHaptic(HAPTIC_EVENTS.PARTNER_CODE_SHARED);
-    } catch {}
+    } catch {
+      // Native share sheet dismissal does not need user-facing error treatment.
+    }
   };
 
   const copyCode = () => {
-    if (!generatedCode) return;
+    if (!generatedCode) {
+      return;
+    }
+
     if (Platform.OS === 'web') {
       navigator.clipboard?.writeText(generatedCode);
     } else {
       Clipboard.setString(generatedCode);
     }
+
     setCopied(true);
     announceForAccessibility('Partner code copied.');
     triggerHaptic(HAPTIC_EVENTS.PARTNER_CODE_COPIED);
@@ -149,101 +334,54 @@ const PartnerLinkScreen = ({ navigation }) => {
       Alert.alert('Missing Code', 'Please enter the code your partner shared with you.');
       return;
     }
+
     setLoadingLink(true);
     try {
       await api.post('/couple/link', { code: trimmed });
       announceForAccessibility('Partner code accepted. You are now connected.');
       triggerHaptic(HAPTIC_EVENTS.INVITATION_ACCEPTED);
-      Alert.alert(
-        'You\'re Connected!',
-        'You and your partner are now linked. Time to start playing!',
-        [{ text: 'Let\'s Go', onPress: () => navigation.navigate('Dashboard') }],
-      );
+      setIsConnected(true);
     } catch {
-      Alert.alert('Invalid Code', 'That code didn\'t work. Ask your partner for a new one.');
+      Alert.alert('Invalid Code', 'That code did not work. Ask your partner for a fresh code and try again.');
       triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
     } finally {
       setLoadingLink(false);
     }
   };
 
-  const dynamicStyles = useMemo(
-    () =>
-      StyleSheet.create({
-        screen: {
-          backgroundColor: theme.colors.background,
-        },
-        heading: {
-          color: theme.colors.textPrimary,
-        },
-        subheading: {
-          color: theme.colors.textSecondary,
-        },
-        card: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          shadowColor: theme.colors.glowPrimary,
-          borderColor: theme.colors.border,
-        },
-        heartHalf: {
-          backgroundColor: theme.colors.primary,
-        },
-        heartBottom: {
-          borderTopColor: theme.colors.primary,
-        },
-        linkDetail: {
-          backgroundColor: theme.colors.border,
-        },
-        stepBadge: {
-          backgroundColor: theme.colors.surfaceEmphasis,
-        },
-        stepText: {
-          color: theme.colors.primary,
-        },
-        cardTitle: {
-          color: theme.colors.textPrimary,
-        },
-        cardDescription: {
-          color: theme.colors.textTertiary,
-        },
-        primaryButton: {
-          backgroundColor: theme.colors.primary,
-        },
-        primaryButtonText: {
-          color: theme.colors.primaryContrast,
-        },
-        codeBadge: {
-          backgroundColor: theme.colors.surfaceElevated,
-          borderColor: theme.colors.borderAccent,
-        },
-        codeText: {
-          color: theme.colors.textPrimary,
-        },
-        actionButton: {
-          backgroundColor: theme.colors.surfaceElevated,
-          borderColor: theme.colors.border,
-        },
-        actionButtonText: {
-          color: theme.colors.primary,
-        },
-        shareButton: {
-          backgroundColor: theme.colors.accent,
-          borderColor: theme.colors.accent,
-        },
-        shareButtonText: {
-          color: theme.colors.accentContrast,
-        },
-        input: {
-          backgroundColor: theme.colors.surfaceInput,
-          borderColor: theme.colors.border,
-          color: theme.colors.textPrimary,
-        },
-        connectButton: {
-          backgroundColor: theme.colors.accent,
-          shadowColor: theme.colors.glowAccent,
-        },
-      }),
-    [theme]
-  );
+  if (isConnected) {
+    return (
+      <VelvetFocusedScreen
+        navigation={navigation}
+        title="Partner Linked"
+        subtitle="Connection established"
+        withAtmosphere
+        atmosphere="auth"
+      >
+        <View style={dynamicStyles.successWrap}>
+          <VelvetHeroCard style={dynamicStyles.successCard}>
+            <Text style={dynamicStyles.successIcon}>💞</Text>
+            <Text style={dynamicStyles.successTitle}>You&apos;re connected.</Text>
+            <Text style={dynamicStyles.successBody}>
+              Your shared space is ready. Start your first game together or head back to the dashboard and explore your new home for two.
+            </Text>
+            <View style={dynamicStyles.successRow}>
+              <VelvetPrimaryButton
+                label="Start First Game"
+                onPress={() => navigation.navigate('CategorySelection')}
+                style={dynamicStyles.heroPrimary}
+              />
+              <VelvetSecondaryButton
+                label="Go to Dashboard"
+                onPress={() => navigation.navigate('Dashboard')}
+                style={dynamicStyles.heroSecondary}
+              />
+            </View>
+          </VelvetHeroCard>
+        </View>
+      </VelvetFocusedScreen>
+    );
+  }
 
   return (
     <VelvetFocusedScreen
@@ -254,381 +392,137 @@ const PartnerLinkScreen = ({ navigation }) => {
       atmosphere="auth"
     >
       <ScrollView
-        style={[styles.screen, dynamicStyles.screen]}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={dynamicStyles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View
-          style={[
-            styles.animatedWrapper,
-            { width: '100%', maxWidth: isTablet ? 760 : 520 },
-            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-          ]}
-        >
-          <HeartIllustration primaryColor={theme.colors.primary} linkColor={theme.colors.border} />
+        <View style={dynamicStyles.introWrap}>
+          <Text style={dynamicStyles.eyebrow}>Private Connection</Text>
+          <Text style={dynamicStyles.title}>Complete your shared space.</Text>
+          <Text style={dynamicStyles.body}>
+            Link with your partner to unlock games, progression, celebrations, and the relationship rituals that make Only Yours feel like a world built for two.
+          </Text>
+          <View style={dynamicStyles.introMeta}>
+            <View style={dynamicStyles.introDot} />
+            <Text style={dynamicStyles.introMetaText}>Transactional flow only. No bottom navigation here.</Text>
+          </View>
+        </View>
 
-          <Text style={[styles.subheading, dynamicStyles.subheading]}>
-            Share your code or enter theirs to connect
+        <VelvetHeroCard style={dynamicStyles.heroCard}>
+          <View style={dynamicStyles.heroGlow} />
+          <VelvetStatusPill label="Step 1" tone="accent" />
+          <Text style={dynamicStyles.heroTitle}>Generate a code and send it to your partner.</Text>
+          <Text style={dynamicStyles.heroBody}>
+            Your code is unique to this connection flow. Copy it instantly or send it through the native share sheet.
           </Text>
 
-          {/* --- Generate & Share Section --- */}
-          <View style={[styles.card, dynamicStyles.card]} accessible={false}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
-                <Text style={[styles.stepText, dynamicStyles.stepText]}>1</Text>
-              </View>
-              <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Share your code</Text>
-            </View>
-            <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
-              Generate a unique code and send it to your partner
-            </Text>
-
-            {generatedCode ? (
-              <Animated.View
-                style={[
-                  styles.codeResultContainer,
-                  {
-                    opacity: codeReveal,
-                    transform: [{ scale: codeReveal }],
-                  },
-                ]}
+          {generatedCode ? (
+            <>
+              <View
+                style={dynamicStyles.codeBadge}
+                accessible
+                accessibilityLabel={`Generated partner code ${generatedCode.split('').join(' ')}`}
               >
-                <View
-                  style={[styles.codeBadge, dynamicStyles.codeBadge]}
-                  accessible
-                  accessibilityLabel={`Generated partner code ${generatedCode.split('').join(' ')}`}
-                >
-                  <Text style={[styles.codeText, dynamicStyles.codeText]}>{generatedCode}</Text>
-                </View>
-
-                <View style={styles.codeActions}>
-                  <TouchableOpacity
-                    style={[styles.actionButton, dynamicStyles.actionButton]}
-                    onPress={copyCode}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel={copied ? 'Partner code copied' : 'Copy partner code'}
-                    accessibilityHint="Copies the generated partner code to your clipboard."
-                  >
-                    <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText]}>
-                      {copied ? 'Copied!' : 'Copy'}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={[styles.actionButton, dynamicStyles.actionButton, styles.shareButton, dynamicStyles.shareButton]}
-                    onPress={shareCode}
-                    activeOpacity={0.7}
-                    accessibilityRole="button"
-                    accessibilityLabel="Share partner code"
-                    accessibilityHint="Opens the native share sheet with your generated partner code."
-                  >
-                    <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText, styles.shareButtonText, dynamicStyles.shareButtonText]}>
-                      Share
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </Animated.View>
-            ) : (
-              <TouchableOpacity
-                style={[styles.primaryButton, dynamicStyles.primaryButton, loadingGen && styles.buttonDisabled]}
+                <Text style={dynamicStyles.codeText}>{generatedCode}</Text>
+              </View>
+              <View style={dynamicStyles.actionRow}>
+                <VelvetSecondaryButton
+                  label={copied ? 'Copied!' : 'Copy Code'}
+                  onPress={copyCode}
+                  style={dynamicStyles.rowButton}
+                  accessibilityLabel={copied ? 'Partner code copied' : 'Copy partner code'}
+                  accessibilityHint="Copies the generated partner code to your clipboard."
+                />
+                <VelvetPrimaryButton
+                  label="Share Code"
+                  onPress={shareCode}
+                  style={dynamicStyles.rowButton}
+                  accessibilityLabel="Share partner code"
+                  accessibilityHint="Opens the native share sheet with your generated partner code."
+                />
+              </View>
+            </>
+          ) : (
+            <View style={dynamicStyles.heroActionRow}>
+              <VelvetPrimaryButton
+                label={loadingGen ? 'Generating...' : 'Generate Code'}
                 onPress={generateCode}
+                loading={loadingGen}
                 disabled={loadingGen}
-                activeOpacity={0.8}
-                accessibilityRole="button"
+                style={dynamicStyles.heroPrimary}
                 accessibilityLabel={loadingGen ? 'Generating partner code' : 'Generate partner code'}
                 accessibilityHint="Requests a new partner code that you can share."
-                accessibilityState={{ disabled: loadingGen }}
-              >
-                {loadingGen ? (
-                  <ActivityIndicator color={theme.colors.primaryContrast} size="small" />
-                ) : (
-                  <Text style={[styles.primaryButtonText, dynamicStyles.primaryButtonText]}>Generate Code</Text>
-                )}
-              </TouchableOpacity>
-            )}
-          </View>
-
-          {/* --- Divider --- */}
-          <View style={styles.dividerRow}>
-            <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-            <Text style={[styles.dividerText, { color: theme.colors.textTertiary }]}>or</Text>
-            <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-          </View>
-
-          {/* --- Enter Code Section --- */}
-          <View style={[styles.card, dynamicStyles.card]} accessible={false}>
-            <View style={styles.cardHeader}>
-              <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
-                <Text style={[styles.stepText, dynamicStyles.stepText]}>2</Text>
-              </View>
-              <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Enter their code</Text>
+              />
+              <VelvetSecondaryButton
+                label="Need theirs instead?"
+                onPress={() => null}
+                disabled
+                style={dynamicStyles.heroSecondary}
+              />
             </View>
-            <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
-              Paste the code your partner shared with you
-            </Text>
+          )}
+        </VelvetHeroCard>
 
-            <TextInput
-              value={code}
-              onChangeText={setCode}
-              placeholder="e.g. ABCD1234"
-              placeholderTextColor={theme.colors.textTertiary}
-              autoCapitalize="characters"
-              style={[styles.input, dynamicStyles.input]}
-              accessibilityLabel="Partner code"
-              accessibilityHint="Enter the code your partner shared with you."
-            />
+        <View style={dynamicStyles.dividerRow}>
+          <View style={dynamicStyles.dividerLine} />
+          <Text style={dynamicStyles.dividerText}>or</Text>
+          <View style={dynamicStyles.dividerLine} />
+        </View>
 
-            <TouchableOpacity
-              style={[
-                styles.connectButton,
-                dynamicStyles.connectButton,
-                (!code.trim() || loadingLink) && styles.buttonDisabled,
-              ]}
-              onPress={link}
-              disabled={!code.trim() || loadingLink}
-              activeOpacity={0.8}
-              accessibilityRole="button"
-              accessibilityLabel={loadingLink ? 'Connecting to partner' : 'Connect with partner code'}
-              accessibilityHint="Links your account with your partner using the entered code."
-              accessibilityState={{ disabled: !code.trim() || loadingLink }}
-            >
-              {loadingLink ? (
-                <ActivityIndicator color={theme.colors.accentContrast} size="small" />
-              ) : (
-                <Text style={[styles.primaryButtonText, dynamicStyles.shareButtonText]}>Connect</Text>
-              )}
-            </TouchableOpacity>
+        <VelvetSectionCard style={dynamicStyles.panel}>
+          <View style={dynamicStyles.panelHeader}>
+            <View style={dynamicStyles.panelHeaderCopy}>
+              <Text style={dynamicStyles.panelTitle}>Enter their code</Text>
+              <Text style={dynamicStyles.panelBody}>
+                Paste the code your partner sent you to connect accounts instantly.
+              </Text>
+            </View>
+            <VelvetStatusPill label="Step 2" tone="primary" />
           </View>
-        </Animated.View>
+
+          <VelvetTextField
+            label="Partner code"
+            value={code}
+            onChangeText={setCode}
+            placeholder="e.g. ABCD1234"
+            autoCapitalize="characters"
+            autoCorrect={false}
+            accessibilityLabel="Partner code"
+            accessibilityHint="Enter the code your partner shared with you."
+            inputStyle={dynamicStyles.field}
+          />
+
+          <VelvetPrimaryButton
+            label="Connect Now"
+            onPress={link}
+            loading={loadingLink}
+            disabled={!code.trim() || loadingLink}
+            accessibilityLabel={loadingLink ? 'Connecting to partner' : 'Connect with partner code'}
+            accessibilityHint="Links your account with your partner using the entered code."
+          />
+        </VelvetSectionCard>
+
+        <VelvetSectionCard style={[dynamicStyles.panel, dynamicStyles.helperCard]}>
+          <View>
+            <Text style={dynamicStyles.helperTitle}>What happens after linking?</Text>
+            <Text style={dynamicStyles.helperBody}>
+              You will be able to start shared games, create private custom decks, unlock milestones together, and resume active sessions from the dashboard.
+            </Text>
+          </View>
+          <VelvetSecondaryButton
+            label="Go to Dashboard"
+            onPress={() => navigation.navigate('Dashboard')}
+          />
+        </VelvetSectionCard>
+
+        <View style={dynamicStyles.securityNote}>
+          <VelvetStatusPill label="Private by design" tone="neutral" />
+          <Text style={dynamicStyles.securityText}>
+            This flow is intentionally focused. Linking is a high-trust relationship action, so the screen keeps the user on task and avoids unrelated navigation noise.
+          </Text>
+        </View>
       </ScrollView>
     </VelvetFocusedScreen>
   );
 };
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#F6F5FF',
-  },
-  scrollContent: {
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 48,
-  },
-  animatedWrapper: {
-    alignItems: 'center',
-  },
-
-  heartContainer: {
-    width: 80,
-    height: 90,
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  heartRow: {
-    flexDirection: 'row',
-    gap: 0,
-  },
-  heartHalf: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: '#6A4CFF',
-  },
-  heartLeft: {
-    marginRight: -4,
-  },
-  heartRight: {
-    marginLeft: -4,
-  },
-  heartBottom: {
-    width: 0,
-    height: 0,
-    borderLeftWidth: 28,
-    borderRightWidth: 28,
-    borderTopWidth: 32,
-    borderLeftColor: 'transparent',
-    borderRightColor: 'transparent',
-    borderTopColor: '#6A4CFF',
-    marginTop: -8,
-  },
-  linkLine: {
-    width: 2,
-    height: 16,
-    backgroundColor: '#D9D3F3',
-    marginTop: 4,
-  },
-  linkDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#D9D3F3',
-  },
-
-  heading: {
-    fontSize: 26,
-    fontWeight: '700',
-    color: '#2D225A',
-    marginTop: 4,
-    marginBottom: 6,
-  },
-  subheading: {
-    fontSize: 15,
-    color: '#6B5FA8',
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-
-  card: {
-    width: '100%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 20,
-    borderWidth: 1,
-    shadowColor: '#6A4CFF',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  stepBadge: {
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    backgroundColor: '#EDE9FF',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  stepText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#6A4CFF',
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#2D225A',
-  },
-  cardDescription: {
-    fontSize: 13,
-    color: '#8A82B0',
-    marginBottom: 16,
-    marginLeft: 34,
-  },
-
-  primaryButton: {
-    backgroundColor: '#6A4CFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  buttonDisabled: {
-    opacity: 0.55,
-  },
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-
-  codeResultContainer: {
-    alignItems: 'center',
-  },
-  codeBadge: {
-    backgroundColor: '#F0EDFF',
-    borderRadius: 12,
-    paddingVertical: 14,
-    paddingHorizontal: 28,
-    borderWidth: 1.5,
-    borderColor: '#D9D3F3',
-    borderStyle: 'dashed',
-    marginBottom: 14,
-  },
-  codeText: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#2D225A',
-    letterSpacing: 4,
-    textAlign: 'center',
-  },
-  codeActions: {
-    flexDirection: 'row',
-    gap: 10,
-    width: '100%',
-  },
-  actionButton: {
-    flex: 1,
-    borderRadius: 12,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: '#F0EDFF',
-    borderWidth: 1,
-    borderColor: '#D9D3F3',
-  },
-  actionButtonText: {
-    fontWeight: '600',
-    fontSize: 15,
-    color: '#6A4CFF',
-  },
-  shareButton: {
-    backgroundColor: '#6A4CFF',
-    borderColor: '#6A4CFF',
-  },
-  shareButtonText: {
-    color: '#FFFFFF',
-  },
-
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 20,
-    width: '100%',
-    paddingHorizontal: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#D9D3F3',
-  },
-  dividerText: {
-    marginHorizontal: 14,
-    fontSize: 14,
-    color: '#8A82B0',
-    fontWeight: '500',
-  },
-
-  input: {
-    backgroundColor: '#F9F8FF',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#D9D3F3',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 18,
-    letterSpacing: 2,
-    color: '#2D225A',
-    textAlign: 'center',
-    fontWeight: '600',
-    marginBottom: 14,
-  },
-  connectButton: {
-    backgroundColor: '#03DAC6',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-    shadowColor: '#03DAC6',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 6,
-    elevation: 3,
-  },
-});
 
 export default PartnerLinkScreen;

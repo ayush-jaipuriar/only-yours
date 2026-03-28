@@ -80,6 +80,10 @@ const GameHistoryScreen = ({ navigation }) => {
           width: '100%',
           maxWidth: isTablet ? 760 : 460,
         },
+        stateContent: {
+          width: '100%',
+          minHeight: 360,
+        },
         sectionTitle: {
           fontSize: 14,
           fontWeight: '700',
@@ -209,23 +213,63 @@ const GameHistoryScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading your game history..." />;
+    return (
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="history"
+        headerTitle="Game History"
+        headerSubtitle="Your relationship archive"
+        scrollStyle={styles.container}
+        contentContainerStyle={styles.content}
+        contentMaxWidth={isTablet ? 760 : 460}
+      >
+        <View style={styles.stateContent}>
+          <LoadingSpinner message="Loading your game history..." />
+        </View>
+      </VelvetBrowseLayout>
+    );
   }
 
   if (loadError) {
     return (
-      <EmptyState
-        icon="⚠️"
-        title="Couldn’t Load History"
-        message="We couldn’t fetch your recent games right now."
-        actionLabel="Retry"
-        onAction={reload}
-      />
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="history"
+        headerTitle="Game History"
+        headerSubtitle="Your relationship archive"
+        scrollStyle={styles.container}
+        contentContainerStyle={styles.content}
+        contentMaxWidth={isTablet ? 760 : 460}
+      >
+        <View style={styles.stateContent}>
+          <EmptyState
+            icon="⚠️"
+            title="Couldn’t Load History"
+            message="We couldn’t fetch your recent games right now."
+            actionLabel="Retry"
+            onAction={reload}
+          />
+        </View>
+      </VelvetBrowseLayout>
     );
   }
 
   if (!historyItems.length) {
-    return renderEmptyHistoryState(winnerFilter, setWinnerFilter, reload);
+    return (
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="history"
+        headerTitle="Game History"
+        headerSubtitle="Your relationship archive"
+        scrollStyle={styles.container}
+        contentContainerStyle={styles.content}
+        contentMaxWidth={isTablet ? 760 : 460}
+      >
+        <View style={styles.stateContent}>
+          {renderEmptyHistoryState(winnerFilter, setWinnerFilter, reload)}
+        </View>
+      </VelvetBrowseLayout>
+    );
   }
 
   return (

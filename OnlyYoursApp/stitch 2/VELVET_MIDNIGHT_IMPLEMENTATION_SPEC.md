@@ -401,6 +401,32 @@ Implementation rule:
 - keep strong hero hierarchy
 - preserve product density without making it feel crowded
 
+Current implementation status:
+- `DashboardScreen` now uses a true state-driven Velvet Midnight layout instead of a mostly linear migrated stack.
+- The live implementation preserves the existing `useDashboardGameFlow` contract and works only with currently available dashboard data, which keeps the redesign safe from backend drift.
+- The hero now branches cleanly across the three mandatory dashboard states:
+  - active game: continuation-focused hero with round/question context and progress bar
+  - linked without active game: start-new-session hero with custom-question secondary action
+  - not linked: partner-linking hero with a softer history fallback
+- Supporting sections now better match the Stitch 2 intent:
+  - quick destination cards for `Custom Questions`, `Game History`, and `Profile`
+  - stronger progression framing with share/profile actions
+  - a dedicated celebration/milestone area rather than one flat list of content
+  - stats and achievements pushed lower in the hierarchy so the screen feels motivating before analytical
+
+Implementation deviations from Stitch 2:
+- We intentionally did not invent any “recent history preview” content cards because the current dashboard data contract does not provide that payload directly.
+- We also avoided introducing unsupported avatar/media treatments from the Stitch mockup; the implemented version stays within the current product’s real data surface.
+- Bottom nav behavior remains consistent through `VelvetBrowseLayout`, which matches the browse-surface rule from the spec.
+
+Current validation status:
+- `DashboardScreen.test.js` now verifies the three dashboard hero states directly:
+  - linked with active game
+  - linked without active game
+  - not linked
+- The same screen test also protects the primary CTAs for continue/start/link actions.
+- `useDashboardGameFlow.test.js` still covers the underlying couple/active-game/progression loading contract, so the dashboard now has both screen-level and data-level automated coverage.
+
 ## 8.7 Partner Linking
 
 References:
@@ -423,6 +449,23 @@ Implementation corrections:
 - no bottom nav on linking flow
 - remove any messaging-like implications
 
+Current implementation status:
+- `PartnerLinkScreen` now uses the focused Velvet Midnight shell and a clearer two-step structure:
+  - generate/share your code
+  - enter their code and connect
+- The implementation still preserves the original API behaviors (`/couple/generate-code` and `/couple/link`) plus native copy/share actions, but the hierarchy is now closer to the Stitch intent.
+- The previous success alert has been upgraded into an in-screen success state, which is a deliberate implementation improvement over the older interaction pattern.
+
+Implementation deviations from Stitch 2:
+- We did not introduce unsupported “security marketing” claims like end-to-end encryption copy as product fact unless it already existed in the app contract.
+- Instead of a static success mockup, the screen now conditionally transitions into a real connected state after the backend link succeeds.
+
+Current validation status:
+- `PartnerLinkScreen.test.js` now verifies:
+  - partner code generation
+  - successful linking into the connected state
+- Native copy/share sheet behavior still needs device-level manual verification because it depends on platform integrations outside Jest.
+
 ## 8.8 Category Selection
 
 Reference:
@@ -442,6 +485,26 @@ Required states:
 - mature content label
 
 Use this screen as the visual standard for “choose a mood/journey” rather than “choose a data category.”
+
+Current implementation status:
+- `CategorySelectionScreen` now presents the custom deck as a featured hero path rather than a flat list item, which better matches the product importance of authored couple prompts.
+- Standard categories remain operationally identical, but the UI now frames them as mood/energy choices instead of raw backend categories.
+- The implementation preserves the existing behavior contract:
+  - custom-deck readiness gating
+  - sensitive-content confirmation
+  - WebSocket invite sending
+  - invite-in-flight lockout
+  - existing loading/error/empty states
+
+Implementation deviations from Stitch 2:
+- We intentionally did not invent rich image-backed category cards because the current product data contract does not provide that asset layer.
+- Instead, we used stronger card hierarchy, status pills, and featured custom-deck framing to get most of the same UX effect without introducing fake content dependencies.
+
+Current validation status:
+- `CategorySelectionScreen.test.js` verifies:
+  - playable custom deck sends the correct WebSocket invite
+  - non-playable custom deck shows the deck-building guidance
+- Existing dashboard regression tests remained green after this phase, which helps confirm the focused-flow changes did not destabilize adjacent navigation assumptions.
 
 ## 8.9 Custom Questions List
 
@@ -712,6 +775,7 @@ Current adoption:
 - `DashboardScreen` uses `VelvetHeroCard`, `VelvetSectionCard`, and `VelvetStatCard`
 - `CustomQuestionsScreen` uses `VelvetHeroCard` and `VelvetSectionCard`
 - `CategorySelectionScreen` uses `VelvetOptionCard`
+- `DashboardScreen` now also directly consumes `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` for its stateful hero and section actions
 
 ## 9.4 Form Controls
 

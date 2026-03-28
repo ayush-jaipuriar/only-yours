@@ -52,6 +52,10 @@ const CustomQuestionsScreen = ({ navigation }) => {
           width: '100%',
           maxWidth: isTablet ? 760 : 520,
         },
+        stateContent: {
+          width: '100%',
+          minHeight: 360,
+        },
         heroCard: {
           marginBottom: 14,
         },
@@ -238,18 +242,44 @@ const CustomQuestionsScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return <LoadingSpinner message="Loading your custom questions..." />;
+    return (
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="customQuestions"
+        headerTitle="Custom Questions"
+        headerSubtitle="Build your private couple deck"
+        scrollStyle={styles.container}
+        contentContainerStyle={styles.content}
+        contentMaxWidth={isTablet ? 760 : 520}
+      >
+        <View style={styles.stateContent}>
+          <LoadingSpinner message="Loading your custom questions..." />
+        </View>
+      </VelvetBrowseLayout>
+    );
   }
 
   if (loadError) {
     return (
-      <EmptyState
-        icon="⚠️"
-        title="Couldn’t Load Custom Questions"
-        message="We couldn’t fetch your authored questions or deck summary right now."
-        actionLabel="Retry"
-        onAction={loadScreen}
-      />
+      <VelvetBrowseLayout
+        navigation={navigation}
+        activeNavKey="customQuestions"
+        headerTitle="Custom Questions"
+        headerSubtitle="Build your private couple deck"
+        scrollStyle={styles.container}
+        contentContainerStyle={styles.content}
+        contentMaxWidth={isTablet ? 760 : 520}
+      >
+        <View style={styles.stateContent}>
+          <EmptyState
+            icon="⚠️"
+            title="Couldn’t Load Custom Questions"
+            message="We couldn’t fetch your authored questions or deck summary right now."
+            actionLabel="Retry"
+            onAction={loadScreen}
+          />
+        </View>
+      </VelvetBrowseLayout>
     );
   }
 
@@ -304,13 +334,15 @@ const CustomQuestionsScreen = ({ navigation }) => {
       <Text style={styles.sectionTitle}>Your Authored Questions</Text>
 
       {!questions.length ? (
-        <EmptyState
-          icon="✍️"
-          title="No Custom Questions Yet"
-          message="Create your first private question. It will stay visible only to you outside the game, but it becomes part of the shared custom deck when played."
-          actionLabel="Create First Question"
-          onAction={() => navigation.navigate('CustomQuestionEditor')}
-        />
+        <View style={styles.stateContent}>
+          <EmptyState
+            icon="✍️"
+            title="No Custom Questions Yet"
+            message="Create your first private question. It will stay visible only to you outside the game, but it becomes part of the shared custom deck when played."
+            actionLabel="Create First Question"
+            onAction={() => navigation.navigate('CustomQuestionEditor')}
+          />
+        </View>
       ) : (
         questions.map((question) => (
           <VelvetSectionCard
