@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { ScrollView, View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
 import api from '../services/api';
 import { AuthContext } from '../state/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -7,6 +7,7 @@ import EmptyState from '../components/EmptyState';
 import BadgeChip from '../components/BadgeChip';
 import MilestoneHighlights from '../components/MilestoneHighlights';
 import ProgressionCard from '../components/ProgressionCard';
+import { VelvetBrowseLayout } from '../components/velvet';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { accessibilityAlertProps } from '../accessibility';
@@ -364,7 +365,14 @@ const ProfileScreen = ({ navigation }) => {
   const latestMilestone = progression?.recentMilestones?.[0] || null;
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <VelvetBrowseLayout
+      navigation={navigation}
+      activeNavKey="profile"
+      headerTitle={profile.name || 'Profile'}
+      headerSubtitle="Your growth and celebrations"
+      contentContainerStyle={styles.container}
+      contentMaxWidth={760}
+    >
       <View style={styles.card}>
         <View style={styles.avatarContainer} accessible={false}>
           <Text style={styles.avatarInitial}>
@@ -517,7 +525,7 @@ const ProfileScreen = ({ navigation }) => {
         </View>
         {shareHost}
       </View>
-    </ScrollView>
+    </VelvetBrowseLayout>
   );
 };
 

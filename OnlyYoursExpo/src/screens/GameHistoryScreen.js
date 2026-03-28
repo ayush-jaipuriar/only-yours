@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -10,6 +9,7 @@ import {
 } from 'react-native';
 import EmptyState from '../components/EmptyState';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { VelvetBrowseLayout } from '../components/velvet';
 import useGameHistoryFlow from './useGameHistoryFlow';
 import useTheme from '../theme/useTheme';
 
@@ -229,7 +229,15 @@ const GameHistoryScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <VelvetBrowseLayout
+      navigation={navigation}
+      activeNavKey="history"
+      headerTitle="Game History"
+      headerSubtitle="Your relationship archive"
+      scrollStyle={styles.container}
+      contentContainerStyle={styles.content}
+      contentMaxWidth={isTablet ? 760 : 460}
+    >
       <Text style={styles.sectionTitle}>Sort</Text>
       <View style={styles.filterRow}>
         {SORT_OPTIONS.map((option) => (
@@ -318,7 +326,7 @@ const GameHistoryScreen = ({ navigation }) => {
       ) : (
         <Text style={styles.endText}>You’re all caught up.</Text>
       )}
-    </ScrollView>
+    </VelvetBrowseLayout>
   );
 };
 

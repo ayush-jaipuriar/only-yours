@@ -26,22 +26,22 @@ Status convention:
 ## Phase 0. Alignment and Guardrails
 
 ### Implementation
-- [ ] Confirm `stitch 2` is the working design baseline
-- [ ] Confirm Velvet Midnight docs are the active source of truth
-- [ ] Review Stitch 2 screens for unsupported product features
-- [ ] Record the “do not implement” list from Stitch drift
-- [ ] Confirm screen mapping against [`AppNavigator.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/navigation/AppNavigator.js)
+- [x] Confirm `stitch 2` is the working design baseline
+- [x] Confirm Velvet Midnight docs are the active source of truth
+- [x] Review Stitch 2 screens for unsupported product features
+- [x] Record the “do not implement” list from Stitch drift
+- [x] Confirm screen mapping against [`AppNavigator.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/navigation/AppNavigator.js)
 
 ### Validation
-- [ ] Verify all current app screens are accounted for in the spec
-- [ ] Verify known missing screens/states are explicitly listed
+- [x] Verify all current app screens are accounted for in the spec
+- [x] Verify known missing screens/states are explicitly listed
 
 ### Docs
-- [ ] Keep [`VELVET_MIDNIGHT_IMPLEMENTATION_SPEC.md`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursApp/stitch%202/VELVET_MIDNIGHT_IMPLEMENTATION_SPEC.md) aligned if scope decisions change
-- [ ] Keep [`VELVET_MIDNIGHT_PHASED_IMPLEMENTATION_PLAN.md`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursApp/stitch%202/VELVET_MIDNIGHT_PHASED_IMPLEMENTATION_PLAN.md) aligned if phase sequencing changes
+- [x] Keep [`VELVET_MIDNIGHT_IMPLEMENTATION_SPEC.md`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursApp/stitch%202/VELVET_MIDNIGHT_IMPLEMENTATION_SPEC.md) aligned if scope decisions change
+- [x] Keep [`VELVET_MIDNIGHT_PHASED_IMPLEMENTATION_PLAN.md`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursApp/stitch%202/VELVET_MIDNIGHT_PHASED_IMPLEMENTATION_PLAN.md) aligned if phase sequencing changes
 
 ### Notes / Blockers
-- Notes:
+- Notes: `stitch 2` is now the approved working baseline; unsupported Stitch drift has been documented in the spec and phased plan.
 - Blockers:
 
 ---
@@ -49,71 +49,71 @@ Status convention:
 ## Phase 1. Theme and Design Tokens
 
 ### Implementation
-- [ ] Audit current theme token usage in:
+- [x] Audit current theme token usage in:
   - [`tokens.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/theme/tokens.js)
   - [`gradients.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/theme/gradients.js)
   - [`ThemeProvider.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/theme/ThemeProvider.js)
-- [ ] Replace old palette foundations with Velvet Midnight tokens
-- [ ] Add tonal surface hierarchy tokens
-- [ ] Add primary CTA gradient tokens
-- [ ] Add glow tokens for hero emphasis and progress
-- [ ] Update typography tokens for `Newsreader` + `Manrope`
-- [ ] Preserve `system`, `light`, and `dark` mode support
-- [ ] Normalize text contrast tokens for dark mode
-- [ ] Define any new spacing/radius/elevation tokens required by the redesign
+- [x] Replace old palette foundations with Velvet Midnight tokens
+- [x] Add tonal surface hierarchy tokens
+- [x] Add primary CTA gradient tokens
+- [x] Add glow tokens for hero emphasis and progress
+- [x] Update typography tokens for `Newsreader` + `Manrope`
+- [x] Preserve `system`, `light`, and `dark` mode support
+- [x] Normalize text contrast tokens for dark mode
+- [x] Define any new spacing/radius/elevation tokens required by the redesign
 
 ### Validation
-- [ ] App renders successfully with new theme tokens
-- [ ] Existing screens do not crash due to token changes
+- [x] App renders successfully with new theme tokens
+- [x] Existing screens do not crash due to token changes
 - [ ] Dark mode matches Velvet Midnight direction
 - [ ] Light mode still feels brand-consistent
-- [ ] Theme switching still works correctly
+- [x] Theme switching still works correctly
 
 ### Docs
 - [ ] Update design-spec notes if token naming changes materially
 - [ ] Record final token decisions in the implementation spec if they differ from Stitch
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: Token names were intentionally preserved to avoid breaking existing screens while swapping the underlying palette and surface hierarchy to Velvet Midnight. Targeted Jest validation passed for auth, gameplay, theme-provider, category-selection, and custom-question screen slices after the token swap.
+- Blockers: `SettingsScreenFlow.test.js` currently times out on onboarding replay and should be checked in a follow-up validation pass before Phase 1 is considered fully closed.
 
 ---
 
 ## Phase 2. Shared Shell and Core UI Primitives
 
 ### Implementation
-- [ ] Define browse shell requirements
-- [ ] Define focused shell requirements
-- [ ] Define auth shell requirements
-- [ ] Create reusable top app bar primitive
-- [ ] Create reusable bottom nav primitive
-- [ ] Create reusable screen container/background primitive
-- [ ] Create primary button component
-- [ ] Create secondary/ghost/destructive button variants
-- [ ] Create branded text input component
-- [ ] Create status pill component
-- [ ] Create glowing progress bar component
-- [ ] Create reusable card primitives:
+- [x] Define browse shell requirements
+- [x] Define focused shell requirements
+- [x] Define auth shell requirements
+- [x] Create reusable top app bar primitive
+- [x] Create reusable bottom nav primitive
+- [x] Create reusable screen container/background primitive
+- [x] Create primary button component
+- [x] Create secondary/ghost/destructive button variants
+- [x] Create branded text input component
+- [x] Create status pill component
+- [x] Create glowing progress bar component
+- [x] Create reusable card primitives:
   - hero card
   - section card
   - stat card
   - option card
-- [ ] Create reusable empty/loading/error states if current ones need redesign
-- [ ] Refactor any early screens/components needed to prove the primitives work
+- [x] Create reusable empty/loading/error states if current ones need redesign
+- [x] Refactor any early screens/components needed to prove the primitives work
 
 ### Validation
-- [ ] Browse shell works with bottom nav and top bar
-- [ ] Focused shell works without bottom nav
-- [ ] Auth shell supports centered branded forms
-- [ ] Shared button/input/card primitives are usable across multiple screens
+- [x] Browse shell works with bottom nav and top bar
+- [x] Focused shell works without bottom nav
+- [x] Auth shell supports centered branded forms
+- [x] Shared button/input/card primitives are usable across multiple screens
 
 ### Docs
-- [ ] Add component names and responsibilities to the spec if they evolve
-- [ ] Record any shared-component decisions that differ from the original plan
+- [x] Add component names and responsibilities to the spec if they evolve
+- [x] Record any shared-component decisions that differ from the original plan
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: Added first-pass Velvet primitives under `src/components/velvet/`: `VelvetAtmosphere`, `VelvetSurfaceCard`, `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, `VelvetProgressBar`, `VelvetTopBar`, `VelvetBottomNav`, and `VelvetTextField`. We now also have higher-level screen containers in `VelvetScreen`, `VelvetScrollScreen`, and `VelvetFocusedScreen`, plus a reusable `VelvetBrowseLayout` that owns browse-surface bottom-nav and top-bar behavior. `AuthFormScreenLayout`, `EmptyState`, and `LoadingSpinner` consume the new primitives. `DashboardScreen`, `GameHistoryScreen`, `CustomQuestionsScreen`, and `ProfileScreen` now share the browse-layout wrapper, and native stack headers are suppressed for those browse destinations so the Velvet shell is the single visible header source. Safe-area ownership is now explicit: browse layouts own left/right framing, `VelvetTopBar` owns top inset, and `VelvetBottomNav` owns bottom inset. Focused shell rollout is now proven on `PartnerLinkScreen`, `CategorySelectionScreen`, and `CustomQuestionEditorScreen`, with native stack headers suppressed there as well. Added reusable card families: `VelvetHeroCard`, `VelvetSectionCard`, `VelvetStatCard`, and `VelvetOptionCard`, and adopted them in dashboard/custom-questions/category-selection flows. Jest validation passed for the shared-shell and card-adoption slice: `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `CategorySelectionScreen`, `CustomQuestionEditorScreen`, `CustomQuestionsScreen`, `GameScreen`, `useDashboardGameFlow`, `ProfileScreenFlow`, and `useGameHistoryFlow`.
+- Blockers: None for Phase 2. Remaining screen-level migrations now belong to later phases.
 
 ---
 
@@ -428,8 +428,8 @@ Mitigations:
 ## Progress Summary
 
 Current active phase:
-
+Phase 3. Authentication and Onboarding
 Overall notes:
-
+Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout.
 Next recommended task:
-
+Start Phase 3 by rebuilding the auth stack on top of the now-stable Velvet Midnight primitives, then move into onboarding once the auth shell patterns are locked.

@@ -598,23 +598,64 @@ Required UI:
 Needed shared primitives:
 - `VelvetTopBar`
 - `VelvetBottomNav`
-- `GlassSection`
-- `GlowBackgroundLayer`
+- `VelvetAtmosphere`
+- `VelvetSurfaceCard`
+- `VelvetScreen` or equivalent screen-shell wrapper
 - `EditorialScreenTitle`
+
+Phase 2 status:
+- Implemented in code:
+  - `VelvetTopBar`
+  - `VelvetBottomNav`
+  - `VelvetAtmosphere`
+  - `VelvetSurfaceCard`
+  - `VelvetScreen`
+  - `VelvetScrollScreen`
+  - `VelvetFocusedScreen`
+  - `VelvetBrowseLayout`
+- Still needed as stronger higher-level abstractions:
+  - more opinionated screen-title helpers where useful
+
+Current adoption:
+- `AuthFormScreenLayout` already uses the Velvet shell/surface primitives for branded auth presentation
+- `DashboardScreen` now uses `VelvetBrowseLayout` as its outer browse container
+- `GameHistoryScreen` now uses `VelvetBrowseLayout` as its outer browse container
+- `CustomQuestionsScreen` now uses `VelvetBrowseLayout` as its outer browse container
+- `ProfileScreen` now uses `VelvetBrowseLayout` as its outer browse container
+- Native stack headers are hidden for browse destinations so the Velvet shell remains the visible source of browse-surface framing
+- `PartnerLinkScreen`, `CategorySelectionScreen`, and `CustomQuestionEditorScreen` now use the focused shell path with native stack headers hidden
+
+Implementation note:
+- The remaining Phase 2 work is no longer “invent the shell abstraction.”
+- Browse-screen top-bar behavior is now standardized through `VelvetBrowseLayout`.
+- Focused-screen top-bar/back behavior is now standardized through `VelvetFocusedScreen`.
+- Later phases can now consume the shell system rather than inventing new framing patterns.
 
 Rules:
 - top bar varies by screen mode
 - bottom nav only on browse/hub surfaces
 - shell blur/background treatment should be centralized, not reauthored per screen
+- safe-area ownership should stay explicit to avoid doubled insets:
+  - browse layout owns left/right framing
+  - top bar owns top inset
+  - bottom nav owns bottom inset
 
 ## 9.2 Buttons
 
 Needed variants:
-- primary gradient pill
+- primary action button
 - secondary tonal button
 - ghost / low-emphasis action
 - destructive bordered action
 - icon-only utility button
+
+Phase 2 status:
+- Implemented in code:
+  - `VelvetPrimaryButton`
+  - `VelvetSecondaryButton`
+- Still needed:
+  - explicit ghost button primitive if later screens need one repeatedly
+  - explicit icon-only utility button primitive if later screens need one repeatedly
 
 ## 9.3 Cards
 
@@ -627,6 +668,21 @@ Needed reusable card families:
 - settings row card
 - list item card
 
+Phase 2 status:
+- Implemented in code:
+  - `VelvetSurfaceCard` as the base shared surface primitive
+  - `VelvetHeroCard`
+  - `VelvetSectionCard`
+  - `VelvetStatCard`
+  - `VelvetOptionCard`
+- Still needed:
+  - additional specialized wrappers only if later screen migrations reveal new repeated patterns
+
+Current adoption:
+- `DashboardScreen` uses `VelvetHeroCard`, `VelvetSectionCard`, and `VelvetStatCard`
+- `CustomQuestionsScreen` uses `VelvetHeroCard` and `VelvetSectionCard`
+- `CategorySelectionScreen` uses `VelvetOptionCard`
+
 ## 9.4 Form Controls
 
 Needed primitives:
@@ -636,6 +692,13 @@ Needed primitives:
 - inline validation text
 - helper text
 - switch/toggle
+
+Phase 2 status:
+- Implemented in code:
+  - `VelvetTextField`
+- Still needed:
+  - dedicated password-field wrapper if reuse becomes high
+  - segmented selector primitive
 
 ## 9.5 Progress and Status
 
@@ -648,6 +711,16 @@ Needed shared UI:
 - empty state
 - error state
 - reconnect banner
+
+Phase 2 status:
+- Implemented in code:
+  - `VelvetProgressBar`
+  - `VelvetStatusPill`
+  - early primitive adoption in `AuthFormScreenLayout`, `EmptyState`, and `LoadingSpinner`
+- Still needed:
+  - reusable round badge
+  - partner presence indicator
+  - reconnect-banner restyle
 
 ## 10. Corrective Design Rules for Stitch 2
 
@@ -790,4 +863,3 @@ That order gives us:
 - brand consistency early
 - shared primitives before expensive screen rewrites
 - the highest user-facing payoff in the shortest path
-

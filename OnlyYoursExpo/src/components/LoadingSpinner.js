@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
 import { accessibilityStatusProps } from '../accessibility';
+import { VelvetSurfaceCard } from './velvet';
 
 /**
  * LoadingSpinner — reusable full-screen loading indicator.
@@ -30,14 +31,8 @@ const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
           minWidth: 220,
           maxWidth: 320,
           alignItems: 'center',
-          borderRadius: 24,
           paddingHorizontal: 26,
           paddingVertical: 28,
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.glowPrimary,
         },
         message: {
           marginTop: 12,
@@ -52,8 +47,9 @@ const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
 
   return (
     <View style={styles.container} testID="loading-spinner">
-      <View
+      <VelvetSurfaceCard
         style={styles.panel}
+        glow
         accessible
         {...accessibilityStatusProps}
         accessibilityRole="progressbar"
@@ -61,7 +57,7 @@ const LoadingSpinner = ({ message = 'Loading...', color, size = 'large' }) => {
       >
         <ActivityIndicator size={size} color={spinnerColor} />
         {message ? <Text style={[styles.message, { color: theme.colors.textSecondary }]}>{message}</Text> : null}
-      </View>
+      </VelvetSurfaceCard>
     </View>
   );
 };

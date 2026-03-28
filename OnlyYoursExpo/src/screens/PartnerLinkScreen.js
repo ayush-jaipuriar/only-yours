@@ -15,6 +15,7 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import api from '../services/api';
+import { VelvetFocusedScreen } from '../components/velvet';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { announceForAccessibility } from '../accessibility';
@@ -245,156 +246,163 @@ const PartnerLinkScreen = ({ navigation }) => {
   );
 
   return (
-    <ScrollView
-      style={[styles.screen, dynamicStyles.screen]}
-      contentContainerStyle={styles.scrollContent}
-      keyboardShouldPersistTaps="handled"
+    <VelvetFocusedScreen
+      navigation={navigation}
+      title="Link with Partner"
+      subtitle="Private connection setup"
+      withAtmosphere
+      atmosphere="auth"
     >
-      <Animated.View
-        style={[
-          styles.animatedWrapper,
-          { width: '100%', maxWidth: isTablet ? 760 : 520 },
-          { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
-        ]}
+      <ScrollView
+        style={[styles.screen, dynamicStyles.screen]}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
       >
-        <HeartIllustration primaryColor={theme.colors.primary} linkColor={theme.colors.border} />
+        <Animated.View
+          style={[
+            styles.animatedWrapper,
+            { width: '100%', maxWidth: isTablet ? 760 : 520 },
+            { opacity: fadeAnim, transform: [{ translateY: slideAnim }] },
+          ]}
+        >
+          <HeartIllustration primaryColor={theme.colors.primary} linkColor={theme.colors.border} />
 
-        <Text style={[styles.heading, dynamicStyles.heading]}>Link with Partner</Text>
-        <Text style={[styles.subheading, dynamicStyles.subheading]}>
-          Share your code or enter theirs to connect
-        </Text>
-
-        {/* --- Generate & Share Section --- */}
-        <View style={[styles.card, dynamicStyles.card]} accessible={false}>
-          <View style={styles.cardHeader}>
-            <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
-              <Text style={[styles.stepText, dynamicStyles.stepText]}>1</Text>
-            </View>
-            <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Share your code</Text>
-          </View>
-          <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
-            Generate a unique code and send it to your partner
+          <Text style={[styles.subheading, dynamicStyles.subheading]}>
+            Share your code or enter theirs to connect
           </Text>
 
-          {generatedCode ? (
-            <Animated.View
-              style={[
-                styles.codeResultContainer,
-                {
-                  opacity: codeReveal,
-                  transform: [{ scale: codeReveal }],
-                },
-              ]}
-            >
-              <View
-                style={[styles.codeBadge, dynamicStyles.codeBadge]}
-                accessible
-                accessibilityLabel={`Generated partner code ${generatedCode.split('').join(' ')}`}
+          {/* --- Generate & Share Section --- */}
+          <View style={[styles.card, dynamicStyles.card]} accessible={false}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
+                <Text style={[styles.stepText, dynamicStyles.stepText]}>1</Text>
+              </View>
+              <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Share your code</Text>
+            </View>
+            <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
+              Generate a unique code and send it to your partner
+            </Text>
+
+            {generatedCode ? (
+              <Animated.View
+                style={[
+                  styles.codeResultContainer,
+                  {
+                    opacity: codeReveal,
+                    transform: [{ scale: codeReveal }],
+                  },
+                ]}
               >
-                <Text style={[styles.codeText, dynamicStyles.codeText]}>{generatedCode}</Text>
-              </View>
-
-              <View style={styles.codeActions}>
-                <TouchableOpacity
-                  style={[styles.actionButton, dynamicStyles.actionButton]}
-                  onPress={copyCode}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel={copied ? 'Partner code copied' : 'Copy partner code'}
-                  accessibilityHint="Copies the generated partner code to your clipboard."
+                <View
+                  style={[styles.codeBadge, dynamicStyles.codeBadge]}
+                  accessible
+                  accessibilityLabel={`Generated partner code ${generatedCode.split('').join(' ')}`}
                 >
-                  <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText]}>
-                    {copied ? 'Copied!' : 'Copy'}
-                  </Text>
-                </TouchableOpacity>
+                  <Text style={[styles.codeText, dynamicStyles.codeText]}>{generatedCode}</Text>
+                </View>
 
-                <TouchableOpacity
-                  style={[styles.actionButton, dynamicStyles.actionButton, styles.shareButton, dynamicStyles.shareButton]}
-                  onPress={shareCode}
-                  activeOpacity={0.7}
-                  accessibilityRole="button"
-                  accessibilityLabel="Share partner code"
-                  accessibilityHint="Opens the native share sheet with your generated partner code."
-                >
-                  <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText, styles.shareButtonText, dynamicStyles.shareButtonText]}>
-                    Share
-                  </Text>
-                </TouchableOpacity>
+                <View style={styles.codeActions}>
+                  <TouchableOpacity
+                    style={[styles.actionButton, dynamicStyles.actionButton]}
+                    onPress={copyCode}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel={copied ? 'Partner code copied' : 'Copy partner code'}
+                    accessibilityHint="Copies the generated partner code to your clipboard."
+                  >
+                    <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText]}>
+                      {copied ? 'Copied!' : 'Copy'}
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={[styles.actionButton, dynamicStyles.actionButton, styles.shareButton, dynamicStyles.shareButton]}
+                    onPress={shareCode}
+                    activeOpacity={0.7}
+                    accessibilityRole="button"
+                    accessibilityLabel="Share partner code"
+                    accessibilityHint="Opens the native share sheet with your generated partner code."
+                  >
+                    <Text style={[styles.actionButtonText, dynamicStyles.actionButtonText, styles.shareButtonText, dynamicStyles.shareButtonText]}>
+                      Share
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </Animated.View>
+            ) : (
+              <TouchableOpacity
+                style={[styles.primaryButton, dynamicStyles.primaryButton, loadingGen && styles.buttonDisabled]}
+                onPress={generateCode}
+                disabled={loadingGen}
+                activeOpacity={0.8}
+                accessibilityRole="button"
+                accessibilityLabel={loadingGen ? 'Generating partner code' : 'Generate partner code'}
+                accessibilityHint="Requests a new partner code that you can share."
+                accessibilityState={{ disabled: loadingGen }}
+              >
+                {loadingGen ? (
+                  <ActivityIndicator color={theme.colors.primaryContrast} size="small" />
+                ) : (
+                  <Text style={[styles.primaryButtonText, dynamicStyles.primaryButtonText]}>Generate Code</Text>
+                )}
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* --- Divider --- */}
+          <View style={styles.dividerRow}>
+            <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+            <Text style={[styles.dividerText, { color: theme.colors.textTertiary }]}>or</Text>
+            <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
+          </View>
+
+          {/* --- Enter Code Section --- */}
+          <View style={[styles.card, dynamicStyles.card]} accessible={false}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
+                <Text style={[styles.stepText, dynamicStyles.stepText]}>2</Text>
               </View>
-            </Animated.View>
-          ) : (
+              <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Enter their code</Text>
+            </View>
+            <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
+              Paste the code your partner shared with you
+            </Text>
+
+            <TextInput
+              value={code}
+              onChangeText={setCode}
+              placeholder="e.g. ABCD1234"
+              placeholderTextColor={theme.colors.textTertiary}
+              autoCapitalize="characters"
+              style={[styles.input, dynamicStyles.input]}
+              accessibilityLabel="Partner code"
+              accessibilityHint="Enter the code your partner shared with you."
+            />
+
             <TouchableOpacity
-              style={[styles.primaryButton, dynamicStyles.primaryButton, loadingGen && styles.buttonDisabled]}
-              onPress={generateCode}
-              disabled={loadingGen}
+              style={[
+                styles.connectButton,
+                dynamicStyles.connectButton,
+                (!code.trim() || loadingLink) && styles.buttonDisabled,
+              ]}
+              onPress={link}
+              disabled={!code.trim() || loadingLink}
               activeOpacity={0.8}
               accessibilityRole="button"
-              accessibilityLabel={loadingGen ? 'Generating partner code' : 'Generate partner code'}
-              accessibilityHint="Requests a new partner code that you can share."
-              accessibilityState={{ disabled: loadingGen }}
+              accessibilityLabel={loadingLink ? 'Connecting to partner' : 'Connect with partner code'}
+              accessibilityHint="Links your account with your partner using the entered code."
+              accessibilityState={{ disabled: !code.trim() || loadingLink }}
             >
-              {loadingGen ? (
-                <ActivityIndicator color={theme.colors.primaryContrast} size="small" />
+              {loadingLink ? (
+                <ActivityIndicator color={theme.colors.accentContrast} size="small" />
               ) : (
-                <Text style={[styles.primaryButtonText, dynamicStyles.primaryButtonText]}>Generate Code</Text>
+                <Text style={[styles.primaryButtonText, dynamicStyles.shareButtonText]}>Connect</Text>
               )}
             </TouchableOpacity>
-          )}
-        </View>
-
-        {/* --- Divider --- */}
-        <View style={styles.dividerRow}>
-          <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-          <Text style={[styles.dividerText, { color: theme.colors.textTertiary }]}>or</Text>
-          <View style={[styles.dividerLine, { backgroundColor: theme.colors.border }]} />
-        </View>
-
-        {/* --- Enter Code Section --- */}
-        <View style={[styles.card, dynamicStyles.card]} accessible={false}>
-          <View style={styles.cardHeader}>
-            <View style={[styles.stepBadge, dynamicStyles.stepBadge]}>
-              <Text style={[styles.stepText, dynamicStyles.stepText]}>2</Text>
-            </View>
-            <Text style={[styles.cardTitle, dynamicStyles.cardTitle]}>Enter their code</Text>
           </View>
-          <Text style={[styles.cardDescription, dynamicStyles.cardDescription]}>
-            Paste the code your partner shared with you
-          </Text>
-
-          <TextInput
-            value={code}
-            onChangeText={setCode}
-            placeholder="e.g. ABCD1234"
-            placeholderTextColor={theme.colors.textTertiary}
-            autoCapitalize="characters"
-            style={[styles.input, dynamicStyles.input]}
-            accessibilityLabel="Partner code"
-            accessibilityHint="Enter the code your partner shared with you."
-          />
-
-          <TouchableOpacity
-            style={[
-              styles.connectButton,
-              dynamicStyles.connectButton,
-              (!code.trim() || loadingLink) && styles.buttonDisabled,
-            ]}
-            onPress={link}
-            disabled={!code.trim() || loadingLink}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={loadingLink ? 'Connecting to partner' : 'Connect with partner code'}
-            accessibilityHint="Links your account with your partner using the entered code."
-            accessibilityState={{ disabled: !code.trim() || loadingLink }}
-          >
-            {loadingLink ? (
-              <ActivityIndicator color={theme.colors.accentContrast} size="small" />
-            ) : (
-              <Text style={[styles.primaryButtonText, dynamicStyles.shareButtonText]}>Connect</Text>
-            )}
-          </TouchableOpacity>
-        </View>
-      </Animated.View>
-    </ScrollView>
+        </Animated.View>
+      </ScrollView>
+    </VelvetFocusedScreen>
   );
 };
 

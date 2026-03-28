@@ -11,6 +11,7 @@ import {
   View,
 } from 'react-native';
 import api from '../services/api';
+import { VelvetFocusedScreen } from '../components/velvet';
 import useTheme from '../theme/useTheme';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 
@@ -156,96 +157,102 @@ const CustomQuestionEditorScreen = ({ route, navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <VelvetFocusedScreen
+      navigation={navigation}
+      title="Custom Question"
+      subtitle={existingQuestion ? 'Refine your private deck prompt' : 'Write a new private deck prompt'}
     >
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.card}>
-          <Text style={styles.title}>
-            {existingQuestion ? 'Edit Custom Question' : 'Create Custom Question'}
-          </Text>
-          <Text style={styles.subtitle}>
-            Only you can see this question outside gameplay, but it becomes part of the shared custom couple deck once saved.
-          </Text>
-
-          <Text style={styles.label}>Question</Text>
-          <TextInput
-            style={[styles.input, styles.textArea]}
-            value={draft.questionText}
-            onChangeText={(value) => updateField('questionText', value)}
-            placeholder="Write the question prompt"
-            placeholderTextColor={theme.colors.textTertiary}
-            multiline
-            accessibilityLabel="Custom question text"
-          />
-
-          <Text style={styles.label}>Option A</Text>
-          <TextInput
-            style={styles.input}
-            value={draft.optionA}
-            onChangeText={(value) => updateField('optionA', value)}
-            placeholder="First answer option"
-            placeholderTextColor={theme.colors.textTertiary}
-            accessibilityLabel="Option A"
-          />
-
-          <Text style={styles.label}>Option B</Text>
-          <TextInput
-            style={styles.input}
-            value={draft.optionB}
-            onChangeText={(value) => updateField('optionB', value)}
-            placeholder="Second answer option"
-            placeholderTextColor={theme.colors.textTertiary}
-            accessibilityLabel="Option B"
-          />
-
-          <Text style={styles.label}>Option C</Text>
-          <TextInput
-            style={styles.input}
-            value={draft.optionC}
-            onChangeText={(value) => updateField('optionC', value)}
-            placeholder="Third answer option"
-            placeholderTextColor={theme.colors.textTertiary}
-            accessibilityLabel="Option C"
-          />
-
-          <Text style={styles.label}>Option D</Text>
-          <TextInput
-            style={styles.input}
-            value={draft.optionD}
-            onChangeText={(value) => updateField('optionD', value)}
-            placeholder="Fourth answer option"
-            placeholderTextColor={theme.colors.textTertiary}
-            accessibilityLabel="Option D"
-          />
-
-          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-          <TouchableOpacity
-            style={styles.primaryButton}
-            onPress={handleSave}
-            disabled={saving}
-            accessibilityRole="button"
-            accessibilityLabel={existingQuestion ? 'Save custom question changes' : 'Create custom question'}
-            accessibilityState={{ disabled: saving }}
-          >
-            <Text style={styles.primaryButtonText}>
-              {saving ? 'Saving...' : existingQuestion ? 'Save Changes' : 'Create Question'}
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.card}>
+            <Text style={styles.title}>
+              {existingQuestion ? 'Edit Custom Question' : 'Create Custom Question'}
             </Text>
-          </TouchableOpacity>
+            <Text style={styles.subtitle}>
+              Only you can see this question outside gameplay, but it becomes part of the shared custom couple deck once saved.
+            </Text>
 
-          <TouchableOpacity
-            style={styles.secondaryButton}
-            onPress={() => navigation.goBack()}
-            accessibilityRole="button"
-            accessibilityLabel="Cancel and go back"
-          >
-            <Text style={styles.secondaryButtonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+            <Text style={styles.label}>Question</Text>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={draft.questionText}
+              onChangeText={(value) => updateField('questionText', value)}
+              placeholder="Write the question prompt"
+              placeholderTextColor={theme.colors.textTertiary}
+              multiline
+              accessibilityLabel="Custom question text"
+            />
+
+            <Text style={styles.label}>Option A</Text>
+            <TextInput
+              style={styles.input}
+              value={draft.optionA}
+              onChangeText={(value) => updateField('optionA', value)}
+              placeholder="First answer option"
+              placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Option A"
+            />
+
+            <Text style={styles.label}>Option B</Text>
+            <TextInput
+              style={styles.input}
+              value={draft.optionB}
+              onChangeText={(value) => updateField('optionB', value)}
+              placeholder="Second answer option"
+              placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Option B"
+            />
+
+            <Text style={styles.label}>Option C</Text>
+            <TextInput
+              style={styles.input}
+              value={draft.optionC}
+              onChangeText={(value) => updateField('optionC', value)}
+              placeholder="Third answer option"
+              placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Option C"
+            />
+
+            <Text style={styles.label}>Option D</Text>
+            <TextInput
+              style={styles.input}
+              value={draft.optionD}
+              onChangeText={(value) => updateField('optionD', value)}
+              placeholder="Fourth answer option"
+              placeholderTextColor={theme.colors.textTertiary}
+              accessibilityLabel="Option D"
+            />
+
+            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+            <TouchableOpacity
+              style={styles.primaryButton}
+              onPress={handleSave}
+              disabled={saving}
+              accessibilityRole="button"
+              accessibilityLabel={existingQuestion ? 'Save custom question changes' : 'Create custom question'}
+              accessibilityState={{ disabled: saving }}
+            >
+              <Text style={styles.primaryButtonText}>
+                {saving ? 'Saving...' : existingQuestion ? 'Save Changes' : 'Create Question'}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.secondaryButton}
+              onPress={() => navigation.goBack()}
+              accessibilityRole="button"
+              accessibilityLabel="Cancel and go back"
+            >
+              <Text style={styles.secondaryButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </VelvetFocusedScreen>
   );
 };
 

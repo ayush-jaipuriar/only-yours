@@ -1,7 +1,6 @@
 import React, { useCallback, useMemo, useState } from 'react';
 import {
   Alert,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import api from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
+import { VelvetBrowseLayout, VelvetHeroCard, VelvetSectionCard } from '../components/velvet';
 import useTheme from '../theme/useTheme';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 
@@ -53,14 +53,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
           maxWidth: isTablet ? 760 : 520,
         },
         heroCard: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderRadius: 20,
-          padding: 18,
-          borderWidth: 1,
-          borderColor: theme.colors.borderAccent,
           marginBottom: 14,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.overlayScrim,
         },
         heroTitle: {
           fontSize: 22,
@@ -133,14 +126,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
           fontWeight: '700',
         },
         card: {
-          backgroundColor: theme.colors.surface,
-          borderRadius: 18,
-          padding: 16,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
           marginBottom: 12,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.overlayScrim,
         },
         questionText: {
           color: theme.colors.textPrimary,
@@ -268,8 +254,16 @@ const CustomQuestionsScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <View style={styles.heroCard}>
+    <VelvetBrowseLayout
+      navigation={navigation}
+      activeNavKey="customQuestions"
+      headerTitle="Custom Questions"
+      headerSubtitle="Build your private couple deck"
+      scrollStyle={styles.container}
+      contentContainerStyle={styles.content}
+      contentMaxWidth={isTablet ? 760 : 520}
+    >
+      <VelvetHeroCard style={styles.heroCard}>
         <Text style={styles.heroTitle}>{summary.deckName}</Text>
         <Text style={styles.heroText}>{summary.deckDescription}</Text>
 
@@ -305,7 +299,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
         >
           <Text style={styles.addButtonText}>Add Custom Question</Text>
         </TouchableOpacity>
-      </View>
+      </VelvetHeroCard>
 
       <Text style={styles.sectionTitle}>Your Authored Questions</Text>
 
@@ -319,7 +313,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
         />
       ) : (
         questions.map((question) => (
-          <View
+          <VelvetSectionCard
             key={question.id}
             style={styles.card}
             accessible
@@ -356,10 +350,10 @@ const CustomQuestionsScreen = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </View>
-          </View>
+          </VelvetSectionCard>
         ))
       )}
-    </ScrollView>
+    </VelvetBrowseLayout>
   );
 };
 

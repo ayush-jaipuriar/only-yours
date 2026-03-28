@@ -56,12 +56,12 @@ const AppNavigator = () => {
             <Stack.Screen 
               name="Dashboard" 
               component={DashboardScreen}
-              options={{ title: 'Only Yours' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen 
               name="Profile" 
               component={ProfileScreen}
-              options={{ title: 'My Profile' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="Settings"
@@ -71,27 +71,27 @@ const AppNavigator = () => {
             <Stack.Screen
               name="GameHistory"
               component={GameHistoryScreen}
-              options={{ title: 'Game History' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen 
               name="PartnerLink" 
               component={PartnerLinkScreen}
-              options={{ title: 'Link with Partner' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen 
               name="CategorySelection" 
               component={CategorySelectionScreen}
-              options={{ title: 'Select Category' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="CustomQuestions"
               component={CustomQuestionsScreen}
-              options={{ title: 'Custom Questions' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen
               name="CustomQuestionEditor"
               component={CustomQuestionEditorScreen}
-              options={{ title: 'Edit Custom Question' }}
+              options={{ headerShown: false }}
             />
             <Stack.Screen 
               name="Game" 

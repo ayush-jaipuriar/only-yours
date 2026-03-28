@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import {
   ActivityIndicator,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -12,6 +11,12 @@ import useDashboardGameFlow from './useDashboardGameFlow';
 import BadgeChip from '../components/BadgeChip';
 import MilestoneHighlights from '../components/MilestoneHighlights';
 import ProgressionCard from '../components/ProgressionCard';
+import {
+  VelvetBrowseLayout,
+  VelvetHeroCard,
+  VelvetSectionCard,
+  VelvetStatCard,
+} from '../components/velvet';
 import useTheme from '../theme/useTheme';
 import {
   buildMilestoneShareCard,
@@ -89,15 +94,8 @@ const DashboardScreen = ({ navigation }) => {
         activeSessionCard: {
           width: '100%',
           maxWidth: isTablet ? 640 : 360,
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderRadius: 20,
-          padding: 18,
           marginBottom: 10,
-          borderWidth: 1,
-          borderColor: theme.colors.borderAccent,
           alignItems: 'center',
-          ...theme.shadows.card,
-          shadowColor: theme.colors.glowPrimary,
         },
         activeSessionTitle: {
           fontSize: 18,
@@ -136,14 +134,7 @@ const DashboardScreen = ({ navigation }) => {
         sectionCard: {
           width: '100%',
           maxWidth: isTablet ? 740 : 420,
-          backgroundColor: theme.colors.surface,
-          borderRadius: 20,
-          padding: 18,
           marginBottom: 14,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.overlayScrim,
         },
         sectionTitle: {
           fontSize: 16,
@@ -158,13 +149,9 @@ const DashboardScreen = ({ navigation }) => {
         },
         metricItem: {
           width: isTablet ? '31.8%' : '48%',
-          backgroundColor: theme.colors.surfaceElevated,
-          borderRadius: 16,
           paddingVertical: 10,
           paddingHorizontal: 8,
           marginBottom: 8,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
         },
         metricValue: {
           fontSize: 16,
@@ -222,6 +209,9 @@ const DashboardScreen = ({ navigation }) => {
           fontSize: 16,
           textDecorationLine: 'underline',
         },
+        innerContent: {
+          alignItems: 'center',
+        },
       }),
     [isTablet, theme]
   );
@@ -246,11 +236,18 @@ const DashboardScreen = ({ navigation }) => {
   const latestMilestone = progression?.recentMilestones?.[0] || null;
 
   return (
-    <View style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+    <VelvetBrowseLayout
+      navigation={navigation}
+      activeNavKey="dashboard"
+      headerTitle="Only Yours"
+      headerSubtitle={
+        couple ? `Connected with ${getPartnerName()}` : 'Your private space for two'
+      }
+      scrollStyle={styles.container}
+      contentContainerStyle={styles.scrollContent}
+      contentMaxWidth={isTablet ? 760 : 460}
+    >
+      <View style={styles.innerContent}>
         <Text style={styles.title}>Welcome, {user?.name}!</Text>
 
         {couple ? (
@@ -258,7 +255,7 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.subtitle}>Connected with {getPartnerName()}</Text>
 
             {shouldShowContinueGame ? (
-              <View style={styles.activeSessionCard}>
+              <VelvetHeroCard style={styles.activeSessionCard}>
                 <Text style={styles.activeSessionTitle}>Continue your active game</Text>
                 <Text style={styles.activeSessionMeta}>
                   {activeGame.round || activeGame.status} • Question {activeGame.currentQuestionNumber || 1}
@@ -273,7 +270,7 @@ const DashboardScreen = ({ navigation }) => {
                 >
                   <Text style={styles.buttonText}>Continue Game</Text>
                 </TouchableOpacity>
-              </View>
+              </VelvetHeroCard>
             ) : (
               <TouchableOpacity
                 style={styles.primaryButton}
@@ -301,7 +298,7 @@ const DashboardScreen = ({ navigation }) => {
           </>
         )}
 
-        <View style={styles.sectionCard}>
+        <VelvetSectionCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Progression</Text>
           {progression?.coupleProgression || progression?.individualProgression ? (
             <>
@@ -325,7 +322,7 @@ const DashboardScreen = ({ navigation }) => {
           ) : (
             <Text style={styles.emptyProgressionText}>Progression is loading or unavailable right now.</Text>
           )}
-        </View>
+        </VelvetSectionCard>
 
         <MilestoneHighlights milestones={progression?.recentMilestones} />
         {latestMilestone ? (
@@ -343,11 +340,11 @@ const DashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         ) : null}
 
-        <View style={styles.sectionCard}>
+        <VelvetSectionCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Your Stats</Text>
           <View style={styles.metricsGrid}>
             {metricCards.map((item) => (
-              <View
+              <VelvetStatCard
                 key={item.label}
                 style={styles.metricItem}
                 accessible
@@ -355,12 +352,12 @@ const DashboardScreen = ({ navigation }) => {
               >
                 <Text style={styles.metricValue}>{item.value}</Text>
                 <Text style={styles.metricLabel}>{item.label}</Text>
-              </View>
+              </VelvetStatCard>
             ))}
           </View>
-        </View>
+        </VelvetSectionCard>
 
-        <View style={styles.sectionCard}>
+        <VelvetSectionCard style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Achievements</Text>
           {badges?.length ? (
             <View style={styles.badgeList}>
@@ -371,7 +368,7 @@ const DashboardScreen = ({ navigation }) => {
           ) : (
             <Text style={styles.emptyBadgeText}>No achievements yet. Complete games to unlock milestones.</Text>
           )}
-        </View>
+        </VelvetSectionCard>
 
         <View style={styles.linksRow}>
           {couple ? (
@@ -405,8 +402,8 @@ const DashboardScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
         {shareHost}
-      </ScrollView>
-    </View>
+      </View>
+    </VelvetBrowseLayout>
   );
 };
 

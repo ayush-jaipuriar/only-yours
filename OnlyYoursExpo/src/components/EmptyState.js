@@ -1,7 +1,8 @@
 import React, { useMemo } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import useTheme from '../theme/useTheme';
 import { accessibilityStatusProps, decorativeAccessibilityProps } from '../accessibility';
+import { VelvetPrimaryButton, VelvetSurfaceCard } from './velvet';
 
 /**
  * EmptyState — reusable component for when a list or resource is empty or failed to load.
@@ -37,14 +38,8 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
           width: '100%',
           maxWidth: 420,
           alignItems: 'center',
-          borderRadius: 24,
           paddingHorizontal: 28,
           paddingVertical: 32,
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.glowPrimary,
         },
         icon: {
           fontSize: 56,
@@ -65,18 +60,10 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
           marginBottom: 28,
         },
         actionButton: {
-          backgroundColor: theme.colors.primary,
-          paddingHorizontal: 32,
-          paddingVertical: 13,
-          borderRadius: 25,
-          ...theme.shadows.button,
-          shadowColor: theme.colors.primary,
+          minWidth: 180,
         },
         actionText: {
-          color: theme.colors.primaryContrast,
           fontSize: 16,
-          fontWeight: '600',
-          letterSpacing: 0.3,
         },
       }),
     [theme]
@@ -84,23 +71,25 @@ const EmptyState = ({ icon = '📭', title, message, actionLabel, onAction }) =>
 
   return (
     <View style={styles.container} testID="empty-state">
-      <View style={styles.panel} accessible={!actionLabel} {...(!actionLabel ? accessibilityStatusProps : {})}>
+      <VelvetSurfaceCard
+        style={styles.panel}
+        glow
+        accessible={!actionLabel}
+        {...(!actionLabel ? accessibilityStatusProps : {})}
+      >
         {icon ? <Text style={styles.icon} {...decorativeAccessibilityProps}>{icon}</Text> : null}
         {title ? <Text style={styles.title}>{title}</Text> : null}
         {message ? <Text style={styles.message}>{message}</Text> : null}
         {actionLabel && onAction ? (
-          <TouchableOpacity
+          <VelvetPrimaryButton
             style={styles.actionButton}
             onPress={onAction}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel={actionLabel}
             accessibilityHint={title ? `${actionLabel}. ${title}.` : actionLabel}
-          >
-            <Text style={styles.actionText}>{actionLabel}</Text>
-          </TouchableOpacity>
+            label={actionLabel}
+            textStyle={styles.actionText}
+          />
         ) : null}
-      </View>
+      </VelvetSurfaceCard>
     </View>
   );
 };

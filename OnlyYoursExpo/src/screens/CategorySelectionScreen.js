@@ -15,6 +15,7 @@ import api from '../services/api';
 import WebSocketService from '../services/WebSocketService';
 import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
+import { VelvetFocusedScreen, VelvetOptionCard } from '../components/velvet';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { announceForAccessibility } from '../accessibility';
@@ -51,29 +52,19 @@ const CategorySelectionScreen = ({ navigation }) => {
           flex: 1,
           backgroundColor: theme.colors.background,
         },
-        title: {
-          fontSize: 24,
-          fontWeight: 'bold',
-          paddingHorizontal: 20,
-          paddingTop: 20,
-          paddingBottom: 12,
-          color: theme.colors.textPrimary,
-          textAlign: 'center',
+        list: {
+          flex: 1,
         },
         listContent: {
           paddingHorizontal: 15,
+          paddingTop: 12,
           paddingBottom: 20,
           alignSelf: 'center',
           width: '100%',
           maxWidth: isTablet ? 760 : 520,
         },
         categoryCard: {
-          backgroundColor: theme.colors.surface,
-          borderRadius: 12,
-          padding: 20,
           marginBottom: 15,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.overlayScrim,
         },
         sensitiveCard: {
           borderWidth: 2,
@@ -254,7 +245,7 @@ const CategorySelectionScreen = ({ navigation }) => {
   const displayItems = [customDeckCard, ...categories];
 
   const renderCategory = ({ item }) => (
-    <TouchableOpacity
+    <VelvetOptionCard
       style={[
         styles.categoryCard,
         item.isCustomDeck && styles.customDeckCard,
@@ -280,7 +271,7 @@ const CategorySelectionScreen = ({ navigation }) => {
       {item.sensitive && (
         <Text style={styles.sensitiveLabel}>Mature Content</Text>
       )}
-    </TouchableOpacity>
+    </VelvetOptionCard>
   );
 
   if (loading) {
@@ -310,15 +301,19 @@ const CategorySelectionScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>What do you want to explore?</Text>
+    <VelvetFocusedScreen
+      navigation={navigation}
+      title="Choose a Category"
+      subtitle="Pick the mood for your next game"
+    >
       <FlatList
         data={displayItems}
+        style={styles.list}
         renderItem={renderCategory}
         keyExtractor={item => item.id.toString()}
         contentContainerStyle={styles.listContent}
       />
-    </View>
+    </VelvetFocusedScreen>
   );
 };
 

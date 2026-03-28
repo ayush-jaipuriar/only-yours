@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useTheme from '../theme/useTheme';
-import { decorativeAccessibilityProps } from '../accessibility';
+import { VelvetAtmosphere, VelvetSurfaceCard } from './velvet';
 
 const MAX_FORM_WIDTH = 560;
 
@@ -29,28 +29,6 @@ const AuthFormScreenLayout = ({ children }) => {
         keyboardRoot: {
           flex: 1,
         },
-        atmosphere: {
-          ...StyleSheet.absoluteFillObject,
-          backgroundColor: theme.colors.backgroundCanvas,
-        },
-        atmosphereGlowTop: {
-          position: 'absolute',
-          top: -120,
-          left: -40,
-          width: width > 700 ? 320 : 240,
-          height: width > 700 ? 320 : 240,
-          borderRadius: 999,
-          backgroundColor: theme.colors.glowPrimary,
-        },
-        atmosphereGlowBottom: {
-          position: 'absolute',
-          right: -60,
-          bottom: -120,
-          width: width > 700 ? 300 : 220,
-          height: width > 700 ? 300 : 220,
-          borderRadius: 999,
-          backgroundColor: theme.colors.glowAccent,
-        },
         scrollContent: {
           flexGrow: 1,
           alignItems: 'center',
@@ -60,13 +38,7 @@ const AuthFormScreenLayout = ({ children }) => {
         },
         formContainer: {
           maxWidth: MAX_FORM_WIDTH,
-          borderRadius: 28,
-          padding: width >= 900 ? 28 : 22,
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
-          ...theme.shadows.card,
-          shadowColor: theme.colors.glowPrimary,
+          borderRadius: theme.radius.xxl + 4,
         },
       }),
     [theme, width]
@@ -74,10 +46,7 @@ const AuthFormScreenLayout = ({ children }) => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <View style={styles.atmosphere} pointerEvents="none" {...decorativeAccessibilityProps}>
-        <View style={styles.atmosphereGlowTop} {...decorativeAccessibilityProps} />
-        <View style={styles.atmosphereGlowBottom} {...decorativeAccessibilityProps} />
-      </View>
+      <VelvetAtmosphere variant="auth" />
       <KeyboardAvoidingView
         style={styles.keyboardRoot}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -88,9 +57,16 @@ const AuthFormScreenLayout = ({ children }) => {
           keyboardShouldPersistTaps="handled"
           alwaysBounceVertical={false}
         >
-          <View style={[styles.formContainer, { width: formWidth }]} accessible={false}>
+          <VelvetSurfaceCard
+            variant="default"
+            glow
+            accessible={false}
+            padding={width >= 900 ? 28 : 22}
+            radius={theme.radius.xxl + 4}
+            style={[styles.formContainer, { width: formWidth }]}
+          >
             {children}
-          </View>
+          </VelvetSurfaceCard>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
