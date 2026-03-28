@@ -24,14 +24,14 @@ describe('ResetPasswordScreen', () => {
     api.post.mockResolvedValue({ data: { message: 'Password reset successful.' } });
 
     const navigation = { navigate: jest.fn() };
-    const { getByPlaceholderText, getAllByText } = render(
+    const { getByPlaceholderText, getAllByText, getByLabelText } = render(
       <ResetPasswordScreen navigation={navigation} />,
     );
 
     fireEvent.changeText(getByPlaceholderText('Reset Token'), 'reset-token-123');
     fireEvent.changeText(getByPlaceholderText('New Password'), 'newpassword123');
     fireEvent.changeText(getByPlaceholderText('Confirm New Password'), 'newpassword123');
-    fireEvent.press(getAllByText('Reset Password')[1]);
+    fireEvent.press(getByLabelText('Reset password'));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/reset-password', {

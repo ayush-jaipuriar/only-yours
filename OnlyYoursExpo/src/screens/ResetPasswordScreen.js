@@ -1,12 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import api from '../services/api';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
+import { VelvetPrimaryButton, VelvetSecondaryButton, VelvetTextField } from '../components/velvet';
 import useTheme from '../theme/useTheme';
 import createAuthFormStyles from '../theme/createAuthFormStyles';
 import { accessibilityAlertProps } from '../accessibility';
@@ -67,67 +63,82 @@ const ResetPasswordScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
+      <Text style={styles.eyebrow}>Set a New Password</Text>
       <Text style={styles.title}>Reset Password</Text>
-      <Text style={styles.subtitle}>Enter your reset token and choose a new password.</Text>
+      <Text style={styles.subtitle}>Enter your reset token and choose a new password you’ll remember.</Text>
 
-      <TextInput
-        value={token}
-        onChangeText={setToken}
-        placeholder="Reset Token"
-        autoCapitalize="none"
-        style={styles.input}
-        placeholderTextColor={theme.colors.textTertiary}
-        accessibilityLabel="Reset token"
-        accessibilityHint="Enter the reset token you received."
-      />
-      <TextInput
-        value={newPassword}
-        onChangeText={setNewPassword}
-        placeholder="New Password"
-        secureTextEntry
-        style={styles.input}
-        placeholderTextColor={theme.colors.textTertiary}
-        accessibilityLabel="New password"
-        accessibilityHint="Enter your new password."
-      />
-      <TextInput
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        placeholder="Confirm New Password"
-        secureTextEntry
-        style={styles.input}
-        placeholderTextColor={theme.colors.textTertiary}
-        accessibilityLabel="Confirm new password"
-        accessibilityHint="Re-enter your new password to confirm it."
-      />
+      <View style={styles.formStack}>
+        <VelvetTextField
+          label="Reset Token"
+          value={token}
+          onChangeText={setToken}
+          placeholder="Reset Token"
+          autoCapitalize="none"
+          autoComplete="off"
+          accessibilityLabel="Reset token"
+          accessibilityHint="Enter the reset token you received."
+          returnKeyType="next"
+        />
+        <VelvetTextField
+          label="New Password"
+          value={newPassword}
+          onChangeText={setNewPassword}
+          placeholder="New Password"
+          secureTextEntry
+          autoComplete="password-new"
+          accessibilityLabel="New password"
+          accessibilityHint="Enter your new password."
+          textContentType="newPassword"
+          returnKeyType="next"
+        />
+        <VelvetTextField
+          label="Confirm New Password"
+          value={confirmPassword}
+          onChangeText={setConfirmPassword}
+          placeholder="Confirm New Password"
+          secureTextEntry
+          autoComplete="password-new"
+          accessibilityLabel="Confirm new password"
+          accessibilityHint="Re-enter your new password to confirm it."
+          textContentType="newPassword"
+          returnKeyType="done"
+        />
+      </View>
 
-      {errorMessage ? <Text style={styles.errorText} {...accessibilityAlertProps}>{errorMessage}</Text> : null}
-      {successMessage ? <Text style={styles.successText} {...accessibilityAlertProps}>{successMessage}</Text> : null}
+      {errorMessage ? (
+        <View style={[styles.messageCard, styles.messageCardError]}>
+          <Text style={[styles.messageText, styles.errorText]} {...accessibilityAlertProps}>
+            {errorMessage}
+          </Text>
+        </View>
+      ) : null}
+      {successMessage ? (
+        <View style={[styles.messageCard, styles.messageCardSuccess]}>
+          <Text style={[styles.messageText, styles.successText]} {...accessibilityAlertProps}>
+            {successMessage}
+          </Text>
+        </View>
+      ) : null}
 
-      <TouchableOpacity
-        style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+      <VelvetPrimaryButton
+        label="Reset Password"
         onPress={handleResetPassword}
-        disabled={isSubmitting}
-        accessibilityRole="button"
+        loading={isSubmitting}
+        style={styles.primaryAction}
         accessibilityLabel={isSubmitting ? 'Resetting password' : 'Reset password'}
         accessibilityHint="Submits your token and new password."
-        accessibilityState={{ disabled: isSubmitting }}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color={theme.colors.primaryContrast} />
-        ) : (
-          <Text style={styles.primaryButtonText}>Reset Password</Text>
-        )}
-      </TouchableOpacity>
+      />
 
-      <TouchableOpacity
+      <VelvetSecondaryButton
+        label="Back to Sign In"
         onPress={() => navigation.navigate('SignIn')}
-        accessibilityRole="button"
+        style={styles.secondaryAction}
         accessibilityLabel="Back to sign in"
         accessibilityHint="Returns to the sign in screen."
-      >
-        <Text style={styles.linkText}>Back to Sign In</Text>
-      </TouchableOpacity>
+      />
+      <Text style={styles.subtleMeta}>
+        Use the token from your email, then choose a stronger password for future sign-ins.
+      </Text>
     </AuthFormScreenLayout>
   );
 };

@@ -45,7 +45,7 @@ describe('SignInScreen', () => {
   it('shows validation error when fields are empty', async () => {
     const { getByLabelText, getByText } = renderScreen();
 
-    fireEvent.press(getByText('Sign In'));
+    fireEvent.press(getByLabelText('Sign in'));
 
     await waitFor(() => {
       expect(getByText('Please enter both email and password.')).toBeTruthy();
@@ -63,11 +63,11 @@ describe('SignInScreen', () => {
     };
     api.post.mockResolvedValue({ data: authPayload });
 
-    const { getByLabelText, getByText, login } = renderScreen();
+    const { getByLabelText, login } = renderScreen();
 
     fireEvent.changeText(getByLabelText('Email'), 'Alice@Example.com');
     fireEvent.changeText(getByLabelText('Password'), 'password123');
-    fireEvent.press(getByText('Sign In'));
+    fireEvent.press(getByLabelText('Sign in'));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/login', {
@@ -81,7 +81,7 @@ describe('SignInScreen', () => {
   it('navigates to SignUp and ForgotPassword', async () => {
     const { getByLabelText, getByText, navigation } = renderScreen();
 
-    fireEvent.press(getByText("Don't have an account? Sign Up"));
+    fireEvent.press(getByText('Create your account'));
     fireEvent.press(getByText('Forgot Password?'));
 
     expect(navigation.navigate).toHaveBeenCalledWith('SignUp');

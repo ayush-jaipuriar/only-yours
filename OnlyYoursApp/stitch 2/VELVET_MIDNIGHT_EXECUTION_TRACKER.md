@@ -120,31 +120,31 @@ Status convention:
 ## Phase 3. Authentication and Onboarding
 
 ### Implementation
-- [ ] Rebuild [`SignInScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SignInScreen.js) using Velvet auth shell
-- [ ] Remove unsupported social/alternate login concepts from sign-in redesign
-- [ ] Rebuild [`SignUpScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SignUpScreen.js)
-- [ ] Rebuild [`ForgotPasswordScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ForgotPasswordScreen.js) using auth design language
-- [ ] Rebuild [`ResetPasswordScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ResetPasswordScreen.js) using auth design language
-- [ ] Rebuild [`OnboardingScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/OnboardingScreen.js) as a 3-step flow
-- [ ] Preserve skip flow and replay onboarding support
-- [ ] Ensure onboarding CTAs and progress indicators match the new system
+- [x] Rebuild [`SignInScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SignInScreen.js) using Velvet auth shell
+- [x] Remove unsupported social/alternate login concepts from sign-in redesign
+- [x] Rebuild [`SignUpScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SignUpScreen.js)
+- [x] Rebuild [`ForgotPasswordScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ForgotPasswordScreen.js) using auth design language
+- [x] Rebuild [`ResetPasswordScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ResetPasswordScreen.js) using auth design language
+- [x] Rebuild [`OnboardingScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/OnboardingScreen.js) as a 3-step flow
+- [x] Preserve skip flow and replay onboarding support
+- [x] Ensure onboarding CTAs and progress indicators match the new system
 
 ### Validation
-- [ ] Sign in works
-- [ ] Sign up works
-- [ ] Forgot password request works
-- [ ] Reset password works
-- [ ] Validation and error states are legible and consistent
-- [ ] Onboarding shows correct step flow
-- [ ] Replay onboarding still works from settings
+- [x] Sign in works
+- [x] Sign up works
+- [x] Forgot password request works
+- [x] Reset password works
+- [x] Validation and error states are legible and consistent
+- [x] Onboarding shows correct step flow
+- [x] Replay onboarding still works from settings
 
 ### Docs
-- [ ] Record any auth-state UI decisions made during implementation
-- [ ] Update spec if forgot/reset screens introduce new shared auth patterns
+- [x] Record any auth-state UI decisions made during implementation
+- [x] Update spec if forgot/reset screens introduce new shared auth patterns
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: The auth stack now uses the stable Velvet Midnight primitive layer rather than raw `TextInput` and ad-hoc buttons. `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, and `ResetPasswordScreen` all retain their existing API contracts and validation logic, but now share a stronger content pattern: editorial eyebrow + title hierarchy, `VelvetTextField` inputs, primary CTA through `VelvetPrimaryButton`, calmer secondary navigation, and inline error/success message cards rather than plain text-only feedback. The sign-in redesign explicitly keeps only real product actions and does not introduce any social or alternate login concepts. A follow-up polish pass also added more intentional helper/meta copy, stronger secondary-button treatment where appropriate, and autofill/autocomplete hints so the forms feel better in real use. Onboarding has now been rebuilt into a true 3-step Velvet Midnight story flow with step-specific emotional framing, stronger visual anchors, explicit progress treatment, optional back navigation, and preserved skip/completion behavior. Jest validation passed for `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `OnboardingScreenFlow`, and `SettingsScreenFlow`.
+- Blockers: None for Phase 3. Remaining work shifts to dashboard/core navigation surfaces.
 
 ---
 
@@ -428,8 +428,8 @@ Mitigations:
 ## Progress Summary
 
 Current active phase:
-Phase 3. Authentication and Onboarding
+Phase 4. Dashboard and Core Navigation Surfaces
 Overall notes:
-Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout.
+Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout. Phase 3 is now complete with the auth stack and onboarding rebuilt on the Velvet Midnight foundation and replay-onboarding validation passing.
 Next recommended task:
-Start Phase 3 by rebuilding the auth stack on top of the now-stable Velvet Midnight primitives, then move into onboarding once the auth shell patterns are locked.
+Start Phase 4 by rebuilding the dashboard states more faithfully to the Stitch 2 direction now that the shell and auth/onboarding systems are stable.

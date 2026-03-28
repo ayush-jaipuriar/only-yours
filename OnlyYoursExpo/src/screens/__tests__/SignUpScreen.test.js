@@ -28,13 +28,13 @@ describe('SignUpScreen', () => {
   });
 
   it('shows mismatch error when passwords differ', async () => {
-    const { getByPlaceholderText, getByText, getAllByText } = renderScreen();
+    const { getByPlaceholderText, getByText, getByLabelText } = renderScreen();
 
     fireEvent.changeText(getByPlaceholderText('Username'), 'alice');
     fireEvent.changeText(getByPlaceholderText('Email'), 'alice@example.com');
     fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
     fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'different123');
-    fireEvent.press(getAllByText('Create Account')[1]);
+    fireEvent.press(getByLabelText('Create account'));
 
     await waitFor(() => {
       expect(getByText('Passwords do not match.')).toBeTruthy();
@@ -50,13 +50,13 @@ describe('SignUpScreen', () => {
     };
     api.post.mockResolvedValue({ data: authPayload });
 
-    const { getByPlaceholderText, getAllByText, login } = renderScreen();
+    const { getByPlaceholderText, getByLabelText, login } = renderScreen();
 
     fireEvent.changeText(getByPlaceholderText('Username'), 'alice');
     fireEvent.changeText(getByPlaceholderText('Email'), 'Alice@Example.com');
     fireEvent.changeText(getByPlaceholderText('Password'), 'password123');
     fireEvent.changeText(getByPlaceholderText('Confirm Password'), 'password123');
-    fireEvent.press(getAllByText('Create Account')[1]);
+    fireEvent.press(getByLabelText('Create account'));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/register', {

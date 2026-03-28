@@ -23,12 +23,12 @@ describe('ForgotPasswordScreen', () => {
     });
 
     const navigation = { navigate: jest.fn() };
-    const { getByPlaceholderText, getByText } = render(
+    const { getByPlaceholderText, getByText, getByLabelText } = render(
       <ForgotPasswordScreen navigation={navigation} />,
     );
 
     fireEvent.changeText(getByPlaceholderText('Email'), 'test@example.com');
-    fireEvent.press(getByText('Send Reset Link'));
+    fireEvent.press(getByLabelText('Send reset link'));
 
     await waitFor(() => {
       expect(api.post).toHaveBeenCalledWith('/auth/forgot-password', {

@@ -8,8 +8,8 @@ import {
   useWindowDimensions,
 } from 'react-native';
 import { useAuth } from '../state/AuthContext';
+import { VelvetPrimaryButton, VelvetScreen, VelvetSecondaryButton, VelvetSurfaceCard } from '../components/velvet';
 import useTheme from '../theme/useTheme';
-import { getGradientToken } from '../theme/gradients';
 import { announceForAccessibility, decorativeAccessibilityProps } from '../accessibility';
 
 /* eslint-disable react/prop-types */
@@ -17,24 +17,45 @@ import { announceForAccessibility, decorativeAccessibilityProps } from '../acces
 const ONBOARDING_STEPS = [
   {
     key: 'connect',
-    emoji: '💞',
-    title: 'Link with your partner',
+    stepLabel: 'Step 1 of 3',
+    eyebrow: 'Private Shared Space',
+    title: 'Connect Your Worlds',
     description:
-      'Generate a secure code and connect your partner account so both of you can play in real time.',
+      'Link with your partner to unlock a private sanctuary designed for the two of you alone.',
+    supporting:
+      'Generate a secure code, connect in seconds, and step into a shared experience that feels personal from the very beginning.',
+    visual: {
+      emoji: '💞',
+      highlights: ['Secure partner code', 'Private couple connection'],
+    },
   },
   {
     key: 'play',
-    emoji: '🎯',
-    title: 'Play round-by-round',
+    stepLabel: 'Step 2 of 3',
+    eyebrow: 'Round-by-Round Play',
+    title: 'Discover Each Other',
     description:
-      'You answer one question at a time, then guess how your partner answered in round two.',
+      'Answer one question at a time, then guess how your partner answered when round two begins.',
+    supporting:
+      'The flow is designed to build anticipation slowly, so every answer feels intimate and every guess feels meaningful.',
+    visual: {
+      emoji: '🎯',
+      highlights: ['Answer first, guess later', 'Momentum without overwhelm'],
+    },
   },
   {
     key: 'track',
-    emoji: '🏆',
-    title: 'Track growth together',
+    stepLabel: 'Step 3 of 3',
+    eyebrow: 'Celebrate Growth',
+    title: 'Celebrate Your Bond',
     description:
-      'Review history, streaks, and badges to celebrate consistency and learn your patterns.',
+      'Track streaks, milestones, badges, and meaningful progress as your shared story evolves over time.',
+    supporting:
+      'You are not just playing a quiz. You are building a private ritual and a record of how your connection grows.',
+    visual: {
+      emoji: '🏆',
+      highlights: ['Milestones worth sharing', 'Progress you can feel'],
+    },
   },
 ];
 
@@ -45,60 +66,208 @@ const OnboardingScreen = ({ navigation }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinishing, setIsFinishing] = useState(false);
 
-  const gradient = getGradientToken('romanceSoft', theme.mode);
   const currentStep = ONBOARDING_STEPS[currentIndex];
   const isLastStep = currentIndex === ONBOARDING_STEPS.length - 1;
+  const progressPercent = ((currentIndex + 1) / ONBOARDING_STEPS.length) * 100;
   const contentWidth = Math.min(width - 32, 640);
+  const isTablet = width >= 768;
 
-  const dynamicStyles = useMemo(
+  const styles = useMemo(
     () =>
       StyleSheet.create({
         screen: {
           flex: 1,
           backgroundColor: theme.colors.background,
         },
-        card: {
+        scrollContent: {
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 16,
+          paddingTop: 28,
+          paddingBottom: 32,
+        },
+        shell: {
           width: contentWidth,
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderColor: theme.colors.borderAccent,
-          shadowColor: theme.colors.glowPrimary,
+        },
+        topRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 18,
+        },
+        brand: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 30,
+          fontStyle: 'italic',
+        },
+        stepMeta: {
+          color: theme.colors.textTertiary,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1.2,
+          textTransform: 'uppercase',
+        },
+        progressTrack: {
+          height: 4,
+          borderRadius: 999,
+          overflow: 'hidden',
+          backgroundColor: theme.colors.surfaceElevated,
+          marginBottom: 24,
+        },
+        progressFill: {
+          height: '100%',
+          borderRadius: 999,
+          backgroundColor: theme.colors.primary,
         },
         heroCard: {
-          backgroundColor: gradient.fallback,
+          marginBottom: 18,
+          overflow: 'hidden',
+        },
+        heroVisual: {
+          minHeight: isTablet ? 340 : 292,
+          borderRadius: 22,
+          paddingHorizontal: 22,
+          paddingTop: 22,
+          paddingBottom: 20,
+          backgroundColor: theme.colors.surfaceOverlay,
+          position: 'relative',
+          justifyContent: 'space-between',
+        },
+        glowLarge: {
+          position: 'absolute',
+          width: isTablet ? 300 : 220,
+          height: isTablet ? 300 : 220,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowPrimary,
+          opacity: 0.42,
+          top: -42,
+          right: -26,
+        },
+        glowSmall: {
+          position: 'absolute',
+          width: isTablet ? 180 : 132,
+          height: isTablet ? 180 : 132,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowAccent,
+          opacity: 0.24,
+          bottom: 24,
+          left: -10,
+        },
+        visualBadge: {
+          alignSelf: 'flex-start',
+          paddingHorizontal: 14,
+          paddingVertical: 8,
+          borderRadius: theme.radius.pill,
+          backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.borderAccent,
+        },
+        visualBadgeText: {
+          color: theme.colors.accent,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1.1,
+          textTransform: 'uppercase',
+        },
+        visualCenter: {
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginTop: 12,
+          marginBottom: 12,
+        },
+        visualHalo: {
+          width: isTablet ? 188 : 160,
+          height: isTablet ? 188 : 160,
+          borderRadius: 999,
+          borderWidth: 1,
+          borderColor: theme.colors.borderAccent,
+          backgroundColor: theme.colors.surfaceElevated,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        visualHaloInner: {
+          width: isTablet ? 138 : 118,
+          height: isTablet ? 138 : 118,
+          borderRadius: 999,
+          backgroundColor: theme.colors.surface,
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+        },
+        visualEmoji: {
+          fontSize: isTablet ? 58 : 50,
+        },
+        visualHighlights: {
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: 10,
+        },
+        highlightPill: {
+          paddingHorizontal: 12,
+          paddingVertical: 8,
+          borderRadius: theme.radius.pill,
+          backgroundColor: theme.colors.surfaceMuted,
+          borderWidth: 1,
+          borderColor: theme.colors.border,
+        },
+        highlightPillText: {
+          color: theme.colors.textSecondary,
+          fontSize: 12,
+          fontWeight: '600',
+        },
+        contentCard: {
+          marginBottom: 20,
+        },
+        eyebrow: {
+          color: theme.colors.accent,
+          fontSize: 11,
+          fontWeight: '700',
+          letterSpacing: 1.3,
+          textTransform: 'uppercase',
+          marginBottom: 12,
         },
         title: {
           color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 42 : 36,
+          lineHeight: isTablet ? 48 : 42,
+          marginBottom: 12,
         },
-        subtitle: {
-          color: theme.colors.textSecondary,
-        },
-        progressTrack: {
-          backgroundColor: theme.colors.surfaceMuted,
-        },
-        progressFill: {
-          backgroundColor: theme.colors.primary,
-        },
-        stepTitle: {
+        description: {
           color: theme.colors.textPrimary,
+          fontSize: 18,
+          lineHeight: 28,
+          marginBottom: 12,
         },
-        stepDescription: {
+        supporting: {
           color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 24,
         },
-        primaryButton: {
-          backgroundColor: theme.colors.primary,
+        footer: {
+          marginTop: 4,
         },
-        primaryButtonText: {
-          color: theme.colors.primaryContrast,
+        primaryAction: {
+          marginBottom: 12,
         },
-        secondaryButton: {
-          borderColor: theme.colors.border,
-          backgroundColor: theme.colors.surfaceElevated,
+        secondaryAction: {
+          marginBottom: 12,
         },
-        secondaryButtonText: {
+        tertiaryActionText: {
           color: theme.colors.textSecondary,
+          textAlign: 'center',
+          fontSize: 14,
+          fontWeight: '600',
+        },
+        disabledAction: {
+          opacity: 0.6,
         },
       }),
-    [contentWidth, gradient.fallback, theme]
+    [contentWidth, isTablet, theme]
   );
 
   useEffect(() => {
@@ -110,7 +279,9 @@ const OnboardingScreen = ({ navigation }) => {
   }, []);
 
   useEffect(() => {
-    announceForAccessibility(`Onboarding step ${currentIndex + 1} of ${ONBOARDING_STEPS.length}. ${currentStep.title}.`);
+    announceForAccessibility(
+      `Onboarding step ${currentIndex + 1} of ${ONBOARDING_STEPS.length}. ${currentStep.title}.`
+    );
   }, [currentIndex, currentStep.title]);
 
   const goToNext = async () => {
@@ -138,176 +309,115 @@ const OnboardingScreen = ({ navigation }) => {
     }
   };
 
-  const progressPercent = ((currentIndex + 1) / ONBOARDING_STEPS.length) * 100;
+  const goBack = () => {
+    if (currentIndex === 0 || isFinishing) {
+      return;
+    }
+    setCurrentIndex((prev) => prev - 1);
+  };
 
   return (
-    <ScrollView
-      style={dynamicStyles.screen}
-      contentContainerStyle={styles.scrollContent}
-      testID="onboarding-screen"
-    >
-      <View style={[styles.card, dynamicStyles.card]}>
-        <View style={[styles.heroCard, dynamicStyles.heroCard]}>
-          <Text style={styles.heroEmoji} {...decorativeAccessibilityProps}>💗</Text>
-          <Text style={[styles.title, dynamicStyles.title]}>Welcome to Only Yours</Text>
-          <Text style={[styles.subtitle, dynamicStyles.subtitle]}>
-            Let’s set up your experience in under a minute.
-          </Text>
-        </View>
+    <VelvetScreen withAtmosphere atmosphere="auth" style={styles.screen}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        testID="onboarding-screen"
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.shell}>
+          <View style={styles.topRow}>
+            <Text style={styles.brand}>Only Yours</Text>
+            <Text style={styles.stepMeta}>{currentStep.stepLabel}</Text>
+          </View>
 
-        <View
-          style={[styles.progressTrack, dynamicStyles.progressTrack]}
-          accessible
-          accessibilityRole="progressbar"
-          accessibilityLabel="Onboarding progress"
-          accessibilityValue={{ min: 1, now: currentIndex + 1, max: ONBOARDING_STEPS.length }}
-        >
-          <View style={[styles.progressFill, dynamicStyles.progressFill, { width: `${progressPercent}%` }]} />
-        </View>
-        <Text style={[styles.progressLabel, dynamicStyles.subtitle]}>
-          Step {currentIndex + 1} of {ONBOARDING_STEPS.length}
-        </Text>
-
-        <View style={styles.stepCard}>
-          <Text style={styles.stepEmoji} {...decorativeAccessibilityProps}>{currentStep.emoji}</Text>
-          <Text style={[styles.stepTitle, dynamicStyles.stepTitle]}>{currentStep.title}</Text>
-          <Text style={[styles.stepDescription, dynamicStyles.stepDescription]}>
-            {currentStep.description}
-          </Text>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.primaryButton, dynamicStyles.primaryButton, isFinishing && styles.disabledButton]}
-          onPress={goToNext}
-          disabled={isFinishing}
-          accessibilityRole="button"
-          accessibilityLabel={isLastStep ? 'Get started' : 'Next onboarding step'}
-          accessibilityHint={isLastStep ? 'Completes onboarding and opens the dashboard.' : 'Moves to the next onboarding step.'}
-          accessibilityState={{ disabled: isFinishing }}
-        >
-          <Text style={[styles.primaryButtonText, dynamicStyles.primaryButtonText]}>
-            {isLastStep ? 'Get Started' : 'Next'}
-          </Text>
-        </TouchableOpacity>
-
-        {!isLastStep && (
-          <TouchableOpacity
-            style={[styles.secondaryButton, dynamicStyles.secondaryButton, isFinishing && styles.disabledButton]}
-            onPress={skipOnboarding}
-            disabled={isFinishing}
-            accessibilityRole="button"
-            accessibilityLabel="Skip onboarding for now"
-            accessibilityHint="Completes onboarding immediately and opens the dashboard."
-            accessibilityState={{ disabled: isFinishing }}
+          <View
+            style={styles.progressTrack}
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel="Onboarding progress"
+            accessibilityValue={{ min: 1, now: currentIndex + 1, max: ONBOARDING_STEPS.length }}
           >
-            <Text style={[styles.secondaryButtonText, dynamicStyles.secondaryButtonText]}>Skip for now</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-    </ScrollView>
+            <View style={[styles.progressFill, { width: `${progressPercent}%` }]} />
+          </View>
+
+          <VelvetSurfaceCard variant="default" glow style={styles.heroCard}>
+            <View style={styles.heroVisual}>
+              <View style={styles.glowLarge} />
+              <View style={styles.glowSmall} />
+
+              <View style={styles.visualBadge}>
+                <Text style={styles.visualBadgeText}>{currentStep.eyebrow}</Text>
+              </View>
+
+              <View style={styles.visualCenter}>
+                <View style={styles.visualHalo}>
+                  <View style={styles.visualHaloInner}>
+                    <Text style={styles.visualEmoji} {...decorativeAccessibilityProps}>
+                      {currentStep.visual.emoji}
+                    </Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={styles.visualHighlights}>
+                {currentStep.visual.highlights.map((highlight) => (
+                  <View key={highlight} style={styles.highlightPill}>
+                    <Text style={styles.highlightPillText}>{highlight}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          </VelvetSurfaceCard>
+
+          <VelvetSurfaceCard variant="solid" style={styles.contentCard}>
+            <Text style={styles.eyebrow}>{currentStep.eyebrow}</Text>
+            <Text style={styles.title}>{currentStep.title}</Text>
+            <Text style={styles.description}>{currentStep.description}</Text>
+            <Text style={styles.supporting}>{currentStep.supporting}</Text>
+          </VelvetSurfaceCard>
+
+          <View style={styles.footer}>
+            <VelvetPrimaryButton
+              label={isLastStep ? 'Get Started' : 'Next'}
+              onPress={goToNext}
+              loading={isFinishing}
+              style={styles.primaryAction}
+              accessibilityLabel={isLastStep ? 'Get started' : 'Next onboarding step'}
+              accessibilityHint={
+                isLastStep
+                  ? 'Completes onboarding and opens the dashboard.'
+                  : 'Moves to the next onboarding step.'
+              }
+            />
+
+            {currentIndex > 0 ? (
+              <VelvetSecondaryButton
+                label="Back"
+                onPress={goBack}
+                disabled={isFinishing}
+                style={styles.secondaryAction}
+                accessibilityLabel="Previous onboarding step"
+                accessibilityHint="Returns to the previous onboarding step."
+              />
+            ) : null}
+
+            {!isLastStep ? (
+              <TouchableOpacity
+                onPress={skipOnboarding}
+                disabled={isFinishing}
+                style={isFinishing && styles.disabledAction}
+                accessibilityRole="button"
+                accessibilityLabel="Skip onboarding for now"
+                accessibilityHint="Completes onboarding immediately and opens the dashboard."
+                accessibilityState={{ disabled: isFinishing }}
+              >
+                <Text style={styles.tertiaryActionText}>Skip for now</Text>
+              </TouchableOpacity>
+            ) : null}
+          </View>
+        </View>
+      </ScrollView>
+    </VelvetScreen>
   );
 };
-
-const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 28,
-  },
-  card: {
-    borderWidth: 1,
-    borderRadius: 24,
-    overflow: 'hidden',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.18,
-    shadowRadius: 18,
-    elevation: 8,
-  },
-  heroCard: {
-    paddingHorizontal: 20,
-    paddingTop: 28,
-    paddingBottom: 22,
-    alignItems: 'center',
-  },
-  heroEmoji: {
-    fontSize: 34,
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 15,
-    textAlign: 'center',
-    lineHeight: 22,
-  },
-  progressTrack: {
-    height: 8,
-    marginHorizontal: 20,
-    marginTop: 20,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-  },
-  progressLabel: {
-    marginTop: 8,
-    marginHorizontal: 20,
-    fontSize: 13,
-    textAlign: 'right',
-  },
-  stepCard: {
-    paddingHorizontal: 20,
-    paddingVertical: 24,
-    alignItems: 'center',
-  },
-  stepEmoji: {
-    fontSize: 42,
-    marginBottom: 10,
-  },
-  stepTitle: {
-    fontSize: 23,
-    fontWeight: '700',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  stepDescription: {
-    fontSize: 16,
-    textAlign: 'center',
-    lineHeight: 24,
-  },
-  primaryButton: {
-    marginHorizontal: 20,
-    marginBottom: 12,
-    borderRadius: 18,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  primaryButtonText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  secondaryButton: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderRadius: 18,
-    paddingVertical: 13,
-    alignItems: 'center',
-  },
-  secondaryButtonText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  disabledButton: {
-    opacity: 0.6,
-  },
-});
 
 export default OnboardingScreen;

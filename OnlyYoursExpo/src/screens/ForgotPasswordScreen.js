@@ -1,12 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import {
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ActivityIndicator,
-} from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import api from '../services/api';
 import AuthFormScreenLayout from '../components/AuthFormScreenLayout';
+import { VelvetPrimaryButton, VelvetSecondaryButton, VelvetTextField } from '../components/velvet';
 import useTheme from '../theme/useTheme';
 import createAuthFormStyles from '../theme/createAuthFormStyles';
 import { accessibilityAlertProps } from '../accessibility';
@@ -49,39 +45,49 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
   return (
     <AuthFormScreenLayout>
+      <Text style={styles.eyebrow}>Recover Access</Text>
       <Text style={styles.title}>Forgot Password</Text>
-      <Text style={styles.subtitle}>Enter your email to request a reset code.</Text>
+      <Text style={styles.subtitle}>Enter your email and we’ll help you get back into your private space.</Text>
 
-      <TextInput
-        value={email}
-        onChangeText={setEmail}
-        placeholder="Email"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-        placeholderTextColor={theme.colors.textTertiary}
-        accessibilityLabel="Email"
-        accessibilityHint="Enter your account email to request a password reset."
-      />
+      <View style={styles.formStack}>
+        <VelvetTextField
+          label="Email"
+          value={email}
+          onChangeText={setEmail}
+          placeholder="Email"
+          keyboardType="email-address"
+          autoCapitalize="none"
+          autoComplete="email"
+          accessibilityLabel="Email"
+          accessibilityHint="Enter your account email to request a password reset."
+          textContentType="emailAddress"
+          returnKeyType="done"
+        />
+      </View>
 
-      {errorMessage ? <Text style={styles.errorText} {...accessibilityAlertProps}>{errorMessage}</Text> : null}
-      {successMessage ? <Text style={styles.successText} {...accessibilityAlertProps}>{successMessage}</Text> : null}
+      {errorMessage ? (
+        <View style={[styles.messageCard, styles.messageCardError]}>
+          <Text style={[styles.messageText, styles.errorText]} {...accessibilityAlertProps}>
+            {errorMessage}
+          </Text>
+        </View>
+      ) : null}
+      {successMessage ? (
+        <View style={[styles.messageCard, styles.messageCardSuccess]}>
+          <Text style={[styles.messageText, styles.successText]} {...accessibilityAlertProps}>
+            {successMessage}
+          </Text>
+        </View>
+      ) : null}
 
-      <TouchableOpacity
-        style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+      <VelvetPrimaryButton
+        label="Send Reset Link"
         onPress={handleForgotPassword}
-        disabled={isSubmitting}
-        accessibilityRole="button"
+        loading={isSubmitting}
+        style={styles.primaryAction}
         accessibilityLabel={isSubmitting ? 'Sending reset link' : 'Send reset link'}
         accessibilityHint="Requests a password reset email or code for this account."
-        accessibilityState={{ disabled: isSubmitting }}
-      >
-        {isSubmitting ? (
-          <ActivityIndicator color={theme.colors.primaryContrast} />
-        ) : (
-          <Text style={styles.primaryButtonText}>Send Reset Link</Text>
-        )}
-      </TouchableOpacity>
+      />
 
       <TouchableOpacity
         onPress={() => navigation.navigate('ResetPassword')}
@@ -92,14 +98,16 @@ const ForgotPasswordScreen = ({ navigation }) => {
         <Text style={styles.linkText}>Already have a reset token? Reset Password</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity
+      <VelvetSecondaryButton
+        label="Back to Sign In"
         onPress={() => navigation.navigate('SignIn')}
-        accessibilityRole="button"
+        style={styles.secondaryAction}
         accessibilityLabel="Back to sign in"
         accessibilityHint="Returns to the sign in screen."
-      >
-        <Text style={styles.linkText}>Back to Sign In</Text>
-      </TouchableOpacity>
+      />
+      <Text style={styles.subtleMeta}>
+        We won’t reveal whether an account exists for the address you enter.
+      </Text>
     </AuthFormScreenLayout>
   );
 };

@@ -271,6 +271,13 @@ Corrective changes:
 - remove social or alternate sign-in buttons
 - keep only real auth actions supported by the app
 
+Implementation status:
+- implemented with the Velvet auth shell already in [`AuthFormScreenLayout.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/components/AuthFormScreenLayout.js)
+- content layer rebuilt using `VelvetTextField` and `VelvetPrimaryButton`
+- auth errors now render as inline message cards instead of plain detached text
+- sign-in secondary action grouping keeps only forgot-password and create-account pathways
+- autofill and keyboard hints are now explicitly configured to improve real-device form usability
+
 ## 8.2 Sign Up
 
 Reference:
@@ -290,6 +297,11 @@ Required UI:
 Tone:
 - account creation should feel like entering a private shared world, not signing up for a generic service
 
+Implementation status:
+- implemented with the shared auth layout and Velvet inputs/buttons
+- CTA and heading hierarchy now separate “screen identity” from “button action,” which avoids duplicate-label ambiguity while keeping the form easier to scan
+- back-to-sign-in is now treated as a calmer secondary action rather than competing with the primary create-account CTA
+
 ## 8.3 Forgot Password
 
 No dedicated Stitch 2 screen.
@@ -303,6 +315,12 @@ Implementation rule:
 Target file:
 - [`ForgotPasswordScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ForgotPasswordScreen.js)
 
+Implementation status:
+- implemented using the same auth visual language as sign-in/sign-up
+- success and error states now use the shared auth message-card pattern
+- back-to-sign-in is elevated into a calmer secondary button instead of another plain link
+- supporting copy now explicitly reassures users that account existence is not exposed through the reset request flow
+
 ## 8.4 Reset Password
 
 No dedicated Stitch 2 screen.
@@ -314,6 +332,12 @@ Implementation rule:
 
 Target file:
 - [`ResetPasswordScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ResetPasswordScreen.js)
+
+Implementation status:
+- implemented using the same auth shell and message-card pattern
+- token and new-password fields now follow the same labeled-field rhythm as the rest of auth
+- success still routes back to sign-in after the existing timed confirmation
+- secondary guidance now reinforces how the reset token flow should be used instead of leaving the screen feeling purely transactional
 
 ## 8.5 Onboarding
 
@@ -336,6 +360,12 @@ Required UX:
 - skip option
 - one clear primary CTA
 - under-one-minute feel
+
+Implementation status:
+- implemented as a cinematic 3-step story flow rather than a single repeated card with swapped copy
+- preserves onboarding start-on-mount, skip, completion, and dashboard redirect behavior
+- replay-onboarding support remains intact and now validates cleanly through `SettingsScreenFlow`
+- each step now has stronger visual identity and supporting copy while keeping the core message sequence intact
 
 ## 8.6 Dashboard
 
