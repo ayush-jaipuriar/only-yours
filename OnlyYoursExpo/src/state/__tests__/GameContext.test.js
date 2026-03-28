@@ -316,6 +316,50 @@ describe('GameContext', () => {
     expect(result.current.gameStatus).toBe('waiting');
   });
 
+  it('tracks partner presence updates as gameplay notices', () => {
+    const { result } = renderHook(() => useGame(), { wrapper });
+
+    act(() => {
+      result.current.startGame('test-session-id');
+    });
+
+    act(() => {
+      capturedGameContextRef.handleRealtimePayload({
+        type: 'STATUS',
+        sessionId: 'test-session-id',
+        status: 'PARTNER_LEFT',
+        message: 'Your partner disconnected for a moment.',
+      });
+    });
+
+    expect(result.current.statusNotice).toEqual({
+      type: 'partner-left',
+      message: 'Your partner disconnected for a moment.',
+    });
+    expect(result.current.gameStatus).toBe('playing');
+  });
+
+  it('moves into the expired state when the session expires', () => {
+    const { result } = renderHook(() => useGame(), { wrapper });
+
+    act(() => {
+      result.current.startGame('test-session-id');
+    });
+
+    act(() => {
+      capturedGameContextRef.handleRealtimePayload({
+        type: 'STATUS',
+        sessionId: 'test-session-id',
+        status: 'SESSION_EXPIRED',
+        message: 'This game session has expired.',
+      });
+    });
+
+    expect(result.current.gameStatus).toBe('expired');
+    expect(result.current.expiredMessage).toBe('This game session has expired.');
+    expect(result.current.currentQuestion).toBeNull();
+  });
+
   it('does not let unrelated STATUS events cancel submit recovery', async () => {
     jest.useFakeTimers();
 

@@ -6,8 +6,15 @@ import ResultsScreen from '../ResultsScreen';
 import { AuthContext } from '../../state/AuthContext';
 import { GameProvider } from '../../state/GameContext';
 import WebSocketService from '../../services/WebSocketService';
+import api from '../../services/api';
 
 jest.mock('../../services/WebSocketService');
+jest.mock('../../services/api', () => ({
+  __esModule: true,
+  default: {
+    get: jest.fn(),
+  },
+}));
 
 const mockScores = {
   player1Name: 'Alice',
@@ -46,9 +53,9 @@ const MockAuthProvider = ({ children }) => (
   </AuthContext.Provider>
 );
 
-const renderResults = (scores = mockScores, navigation = {}) => {
+const renderResults = (routeParams = { scores: mockScores }, navigation = {}) => {
   const mockNav = { replace: jest.fn(), navigate: jest.fn(), ...navigation };
-  const mockRoute = { params: { scores } };
+  const mockRoute = { params: routeParams };
   WebSocketService.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
 
   const result = render(
@@ -64,6 +71,7 @@ const renderResults = (scores = mockScores, navigation = {}) => {
 describe('ResultsScreen', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    api.get.mockResolvedValue({ data: mockScores });
   });
 
   afterEach(() => {
@@ -128,5 +136,31 @@ describe('ResultsScreen', () => {
     const { getByText, navigation } = renderResults();
     fireEvent.press(getByText('Back to Dashboard'));
     expect(navigation.replace).toHaveBeenCalledWith('Dashboard');
+  });
+
+  it('shows a results-not-ready recovery state for 409 responses', async () => {
+    api.get.mockRejectedValueOnce({ response: { status: 409 } });
+
+    const { findByText, navigation } = renderResults({ sessionId: 'session-123' });
+    expect(await findByText("Results Aren't Ready Yet")).toBeTruthy();
+
+    fireEvent.press(await findByText('Return to Game'));
+    expect(navigation.replace).toHaveBeenCalledWith('Game', { sessionId: 'session-123' });
+  });
+
+  it('refreshes results from the not-ready state', async () => {
+    api.get
+      .mockRejectedValueOnce({ response: { status: 409 } })
+      .mockResolvedValueOnce({ data: mockScores });
+
+    const { findByText, getByText } = renderResults({ sessionId: 'session-123' });
+    expect(await findByText("Results Aren't Ready Yet")).toBeTruthy();
+
+    fireEvent.press(getByText('Refresh Results'));
+
+    await waitFor(() => {
+      expect(api.get).toHaveBeenCalledTimes(2);
+      expect(getByText('Game Complete!')).toBeTruthy();
+    });
   });
 });

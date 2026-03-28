@@ -260,6 +260,11 @@ export const AuthProvider = ({ children }) => {
       }
     };
 
+    const currentRoute = navigationRef.current?.getCurrentRoute?.();
+    const isCurrentGameplayRoute =
+      currentRoute?.name === 'Game' &&
+      currentRoute?.params?.sessionId === status.sessionId;
+
     switch (status.status) {
       case 'INVITATION_DECLINED':
         Alert.alert('Invitation Declined', status.message);
@@ -275,6 +280,10 @@ export const AuthProvider = ({ children }) => {
         openGameSession(status.sessionId);
         break;
       case 'SESSION_EXPIRED':
+        if (isCurrentGameplayRoute) {
+          triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
+          break;
+        }
         if (gameContextRef.current) {
           gameContextRef.current.endGame();
         }
@@ -288,8 +297,15 @@ export const AuthProvider = ({ children }) => {
         }
         break;
       case 'PARTNER_LEFT':
-      case 'PARTNER_RETURNED':
+        if (isCurrentGameplayRoute) {
+          break;
+        }
         Alert.alert('Game Update', status.message || 'Game status updated.');
+        break;
+      case 'PARTNER_RETURNED':
+        if (isCurrentGameplayRoute) {
+          break;
+        }
         break;
       default:
         break;

@@ -42,6 +42,7 @@ const SettingsScreen = ({ navigation }) => {
   const [preferencesMessage, setPreferencesMessage] = useState('');
   const [preferencesError, setPreferencesError] = useState('');
   const [coupleStatus, setCoupleStatus] = useState(null);
+  const [activeGameSession, setActiveGameSession] = useState(null);
   const [isLoadingCoupleStatus, setIsLoadingCoupleStatus] = useState(true);
   const [isPreparingUnlink, setIsPreparingUnlink] = useState(false);
   const [isConfirmingUnlink, setIsConfirmingUnlink] = useState(false);
@@ -185,10 +186,18 @@ const SettingsScreen = ({ navigation }) => {
           alignItems: 'center',
           opacity: isPreparingUnlink || isConfirmingUnlink ? 0.7 : 1,
         },
+        dangerButtonDisabled: {
+          borderColor: theme.colors.border,
+          backgroundColor: theme.colors.surfaceMuted,
+          opacity: 1,
+        },
         dangerButtonText: {
           color: theme.colors.danger,
           fontSize: 15,
           fontWeight: '700',
+        },
+        dangerButtonTextDisabled: {
+          color: theme.colors.textSecondary,
         },
         recoverButton: {
           marginTop: 12,
@@ -287,30 +296,42 @@ const SettingsScreen = ({ navigation }) => {
     let isMounted = true;
 
     const loadSettings = async () => {
-      try {
-        const [preferencesResponse, statusResponse] = await Promise.all([
-          api.get('/user/preferences'),
-          api.get('/couple/status'),
-        ]);
-        if (!isMounted) {
-          return;
-        }
-        setPreferencesDraft({
-          timezone: preferencesResponse?.data?.timezone || 'UTC',
-          reminderTimeLocal: preferencesResponse?.data?.reminderTimeLocal || '21:00',
-          quietHoursStart: preferencesResponse?.data?.quietHoursStart || '23:00',
-          quietHoursEnd: preferencesResponse?.data?.quietHoursEnd || '07:00',
-        });
-        setCoupleStatus(statusResponse?.data || null);
-      } catch (error) {
-        if (isMounted) {
-          setPreferencesError('Unable to load latest settings. You can still retry.');
-        }
-      } finally {
-        if (isMounted) {
-          setIsLoadingCoupleStatus(false);
-        }
+      const [preferencesResult, statusResult, activeGameResult] = await Promise.allSettled([
+        api.get('/user/preferences'),
+        api.get('/couple/status'),
+        api.get('/game/active'),
+      ]);
+
+      if (!isMounted) {
+        return;
       }
+
+      if (preferencesResult.status === 'fulfilled') {
+        setPreferencesDraft({
+          timezone: preferencesResult.value?.data?.timezone || 'UTC',
+          reminderTimeLocal: preferencesResult.value?.data?.reminderTimeLocal || '21:00',
+          quietHoursStart: preferencesResult.value?.data?.quietHoursStart || '23:00',
+          quietHoursEnd: preferencesResult.value?.data?.quietHoursEnd || '07:00',
+        });
+      } else {
+        setPreferencesError('Unable to load latest settings. You can still retry.');
+      }
+
+      if (statusResult.status === 'fulfilled') {
+        setCoupleStatus(statusResult.value?.data || null);
+      } else {
+        setPreferencesError((current) => current || 'Unable to load latest settings. You can still retry.');
+      }
+
+      if (activeGameResult.status === 'fulfilled') {
+        setActiveGameSession(activeGameResult.value?.data || null);
+      } else if (activeGameResult.reason?.response?.status === 404) {
+        setActiveGameSession(null);
+      } else {
+        setActiveGameSession(null);
+      }
+
+      setIsLoadingCoupleStatus(false);
     };
 
     loadSettings();
@@ -413,6 +434,10 @@ const SettingsScreen = ({ navigation }) => {
   };
 
   const beginUnlinkFlow = async () => {
+    if (activeGameSession?.sessionId) {
+      triggerHaptic(HAPTIC_EVENTS.INVALID_ACTION);
+      return;
+    }
     setUnlinkError('');
     setIsPreparingUnlink(true);
     try {
@@ -476,6 +501,14 @@ const SettingsScreen = ({ navigation }) => {
       setIsReplayingOnboarding(false);
     }
   };
+
+  const hasActiveGameBlockingUnlink = Boolean(activeGameSession?.sessionId);
+  const unlinkButtonLabel = hasActiveGameBlockingUnlink ? 'Finish Active Game First' : isPreparingUnlink ? 'Preparing...' : 'Unlink Partner';
+  const unlinkAccessibilityLabel = hasActiveGameBlockingUnlink
+    ? 'Unlink unavailable while a game is active'
+    : isPreparingUnlink
+      ? 'Preparing unlink flow'
+      : 'Unlink partner';
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -651,19 +684,36 @@ const SettingsScreen = ({ navigation }) => {
                   You are linked. Unlinking starts a 24-hour cooldown before unrestricted relinking.
                 </Text>
                 <TouchableOpacity
-                  style={styles.dangerButton}
+                  style={[
+                    styles.dangerButton,
+                    hasActiveGameBlockingUnlink && styles.dangerButtonDisabled,
+                  ]}
                   onPress={beginUnlinkFlow}
-                  disabled={isPreparingUnlink || isConfirmingUnlink}
+                  disabled={isPreparingUnlink || isConfirmingUnlink || hasActiveGameBlockingUnlink}
                   activeOpacity={0.8}
                   accessibilityRole="button"
-                  accessibilityLabel={isPreparingUnlink ? 'Preparing unlink flow' : 'Unlink partner'}
-                  accessibilityHint="Starts the two-step unlink confirmation flow."
-                  accessibilityState={{ disabled: isPreparingUnlink || isConfirmingUnlink }}
+                  accessibilityLabel={unlinkAccessibilityLabel}
+                  accessibilityHint={
+                    hasActiveGameBlockingUnlink
+                      ? 'Finish or expire your active game before unlinking.'
+                      : 'Starts the two-step unlink confirmation flow.'
+                  }
+                  accessibilityState={{ disabled: isPreparingUnlink || isConfirmingUnlink || hasActiveGameBlockingUnlink }}
                 >
-                  <Text style={styles.dangerButtonText}>
-                    {isPreparingUnlink ? 'Preparing...' : 'Unlink Partner'}
+                  <Text
+                    style={[
+                      styles.dangerButtonText,
+                      hasActiveGameBlockingUnlink && styles.dangerButtonTextDisabled,
+                    ]}
+                  >
+                    {unlinkButtonLabel}
                   </Text>
                 </TouchableOpacity>
+                {hasActiveGameBlockingUnlink ? (
+                  <Text style={styles.infoText}>
+                    Finish or expire your active game before unlinking.
+                  </Text>
+                ) : null}
               </>
             ) : null}
 

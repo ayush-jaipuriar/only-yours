@@ -68,6 +68,9 @@ describe('SettingsScreen flow', () => {
           },
         });
       }
+      if (url === '/game/active') {
+        return Promise.reject({ response: { status: 404 } });
+      }
       return Promise.resolve({ data: {} });
     });
   });
@@ -120,6 +123,61 @@ describe('SettingsScreen flow', () => {
       expect(getByText('Confirm Unlink')).toBeTruthy();
     });
     expect(getByLabelText('Unlink partner')).toBeTruthy();
+  });
+
+  it('shows unlink as unavailable while an active game exists', async () => {
+    api.get.mockImplementation((url) => {
+      if (url === '/user/preferences') {
+        return Promise.resolve({
+          data: {
+            timezone: 'UTC',
+            reminderTimeLocal: '21:00',
+            quietHoursStart: '23:00',
+            quietHoursEnd: '07:00',
+          },
+        });
+      }
+      if (url === '/couple/status') {
+        return Promise.resolve({
+          data: {
+            status: 'LINKED',
+            linked: true,
+            canRecoverWithPreviousPartner: false,
+          },
+        });
+      }
+      if (url === '/game/active') {
+        return Promise.resolve({
+          data: {
+            sessionId: 'session-1',
+            status: 'ROUND1',
+            currentQuestionNumber: 3,
+            totalQuestions: 8,
+          },
+        });
+      }
+      return Promise.resolve({ data: {} });
+    });
+
+    const navigation = { replace: jest.fn() };
+
+    const { getByText, getByLabelText } = render(
+      <ThemeProvider>
+        <HapticsProvider>
+          <AuthContext.Provider value={{ replayOnboarding: jest.fn(() => Promise.resolve()) }}>
+            <SettingsScreen navigation={navigation} />
+          </AuthContext.Provider>
+        </HapticsProvider>
+      </ThemeProvider>
+    );
+
+    await waitFor(() => {
+      expect(getByText('Finish Active Game First')).toBeTruthy();
+      expect(getByText('Finish or expire your active game before unlinking.')).toBeTruthy();
+    });
+
+    expect(getByLabelText('Unlink unavailable while a game is active')).toBeTruthy();
+    expect(api.post).not.toHaveBeenCalledWith('/couple/unlink', {});
   });
 
   it('saves notification preferences through backend contract', async () => {

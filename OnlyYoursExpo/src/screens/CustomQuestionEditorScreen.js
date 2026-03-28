@@ -39,7 +39,7 @@ const CustomQuestionEditorScreen = ({ route, navigation }) => {
         },
         content: {
           padding: 18,
-          paddingBottom: 30,
+          paddingBottom: 120,
         },
         card: {
           backgroundColor: theme.colors.surface,
@@ -100,6 +100,7 @@ const CustomQuestionEditorScreen = ({ route, navigation }) => {
         },
         secondaryButton: {
           marginTop: 10,
+          marginBottom: 20,
           borderRadius: 18,
           paddingVertical: 14,
           alignItems: 'center',
@@ -166,7 +167,7 @@ const CustomQuestionEditorScreen = ({ route, navigation }) => {
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        <ScrollView contentContainerStyle={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <Text style={styles.title}>
               {existingQuestion ? 'Edit Custom Question' : 'Create Custom Question'}

@@ -12,7 +12,11 @@ import java.util.UUID;
  * 
  * Sent on game topic (/topic/game/{sessionId}) when:
  * - Game starts (first question)
- * - Both players answer current question (next question)
+ * - Round-level shared transitions occur, such as entering Round 2
+ *
+ * In Round 1 and Round 2, players advance through their own unanswered
+ * questions independently. Per-user next-question snapshots are resolved
+ * privately rather than requiring per-question partner lockstep.
  * 
  * @see com.onlyyours.service.GameService#buildQuestionPayload
  */

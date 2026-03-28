@@ -249,6 +249,40 @@ describe('AuthContext — Game Status Handling', () => {
       }
     });
 
+    it('does not show a modal alert for PARTNER_RETURNED outside gameplay', async () => {
+      const { result } = await renderAuthHook();
+
+      const mockNav = {
+        navigate: jest.fn(),
+        getCurrentRoute: jest.fn(() => ({ name: 'Dashboard' })),
+      };
+      const mockGameCtx = { startGame: jest.fn(), endGame: jest.fn() };
+
+      act(() => {
+        result.current.setNavigationRef(mockNav);
+        result.current.setGameContextRef(mockGameCtx);
+      });
+
+      const subscribeCalls = WebSocketService.subscribe.mock.calls;
+      const gameEventsCall = subscribeCalls.find(
+        (call) => call[0] === '/user/queue/game-events'
+      );
+
+      if (gameEventsCall) {
+        const callback = gameEventsCall[1];
+        act(() => {
+          callback({
+            type: 'STATUS',
+            status: 'PARTNER_RETURNED',
+            sessionId: 'session-1',
+            message: 'Your partner is back.',
+          });
+        });
+
+        expect(Alert.alert).not.toHaveBeenCalledWith('Game Update', 'Your partner is back.');
+      }
+    });
+
     it('routes notification deep-link intents when response listener fires', async () => {
       const { result } = await renderAuthHook();
 

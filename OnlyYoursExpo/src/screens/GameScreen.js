@@ -1,24 +1,65 @@
-import React, { useEffect, useState, useCallback, useMemo } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   ActivityIndicator,
   ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
   useWindowDimensions,
 } from 'react-native';
+import { AuthContext } from '../state/AuthContext';
 import { useGame } from '../state/GameContext';
-import useTheme from '../theme/useTheme';
 import {
   accessibilityStatusProps,
   announceForAccessibility,
   decorativeAccessibilityProps,
 } from '../accessibility';
+import {
+  VelvetHeroCard,
+  VelvetOptionCard,
+  VelvetPrimaryButton,
+  VelvetProgressBar,
+  VelvetScreen,
+  VelvetSectionCard,
+  VelvetSecondaryButton,
+  VelvetStatusPill,
+  VelvetTopBar,
+} from '../components/velvet';
+import useTheme from '../theme/useTheme';
+
+const getRoundMeta = (round, currentQuestion, correctCount = 0) => {
+  const questionNumber = currentQuestion?.questionNumber || 1;
+  const totalQuestions = currentQuestion?.totalQuestions || 1;
+
+  if (round === 'round2') {
+    return {
+      title: `Question ${questionNumber} of ${totalQuestions}`,
+      subtitle: "Round 2: Guess your partner's answer",
+      tone: 'accent',
+      prompt: 'How did your partner answer this?',
+      footerCta: 'Submit Guess',
+      helper: 'Your guess locks in immediately and counts toward your final match score.',
+      statLabel: `${correctCount}/${Math.max(questionNumber - 1, 0)} correct`,
+    };
+  }
+
+  return {
+    title: `Question ${questionNumber} of ${totalQuestions}`,
+    subtitle: "Round 1: You're answering",
+    tone: 'primary',
+    prompt: null,
+    footerCta: 'Lock Selection',
+    helper: 'Your partner will guess this answer in Round 2.',
+    statLabel: null,
+  };
+};
 
 // eslint-disable-next-line react/prop-types
 const GameScreen = ({ route, navigation }) => {
   const { theme } = useTheme();
+  const authContext = useContext(AuthContext) || {};
+  const wsConnectionState = authContext.wsConnectionState || 'connected';
   const {
     activeSession,
     currentQuestion,
@@ -29,6 +70,8 @@ const GameScreen = ({ route, navigation }) => {
     submitAnswer,
     submitGuess,
     gameStatus,
+    statusNotice,
+    expiredMessage,
     round,
     scores,
     correctCount,
@@ -37,11 +80,14 @@ const GameScreen = ({ route, navigation }) => {
     isSubmitting,
     acceptPendingInvitation,
     refreshCurrentQuestion,
+    endGame,
   } = useGame();
 
   const [selectedOption, setSelectedOption] = useState(null);
   const { width, height } = useWindowDimensions();
   const routeSessionId = route?.params?.sessionId;
+  const isCompactLandscape = width > height && height < 520;
+  const isRound2 = round === 'round2';
 
   useEffect(() => {
     if (!routeSessionId) {
@@ -82,6 +128,18 @@ const GameScreen = ({ route, navigation }) => {
     }
   }, [roundState]);
 
+  useEffect(() => {
+    if (statusNotice?.message) {
+      announceForAccessibility(statusNotice.message);
+    }
+  }, [statusNotice]);
+
+  useEffect(() => {
+    if (gameStatus === 'expired' && expiredMessage) {
+      announceForAccessibility(expiredMessage);
+    }
+  }, [expiredMessage, gameStatus]);
+
   const handleOptionSelect = useCallback((option) => {
     if (waitingForPartner || isSubmitting || myAnswer) {
       return;
@@ -110,818 +168,721 @@ const GameScreen = ({ route, navigation }) => {
     }
   }, [acceptPendingInvitation, activeSession, startGame]);
 
-  const isRound2 = round === 'round2';
-  const dynamicStyles = useMemo(
+  const handleReturnToDashboard = useCallback(() => {
+    endGame();
+    navigation.navigate('Dashboard');
+  }, [endGame, navigation]);
+
+  const roundMeta = getRoundMeta(round, currentQuestion, correctCount);
+
+  const styles = useMemo(
     () =>
       StyleSheet.create({
-        centered: {
+        root: {
+          flex: 1,
+        },
+        topBar: {
           backgroundColor: theme.colors.background,
         },
-        loadingText: {
-          color: theme.colors.textSecondary,
+        scroll: {
+          flex: 1,
         },
-        pendingTitle: {
+        scrollContent: {
+          flexGrow: 1,
+          paddingHorizontal: isCompactLandscape ? 14 : 20,
+          paddingTop: isCompactLandscape ? 10 : 20,
+          paddingBottom: 24,
+          alignItems: 'center',
+        },
+        panelWrap: {
+          width: '100%',
+          maxWidth: 720,
+        },
+        statusBanner: {
+          width: '100%',
+          borderRadius: 18,
+          borderWidth: 1,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          marginBottom: 14,
+          backgroundColor: wsConnectionState === 'connected'
+            ? theme.colors.surfaceMuted
+            : theme.colors.bannerWarning,
+          borderColor: wsConnectionState === 'connected'
+            ? theme.colors.border
+            : theme.colors.bannerWarningBorder,
+        },
+        statusBannerText: {
           color: theme.colors.textPrimary,
+          fontSize: 13,
+          lineHeight: 19,
+          fontWeight: '600',
         },
-        pendingText: {
-          color: theme.colors.textSecondary,
+        heroCard: {
+          width: '100%',
+          marginBottom: 14,
+          overflow: 'hidden',
         },
-        pendingButtonText: {
-          color: theme.colors.primaryContrast,
+        heroGlow: {
+          position: 'absolute',
+          top: -30,
+          right: -20,
+          width: 180,
+          height: 180,
+          borderRadius: 999,
+          backgroundColor: isRound2 ? theme.colors.glowAccent : theme.colors.glowPrimary,
+          opacity: 0.5,
         },
-        pendingButtonSecondaryText: {
+        heroTitle: {
           color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isCompactLandscape ? 28 : 34,
+          lineHeight: isCompactLandscape ? 32 : 38,
+          marginTop: 12,
+          marginBottom: 12,
+          textAlign: 'center',
         },
-        reviewHeaderCard: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderColor: theme.colors.border,
-          shadowColor: theme.colors.overlayScrim,
-        },
-        reviewTitle: {
-          color: theme.colors.textPrimary,
-        },
-        reviewMessage: {
-          color: theme.colors.textSecondary,
-        },
-        reviewStat: {
-          color: theme.colors.accent,
-        },
-        reviewListTitle: {
-          color: theme.colors.textPrimary,
-        },
-        reviewCard: {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-        },
-        reviewQuestionText: {
-          color: theme.colors.textPrimary,
-        },
-        reviewSubmittedValue: {
-          color: theme.colors.primary,
-        },
-        reviewRefreshButton: {
-          backgroundColor: theme.colors.surfaceElevated,
-          borderColor: theme.colors.border,
-        },
-        reviewRefreshButtonText: {
-          color: theme.colors.textPrimary,
-        },
-        roundBadge: {
-          backgroundColor: isRound2 ? theme.colors.badgeSurfaceMint : theme.colors.surfaceEmphasis,
+        heroPrompt: {
+          borderRadius: 18,
+          borderWidth: 1,
           borderColor: isRound2 ? theme.colors.accent : theme.colors.borderAccent,
+          backgroundColor: isRound2 ? theme.colors.badgeSurfaceMint : theme.colors.surfaceEmphasis,
+          paddingHorizontal: 16,
+          paddingVertical: 12,
+          marginBottom: 14,
         },
-        roundBadgeText: {
-          color: isRound2 ? theme.colors.accentContrast : theme.colors.primary,
+        heroPromptText: {
+          color: isRound2 ? theme.colors.accentContrast : theme.colors.textPrimary,
+          textAlign: 'center',
+          fontSize: 14,
+          lineHeight: 20,
+          fontWeight: '700',
         },
-        runningScore: {
-          color: theme.colors.accentContrast,
+        questionMetaRow: {
+          marginBottom: 14,
         },
-        progressBar: {
-          backgroundColor: theme.colors.surfaceMuted,
+        questionMetaTop: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 10,
         },
-        guessPrompt: {
-          backgroundColor: theme.colors.surfaceElevated,
-          borderLeftColor: theme.colors.accent,
-          borderColor: theme.colors.border,
+        questionMetaText: {
+          color: theme.colors.textSecondary,
+          fontSize: 13,
+          fontWeight: '700',
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
         },
-        guessPromptText: {
-          color: theme.colors.textOnEmphasis,
+        helperText: {
+          color: theme.colors.textSecondary,
+          fontSize: 13,
+          lineHeight: 20,
+          textAlign: 'center',
+          marginTop: 10,
         },
         customBadge: {
           alignSelf: 'center',
-          marginBottom: 10,
-          paddingHorizontal: 12,
-          paddingVertical: 6,
-          borderRadius: 999,
-          backgroundColor: theme.colors.badgeSurfaceMint,
-          borderWidth: 1,
-          borderColor: theme.colors.accent,
+          marginBottom: 12,
         },
-        customBadgeText: {
-          color: theme.colors.accentContrast,
-          fontSize: 12,
-          fontWeight: '700',
-        },
-        questionContainer: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderColor: theme.colors.border,
-          shadowColor: theme.colors.overlayScrim,
-        },
-        questionText: {
-          color: theme.colors.textPrimary,
+        optionsWrap: {
+          width: '100%',
+          marginBottom: 12,
         },
         optionCard: {
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.border,
-          shadowColor: theme.colors.overlayScrim,
+          marginBottom: 12,
+          paddingVertical: isCompactLandscape ? 14 : 16,
         },
-        selectedOption: {
-          borderColor: theme.colors.primary,
+        optionRow: {
+          flexDirection: 'row',
+          alignItems: 'center',
+        },
+        optionLetter: {
+          width: 40,
+          height: 40,
+          borderRadius: 14,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginRight: 14,
+          backgroundColor: isRound2 ? theme.colors.accent : theme.colors.primary,
+        },
+        optionLetterMuted: {
           backgroundColor: theme.colors.surfaceEmphasis,
-        },
-        selectedOptionR2: {
-          borderColor: theme.colors.accent,
-          backgroundColor: theme.colors.badgeSurfaceMint,
-        },
-        submittedOption: {
-          borderColor: theme.colors.accent,
-          backgroundColor: theme.colors.badgeSurfaceMint,
-        },
-        optionLetterRound1: {
-          backgroundColor: theme.colors.primary,
-        },
-        optionLetterRound2: {
-          backgroundColor: theme.colors.accent,
         },
         optionLetterText: {
           color: isRound2 ? theme.colors.accentContrast : theme.colors.primaryContrast,
+          fontSize: 14,
+          fontWeight: '800',
+        },
+        optionLetterTextMuted: {
+          color: theme.colors.textSecondary,
         },
         optionText: {
+          flex: 1,
           color: theme.colors.textPrimary,
+          fontSize: 16,
+          lineHeight: 22,
+          fontWeight: '600',
         },
-        submitButtonDisabled: {
-          backgroundColor: theme.colors.border,
+        selectedMark: {
+          marginLeft: 10,
+          color: isRound2 ? theme.colors.accent : theme.colors.primary,
+          fontSize: 16,
+          fontWeight: '800',
         },
-        submitButtonText: {
-          color: isRound2 ? theme.colors.accentContrast : theme.colors.primaryContrast,
+        footerCard: {
+          width: '100%',
+          marginTop: 2,
         },
-        waitingText: {
+        footerStatus: {
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingVertical: 4,
+        },
+        footerStatusText: {
+          marginLeft: 10,
           color: theme.colors.textSecondary,
+          fontSize: 14,
+          fontWeight: '600',
         },
-        submittedText: {
+        footerSubmitted: {
           color: theme.colors.textSecondary,
+          fontSize: 14,
+          fontWeight: '700',
+          textAlign: 'center',
+          marginBottom: 12,
         },
-        transitionContainer: {
-          backgroundColor: theme.colors.celebrationSurface,
+        transitionWrap: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 24,
+        },
+        transitionCard: {
+          width: '100%',
+          maxWidth: 520,
+          alignItems: 'center',
+          paddingTop: 30,
+          paddingBottom: 26,
+        },
+        transitionEmoji: {
+          fontSize: 42,
+          marginBottom: 16,
         },
         transitionTitle: {
           color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 34,
+          lineHeight: 38,
+          textAlign: 'center',
+          marginBottom: 10,
         },
         transitionSubtitle: {
           color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: 'center',
+          marginBottom: 18,
+        },
+        centeredWrap: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: 24,
+        },
+        pendingCard: {
+          width: '100%',
+          maxWidth: 540,
+        },
+        pendingTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 30,
+          lineHeight: 34,
+          textAlign: 'center',
+          marginTop: 12,
+          marginBottom: 10,
+        },
+        pendingBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: 'center',
+        },
+        pendingActions: {
+          marginTop: 18,
+        },
+        actionGap: {
+          marginBottom: 10,
+        },
+        waitingScrollContent: {
+          paddingHorizontal: 20,
+          paddingTop: 20,
+          paddingBottom: 24,
+          alignItems: 'center',
+        },
+        waitingWrap: {
+          width: '100%',
+          maxWidth: 720,
+        },
+        waitingHero: {
+          width: '100%',
+          marginBottom: 14,
+        },
+        waitingTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 30,
+          lineHeight: 34,
+          textAlign: 'center',
+          marginTop: 12,
+          marginBottom: 10,
+        },
+        waitingBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: 'center',
+        },
+        waitingStat: {
+          color: theme.colors.primary,
+          fontSize: 14,
+          fontWeight: '700',
+          textAlign: 'center',
+          marginTop: 12,
+        },
+        reviewSection: {
+          width: '100%',
+          marginBottom: 14,
+        },
+        reviewSectionTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 24,
+          lineHeight: 28,
+          marginBottom: 10,
+        },
+        reviewCard: {
+          marginBottom: 12,
+        },
+        reviewQuestionNumber: {
+          color: theme.colors.primary,
+          fontSize: 12,
+          fontWeight: '800',
+          letterSpacing: 0.8,
+          textTransform: 'uppercase',
+          marginBottom: 8,
+        },
+        reviewQuestionText: {
+          color: theme.colors.textPrimary,
+          fontSize: 16,
+          lineHeight: 22,
+          fontWeight: '700',
+          marginBottom: 10,
+        },
+        reviewSubmittedValue: {
+          color: theme.colors.textSecondary,
+          fontSize: 14,
+          lineHeight: 20,
+        },
+        loadingTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 30,
+          lineHeight: 34,
+          textAlign: 'center',
+          marginTop: 18,
+          marginBottom: 10,
+        },
+        loadingText: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: 'center',
         },
       }),
-    [isRound2, theme]
+    [isCompactLandscape, isRound2, theme, wsConnectionState]
   );
+
+  const renderConnectionBanner = () => {
+    if (wsConnectionState === 'connected') {
+      return null;
+    }
+
+    return (
+      <View style={styles.statusBanner}>
+        <Text style={styles.statusBannerText} {...accessibilityStatusProps}>
+          {wsConnectionState === 'connecting'
+            ? 'Reconnecting to your session... We will refresh the latest game state as soon as realtime is ready.'
+            : 'Realtime connection is unavailable right now. You can still refresh, and the session will recover when connection returns.'}
+        </Text>
+      </View>
+    );
+  };
+
+  const renderStatusNoticeBanner = () => {
+    if (!statusNotice) {
+      return null;
+    }
+
+    const isPartnerLeft = statusNotice.type === 'partner-left';
+
+    return (
+      <View
+        style={[
+          styles.statusBanner,
+          {
+            backgroundColor: isPartnerLeft ? theme.colors.bannerWarning : theme.colors.surfaceEmphasis,
+            borderColor: isPartnerLeft ? theme.colors.bannerWarningBorder : theme.colors.borderAccent,
+          },
+        ]}
+      >
+        <Text style={styles.statusBannerText} {...accessibilityStatusProps}>
+          {statusNotice.message}
+        </Text>
+      </View>
+    );
+  };
 
   const renderOption = (letter, text) => {
     const isSelected = selectedOption === letter;
     const isMyAnswer = myAnswer === letter;
     const isDisabled = waitingForPartner || isSubmitting || Boolean(myAnswer);
+    const tone = isRound2 ? 'accent' : 'primary';
 
     return (
-      <TouchableOpacity
+      <VelvetOptionCard
         key={letter}
-        style={[
-          styles.optionCard,
-          dynamicStyles.optionCard,
-          isSelected && (round === 'round2' ? styles.selectedOptionR2 : styles.selectedOption),
-          isSelected && (round === 'round2' ? dynamicStyles.selectedOptionR2 : dynamicStyles.selectedOption),
-          isMyAnswer && styles.submittedOption,
-          isMyAnswer && dynamicStyles.submittedOption,
-          isDisabled && styles.disabledOption,
-        ]}
+        style={styles.optionCard}
         onPress={() => handleOptionSelect(letter)}
+        selected={isSelected}
+        submitted={isMyAnswer}
         disabled={isDisabled}
-        activeOpacity={0.7}
+        tone={tone}
         accessibilityRole="button"
         accessibilityLabel={`Option ${letter}. ${text}`}
         accessibilityHint={isRound2 ? 'Select this answer as your guess.' : 'Select this as your answer.'}
         accessibilityState={{ selected: isSelected || isMyAnswer, disabled: isDisabled }}
       >
-        <View
-          style={[
-            styles.optionLetter,
-            round === 'round2' ? styles.optionLetterRound2 : styles.optionLetterRound1,
-            round === 'round2' ? dynamicStyles.optionLetterRound2 : dynamicStyles.optionLetterRound1,
-          ]}
-          {...decorativeAccessibilityProps}
-        >
-          <Text style={[styles.optionLetterText, dynamicStyles.optionLetterText]}>{letter}</Text>
+        <View style={styles.optionRow}>
+          <View
+            style={[
+              styles.optionLetter,
+              !(isSelected || isMyAnswer) && styles.optionLetterMuted,
+            ]}
+            {...decorativeAccessibilityProps}
+          >
+            <Text
+              style={[
+                styles.optionLetterText,
+                !(isSelected || isMyAnswer) && styles.optionLetterTextMuted,
+              ]}
+            >
+              {letter}
+            </Text>
+          </View>
+          <Text style={styles.optionText}>{text}</Text>
+          {isSelected || isMyAnswer ? (
+            <Text style={styles.selectedMark} {...decorativeAccessibilityProps}>
+              ✓
+            </Text>
+          ) : null}
         </View>
-        <Text style={[styles.optionText, dynamicStyles.optionText]}>{text}</Text>
-      </TouchableOpacity>
+      </VelvetOptionCard>
     );
   };
 
-  if (isTransitioning) {
-    return (
-      <View style={[styles.transitionContainer, dynamicStyles.transitionContainer]}>
-        <Text style={styles.transitionEmoji} {...decorativeAccessibilityProps}>🎯</Text>
-        <Text style={[styles.transitionTitle, dynamicStyles.transitionTitle]}>Round 1 Complete!</Text>
-        <Text style={[styles.transitionSubtitle, dynamicStyles.transitionSubtitle]} {...accessibilityStatusProps}>
-          Now guess how your partner answered...
-        </Text>
-        <ActivityIndicator
-          size="large"
-          color={theme.colors.accent}
-          style={styles.transitionSpinner}
-        />
+  const renderTransitionState = () => (
+    <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+      <VelvetTopBar title="Round 2 Unlocked" subtitle="Transitioning into guesses" />
+      <View style={styles.transitionWrap}>
+        <VelvetHeroCard style={styles.transitionCard}>
+          <Text style={styles.transitionEmoji} {...decorativeAccessibilityProps}>🎯</Text>
+          <Text style={styles.transitionTitle}>Round 1 complete.</Text>
+          <Text style={styles.transitionSubtitle} {...accessibilityStatusProps}>
+            Now guess how your partner answered. The tone changes here on purpose: this round should feel more suspenseful and more revealing.
+          </Text>
+          <ActivityIndicator size="large" color={theme.colors.accent} />
+        </VelvetHeroCard>
       </View>
+    </VelvetScreen>
+  );
+
+  const renderInvitationPendingState = () => (
+    <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+      <VelvetTopBar title="Invitation Pending" subtitle="Session invite still active" />
+      <View style={styles.centeredWrap}>
+        <VelvetHeroCard style={styles.pendingCard}>
+          {renderStatusNoticeBanner()}
+          <VelvetStatusPill label="Invite state" tone="warning" />
+          <Text style={styles.pendingTitle}>Invitation pending</Text>
+          <Text style={styles.pendingBody}>
+            This session is still in invite state. Accept the invitation to start Round 1, or refresh the session while you wait for the latest state.
+          </Text>
+          <View style={styles.pendingActions}>
+            <VelvetPrimaryButton
+              label="Accept Invitation"
+              onPress={handleAcceptPendingInvitation}
+              style={styles.actionGap}
+              accessibilityLabel="Accept invitation"
+              accessibilityHint="Accepts the current invitation and starts round 1."
+            />
+            <VelvetSecondaryButton
+              label="Refresh Session"
+              onPress={refreshCurrentQuestion}
+              style={styles.actionGap}
+              accessibilityLabel="Refresh session"
+              accessibilityHint="Checks again for the latest invitation state."
+            />
+            <VelvetSecondaryButton
+              label="Back to Dashboard"
+              onPress={() => navigation.navigate('Dashboard')}
+            />
+          </View>
+        </VelvetHeroCard>
+      </View>
+    </VelvetScreen>
+  );
+
+  const renderWaitingState = () => {
+    const isRound2Waiting = roundState?.round === 'ROUND2';
+    const submittedLabel = isRound2Waiting ? 'guesses' : 'answers';
+
+    return (
+      <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+        <VelvetTopBar
+          title={isRound2Waiting ? 'Round 2 Complete' : 'Round 1 Complete'}
+          subtitle="Waiting for your partner"
+        />
+        <ScrollView contentContainerStyle={styles.waitingScrollContent} showsVerticalScrollIndicator={false}>
+          <View style={styles.waitingWrap}>
+            {renderConnectionBanner()}
+            {renderStatusNoticeBanner()}
+            <VelvetHeroCard style={styles.waitingHero}>
+              <VelvetStatusPill
+                label={isRound2Waiting ? 'Your guesses are locked' : 'Your answers are locked'}
+                tone={isRound2Waiting ? 'accent' : 'primary'}
+              />
+              <Text style={styles.waitingTitle}>Waiting for your partner</Text>
+              <Text style={styles.waitingBody} {...accessibilityStatusProps}>
+                {roundState?.message}
+              </Text>
+              <Text style={styles.waitingStat}>
+                {roundState?.completedCount}/{roundState?.totalQuestions} {submittedLabel} locked in
+              </Text>
+              <View style={styles.pendingActions}>
+                <VelvetSecondaryButton
+                  label="Refresh Status"
+                  onPress={refreshCurrentQuestion}
+                  style={styles.actionGap}
+                  accessibilityLabel="Refresh game status"
+                  accessibilityHint="Checks whether your partner finished the round."
+                />
+                <VelvetSecondaryButton
+                  label="Back to Dashboard"
+                  onPress={() => navigation.navigate('Dashboard')}
+                />
+              </View>
+            </VelvetHeroCard>
+
+            <VelvetSectionCard style={styles.reviewSection}>
+              <Text style={styles.reviewSectionTitle}>Your submitted {submittedLabel}</Text>
+              {roundState?.reviewItems?.map((item) => (
+                <VelvetSectionCard
+                  key={`${roundState?.round}-${item.questionId}`}
+                  style={styles.reviewCard}
+                >
+                  <Text style={styles.reviewQuestionNumber}>Question {item.questionNumber}</Text>
+                  <Text style={styles.reviewQuestionText}>{item.questionText}</Text>
+                  <Text style={styles.reviewSubmittedValue}>
+                    Your {isRound2Waiting ? 'guess' : 'answer'}: {item.submittedValue}
+                  </Text>
+                </VelvetSectionCard>
+              ))}
+            </VelvetSectionCard>
+          </View>
+        </ScrollView>
+      </VelvetScreen>
     );
-  }
+  };
 
-  if (!currentQuestion) {
-    if (isInvitationPending || gameStatus === 'invited') {
-      return (
-        <View style={[styles.centered, dynamicStyles.centered]}>
-          <Text style={[styles.pendingTitle, dynamicStyles.pendingTitle]}>
-            Invitation pending
-          </Text>
-          <Text style={[styles.pendingText, dynamicStyles.pendingText]}>
-            This session is still in invite state. Accept the invite to start Round 1, or wait for your partner to accept.
-          </Text>
-          <TouchableOpacity
-            style={[styles.pendingButton, { backgroundColor: theme.colors.primary }]}
-            onPress={handleAcceptPendingInvitation}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel="Accept invitation"
-            accessibilityHint="Accepts the current invitation and starts round 1."
+  const renderLoadingState = () => (
+    <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+      <VelvetTopBar title="Preparing Session" subtitle="Syncing the latest question" />
+      <View style={styles.centeredWrap}>
+        <VelvetHeroCard style={styles.pendingCard}>
+          {renderStatusNoticeBanner()}
+          <View
+            accessible
+            accessibilityRole="progressbar"
+            accessibilityLabel="Loading question..."
           >
-            <Text style={[styles.pendingButtonText, dynamicStyles.pendingButtonText]}>Accept Invitation</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.pendingButtonSecondary, { borderColor: theme.colors.border }]}
-            onPress={refreshCurrentQuestion}
-            activeOpacity={0.85}
-            accessibilityRole="button"
-            accessibilityLabel="Refresh session"
-            accessibilityHint="Checks again for the latest invitation state."
-          >
-            <Text style={[styles.pendingButtonSecondaryText, dynamicStyles.pendingButtonSecondaryText]}>
-              Refresh Session
-            </Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+          </View>
+          <Text style={styles.loadingTitle}>Loading question...</Text>
+          <Text style={styles.loadingText}>
+            We&apos;re syncing the latest session state so both partners stay aligned.
+          </Text>
+          {renderConnectionBanner()}
+        </VelvetHeroCard>
+      </View>
+    </VelvetScreen>
+  );
 
-    if (roundState?.status === 'WAITING_FOR_PARTNER') {
-      const isRound2Waiting = roundState.round === 'ROUND2';
-      const submittedLabel = isRound2Waiting ? 'guesses' : 'answers';
+  const renderExpiredState = () => (
+    <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+      <VelvetTopBar title="Session Expired" subtitle="This game can no longer continue" />
+      <View style={styles.centeredWrap}>
+        <VelvetHeroCard style={styles.pendingCard}>
+          <VelvetStatusPill label="Expired session" tone="warning" />
+          <Text style={styles.pendingTitle}>This session has expired</Text>
+          <Text style={styles.pendingBody} {...accessibilityStatusProps}>
+            {expiredMessage || 'This game session is no longer active. Head back to the dashboard to start again.'}
+          </Text>
+          <View style={styles.pendingActions}>
+            <VelvetPrimaryButton
+              label="Back to Dashboard"
+              onPress={handleReturnToDashboard}
+              style={styles.actionGap}
+              accessibilityLabel="Back to dashboard"
+              accessibilityHint="Leaves this expired session and returns to the dashboard."
+            />
+          </View>
+        </VelvetHeroCard>
+      </View>
+    </VelvetScreen>
+  );
 
-      return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+  const renderQuestionState = () => {
+    const progress = currentQuestion?.totalQuestions
+      ? currentQuestion.questionNumber / currentQuestion.totalQuestions
+      : 0;
+    const primaryTone = isRound2 ? 'accent' : 'primary';
+
+    return (
+      <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+        <View style={styles.root}>
+          <VelvetTopBar
+            style={styles.topBar}
+            title={roundMeta.title}
+            subtitle={roundMeta.subtitle}
+            rightContent={
+              roundMeta.statLabel ? (
+                <VelvetStatusPill label={roundMeta.statLabel} tone={primaryTone} />
+              ) : null
+            }
+          />
+
           <ScrollView
+            style={styles.scroll}
             contentContainerStyle={styles.scrollContent}
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View style={styles.contentWrapper}>
-              <View
-                style={[
-                  styles.roundBadge,
-                  dynamicStyles.roundBadge,
-                  isRound2Waiting && styles.roundBadgeR2,
-                ]}
-                accessible
-                accessibilityLabel={
-                  isRound2Waiting
-                    ? `Round 2 complete for you. ${correctCount} correct so far.`
-                    : 'Round 1 complete for you.'
-                }
-              >
-                <Text
-                  style={[
-                    styles.roundBadgeText,
-                    dynamicStyles.roundBadgeText,
-                    isRound2Waiting && styles.roundBadgeTextR2,
-                  ]}
-                >
-                  {isRound2Waiting ? 'Round 2 Submitted' : 'Round 1 Submitted'}
-                </Text>
-                {isRound2Waiting && (
-                  <Text style={[styles.runningScore, dynamicStyles.runningScore]}>
-                    {correctCount}/{roundState.totalQuestions} correct
-                  </Text>
-                )}
-              </View>
+            <View style={styles.panelWrap}>
+              {renderConnectionBanner()}
+              {renderStatusNoticeBanner()}
 
-              <View style={[styles.reviewHeaderCard, dynamicStyles.reviewHeaderCard]}>
-                <Text style={[styles.reviewTitle, dynamicStyles.reviewTitle]}>
-                  Waiting for your partner
-                </Text>
-                <Text
-                  style={[styles.reviewMessage, dynamicStyles.reviewMessage]}
-                  {...accessibilityStatusProps}
-                >
-                  {roundState.message}
-                </Text>
-                <Text style={[styles.reviewStat, dynamicStyles.reviewStat]}>
-                  {roundState.completedCount}/{roundState.totalQuestions} {submittedLabel} locked in
-                </Text>
-                <TouchableOpacity
-                  style={[styles.reviewRefreshButton, dynamicStyles.reviewRefreshButton]}
-                  onPress={refreshCurrentQuestion}
-                  activeOpacity={0.8}
-                  accessibilityRole="button"
-                  accessibilityLabel="Refresh game status"
-                  accessibilityHint="Checks whether your partner finished the round."
-                >
-                  <Text style={[styles.reviewRefreshButtonText, dynamicStyles.reviewRefreshButtonText]}>
-                    Refresh Status
-                  </Text>
-                </TouchableOpacity>
-              </View>
+              <VelvetHeroCard style={styles.heroCard}>
+                <View style={styles.heroGlow} />
+                <VelvetStatusPill
+                  label={isRound2 ? 'Guessing mode' : 'Answering mode'}
+                  tone={primaryTone}
+                />
+                <Text style={styles.heroTitle}>{currentQuestion.questionText}</Text>
 
-              <Text style={[styles.reviewListTitle, dynamicStyles.reviewListTitle]}>
-                Your submitted {submittedLabel}
-              </Text>
+                {roundMeta.prompt ? (
+                  <View style={styles.heroPrompt}>
+                    <Text style={styles.heroPromptText}>{roundMeta.prompt}</Text>
+                  </View>
+                ) : null}
 
-              {roundState.reviewItems?.map((item) => (
-                <View key={`${roundState.round}-${item.questionId}`} style={[styles.reviewCard, dynamicStyles.reviewCard]}>
-                  <Text style={[styles.questionNumber, { color: theme.colors.primary }]}>
-                    Question {item.questionNumber}
-                  </Text>
-                  <Text style={[styles.reviewQuestionText, dynamicStyles.reviewQuestionText]}>
-                    {item.questionText}
-                  </Text>
-                  <Text style={[styles.reviewSubmittedValue, dynamicStyles.reviewSubmittedValue]}>
-                    Your {isRound2Waiting ? 'guess' : 'answer'}: {item.submittedValue}
-                  </Text>
+                <View style={styles.questionMetaRow}>
+                  <View style={styles.questionMetaTop}>
+                    <Text style={styles.questionMetaText}>
+                      Question {currentQuestion.questionNumber} of {currentQuestion.totalQuestions}
+                    </Text>
+                    {currentQuestion.customQuestion ? (
+                      <View style={styles.customBadge}>
+                        <VelvetStatusPill label="Custom Couple Question" tone="success" />
+                      </View>
+                    ) : null}
+                  </View>
+                  <VelvetProgressBar
+                    progress={progress}
+                    accessibilityRole="progressbar"
+                    accessibilityLabel="Question progress"
+                    accessibilityValue={{ min: 1, now: currentQuestion.questionNumber, max: currentQuestion.totalQuestions }}
+                  />
+                  <Text style={styles.helperText}>{roundMeta.helper}</Text>
                 </View>
-              ))}
+              </VelvetHeroCard>
+
+              <View style={styles.optionsWrap}>
+                {renderOption('A', currentQuestion.optionA)}
+                {renderOption('B', currentQuestion.optionB)}
+                {renderOption('C', currentQuestion.optionC)}
+                {renderOption('D', currentQuestion.optionD)}
+              </View>
+
+              <VelvetSectionCard style={styles.footerCard}>
+                {isSubmitting ? (
+                  <View style={styles.footerStatus}>
+                    <ActivityIndicator size="small" color={isRound2 ? theme.colors.accent : theme.colors.primary} />
+                    <Text style={styles.footerStatusText} {...accessibilityStatusProps}>
+                      {isRound2 ? 'Submitting guess...' : 'Submitting answer...'}
+                    </Text>
+                  </View>
+                ) : myAnswer ? (
+                  <>
+                    <Text style={styles.footerSubmitted} {...accessibilityStatusProps}>
+                      {isRound2 ? 'Guess submitted!' : 'Answer submitted!'}
+                    </Text>
+                    <VelvetSecondaryButton
+                      label="Waiting for the next state"
+                      onPress={() => null}
+                      disabled
+                    />
+                  </>
+                ) : (
+                  <VelvetPrimaryButton
+                    label={roundMeta.footerCta}
+                    onPress={handleSubmit}
+                    disabled={!selectedOption}
+                    accessibilityLabel={isRound2 ? 'Submit guess' : 'Submit answer'}
+                    accessibilityHint={isRound2 ? 'Submits your selected guess.' : 'Submits your selected answer.'}
+                  />
+                )}
+              </VelvetSectionCard>
             </View>
           </ScrollView>
         </View>
-      );
-    }
-
-    return (
-      <View
-        style={[styles.centered, dynamicStyles.centered]}
-        accessible
-        accessibilityRole="progressbar"
-        accessibilityLabel="Loading question..."
-      >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, dynamicStyles.loadingText]}>Loading question...</Text>
-      </View>
+      </VelvetScreen>
     );
+  };
+
+  if (isTransitioning) {
+    return renderTransitionState();
   }
 
-  const primaryColor = isRound2 ? theme.colors.accent : theme.colors.primary;
-  const progressPercent = (currentQuestion.questionNumber / currentQuestion.totalQuestions) * 100;
-  const isCompactLandscape = width > height && height < 520;
+  if (gameStatus === 'expired') {
+    return renderExpiredState();
+  }
 
-  return (
-    <View
-      style={[
-        styles.container,
-        { backgroundColor: theme.colors.background },
-        isCompactLandscape && styles.containerCompact,
-      ]}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <View style={styles.contentWrapper}>
-          <View
-            style={[
-              styles.roundBadge,
-              dynamicStyles.roundBadge,
-              isRound2 && styles.roundBadgeR2,
-            ]}
-            accessible
-            accessibilityLabel={isRound2 ? `Round 2. ${correctCount} correct so far.` : 'Round 1. Answer the question.'}
-          >
-            <Text
-              style={[
-                styles.roundBadgeText,
-                dynamicStyles.roundBadgeText,
-                isRound2 && styles.roundBadgeTextR2,
-              ]}
-            >
-              {isRound2 ? 'Round 2: Guess' : 'Round 1: Answer'}
-            </Text>
-            {isRound2 && (
-              <Text style={[styles.runningScore, dynamicStyles.runningScore]}>
-                {correctCount}/{currentQuestion.questionNumber - 1} correct
-              </Text>
-            )}
-          </View>
+  if (!currentQuestion) {
+    if (isInvitationPending || gameStatus === 'invited') {
+      return renderInvitationPendingState();
+    }
 
-          <View style={styles.header}>
-            <Text style={[styles.questionNumber, { color: primaryColor }]}>
-              Question {currentQuestion.questionNumber} of {currentQuestion.totalQuestions}
-            </Text>
-            <View
-              style={[styles.progressBar, dynamicStyles.progressBar]}
-              accessible
-              accessibilityRole="progressbar"
-              accessibilityLabel="Question progress"
-              accessibilityValue={{ min: 1, now: currentQuestion.questionNumber, max: currentQuestion.totalQuestions }}
-            >
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${progressPercent}%`, backgroundColor: primaryColor },
-                ]}
-                {...decorativeAccessibilityProps}
-              />
-            </View>
-          </View>
+    if (roundState?.status === 'WAITING_FOR_PARTNER') {
+      return renderWaitingState();
+    }
 
-          {isRound2 && (
-            <View style={[styles.guessPrompt, dynamicStyles.guessPrompt]}>
-              <Text style={[styles.guessPromptText, dynamicStyles.guessPromptText]}>
-                How did your partner answer this?
-              </Text>
-            </View>
-          )}
+    return renderLoadingState();
+  }
 
-          <View style={[styles.questionContainer, dynamicStyles.questionContainer]}>
-            {currentQuestion.customQuestion ? (
-              <View
-                style={dynamicStyles.customBadge}
-                accessible
-                accessibilityLabel="Custom couple question"
-              >
-                <Text style={dynamicStyles.customBadgeText}>Custom Couple Question</Text>
-              </View>
-            ) : null}
-            <Text style={[styles.questionText, dynamicStyles.questionText]}>
-              {currentQuestion.questionText}
-            </Text>
-          </View>
-
-          <View style={styles.optionsContainer}>
-            {renderOption('A', currentQuestion.optionA)}
-            {renderOption('B', currentQuestion.optionB)}
-            {renderOption('C', currentQuestion.optionC)}
-            {renderOption('D', currentQuestion.optionD)}
-          </View>
-
-          <View style={styles.footer}>
-            {isSubmitting ? (
-              <View style={styles.waitingContainer}>
-                <ActivityIndicator size="small" color={primaryColor} />
-                <Text style={[styles.submittedText, dynamicStyles.submittedText]} {...accessibilityStatusProps}>
-                  {isRound2 ? 'Submitting guess...' : 'Submitting answer...'}
-                </Text>
-              </View>
-            ) : myAnswer ? (
-              <Text style={[styles.submittedText, dynamicStyles.submittedText]} {...accessibilityStatusProps}>
-                {isRound2 ? 'Guess submitted!' : 'Answer submitted!'}
-              </Text>
-            ) : (
-              <TouchableOpacity
-                style={[
-                  styles.submitButton,
-                  { backgroundColor: primaryColor },
-                  !selectedOption && [styles.submitButtonDisabled, dynamicStyles.submitButtonDisabled],
-                ]}
-                onPress={handleSubmit}
-                disabled={!selectedOption}
-                activeOpacity={0.8}
-                accessibilityRole="button"
-                accessibilityLabel={isRound2 ? 'Submit guess' : 'Submit answer'}
-                accessibilityHint={isRound2 ? 'Submits your selected guess.' : 'Submits your selected answer.'}
-                accessibilityState={{ disabled: !selectedOption }}
-              >
-                <Text style={[styles.submitButtonText, dynamicStyles.submitButtonText]}>
-                  {isRound2 ? 'Submit Guess' : 'Submit Answer'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        </View>
-      </ScrollView>
-    </View>
-  );
+  return renderQuestionState();
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-    padding: 20,
-  },
-  containerCompact: {
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  contentWrapper: {
-    width: '100%',
-    maxWidth: 960,
-    alignSelf: 'center',
-  },
-  centered: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#f5f5f5',
-  },
-  loadingText: {
-    marginTop: 10,
-    fontSize: 16,
-    color: '#666',
-  },
-  pendingTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  pendingText: {
-    fontSize: 15,
-    lineHeight: 22,
-    textAlign: 'center',
-    marginBottom: 18,
-    paddingHorizontal: 20,
-  },
-  pendingButton: {
-    borderRadius: 24,
-    paddingVertical: 12,
-    paddingHorizontal: 22,
-    marginBottom: 10,
-    minWidth: 220,
-    alignItems: 'center',
-  },
-  pendingButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  pendingButtonSecondary: {
-    borderRadius: 24,
-    paddingVertical: 11,
-    paddingHorizontal: 22,
-    minWidth: 220,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  pendingButtonSecondaryText: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  reviewHeaderCard: {
-    borderWidth: 1,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 18,
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 4,
-  },
-  reviewTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 8,
-  },
-  reviewMessage: {
-    fontSize: 15,
-    lineHeight: 22,
-    marginBottom: 10,
-  },
-  reviewStat: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 14,
-  },
-  reviewRefreshButton: {
-    borderWidth: 1,
-    borderRadius: 22,
-    alignSelf: 'flex-start',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-  },
-  reviewRefreshButtonText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  reviewListTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 12,
-  },
-  reviewCard: {
-    borderWidth: 1,
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 12,
-  },
-  reviewQuestionText: {
-    fontSize: 16,
-    lineHeight: 22,
-    marginBottom: 10,
-    fontWeight: '600',
-  },
-  reviewSubmittedValue: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  roundBadge: {
-    alignSelf: 'center',
-    backgroundColor: '#f3e5f5',
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  roundBadgeR2: {
-    backgroundColor: '#e0f7fa',
-  },
-  roundBadgeText: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#6200ea',
-  },
-  roundBadgeTextR2: {
-    color: '#00796b',
-  },
-  runningScore: {
-    fontSize: 13,
-    color: '#00796b',
-    marginLeft: 10,
-    fontWeight: '600',
-  },
-  header: {
-    marginBottom: 16,
-  },
-  questionNumber: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  progressBar: {
-    height: 8,
-    backgroundColor: '#e0e0e0',
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  guessPrompt: {
-    backgroundColor: '#e0f7fa',
-    borderRadius: 10,
-    padding: 12,
-    marginBottom: 12,
-    borderLeftWidth: 4,
-    borderLeftColor: '#03dac6',
-  },
-  guessPromptText: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#00796b',
-    textAlign: 'center',
-  },
-  questionContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  questionText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#333',
-    lineHeight: 28,
-    textAlign: 'center',
-  },
-  optionsContainer: {
-    width: '100%',
-  },
-  optionCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 10,
-    borderWidth: 2,
-    borderColor: '#e0e0e0',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  selectedOption: {
-    borderColor: '#6200ea',
-    backgroundColor: '#f3e5f5',
-  },
-  selectedOptionR2: {
-    borderColor: '#03dac6',
-    backgroundColor: '#e0f7fa',
-  },
-  submittedOption: {
-    borderColor: '#03dac6',
-    backgroundColor: '#e0f7fa',
-  },
-  disabledOption: {
-    opacity: 0.6,
-  },
-  optionLetter: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 15,
-  },
-  optionLetterRound1: {
-    backgroundColor: '#6200ea',
-  },
-  optionLetterRound2: {
-    backgroundColor: '#03dac6',
-  },
-  optionLetterText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  optionText: {
-    flex: 1,
-    fontSize: 16,
-    color: '#333',
-    lineHeight: 22,
-  },
-  footer: {
-    paddingTop: 16,
-    paddingBottom: 10,
-  },
-  submitButton: {
-    paddingVertical: 16,
-    borderRadius: 25,
-    alignItems: 'center',
-    elevation: 3,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  submitButtonDisabled: {
-    backgroundColor: '#b0b0b0',
-    elevation: 0,
-    shadowOpacity: 0,
-  },
-  submitButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  waitingContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingVertical: 16,
-  },
-  waitingText: {
-    fontSize: 16,
-    color: '#666',
-    marginLeft: 10,
-    textAlign: 'center',
-  },
-  submittedText: {
-    fontSize: 16,
-    color: '#666',
-    textAlign: 'center',
-    fontWeight: '500',
-  },
-  transitionContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#e0f7fa',
-    padding: 40,
-  },
-  transitionEmoji: {
-    fontSize: 64,
-    marginBottom: 20,
-  },
-  transitionTitle: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#00796b',
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  transitionSubtitle: {
-    fontSize: 18,
-    color: '#00897b',
-    textAlign: 'center',
-    lineHeight: 26,
-    marginBottom: 30,
-  },
-  transitionSpinner: {
-    marginTop: 10,
-  },
-});
 
 export default GameScreen;

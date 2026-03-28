@@ -241,6 +241,11 @@ Gameplay shell rules:
 - strong progress marker
 - one dominant question at a time
 
+Runtime findings to preserve during implementation:
+- A physical-device smoke pass using local throwaway users confirmed the real invite flow, invitation-pending screen, Question 1 render, and partner presence notices (`PARTNER_LEFT` and `PARTNER_RETURNED`) are all reachable in the current build.
+- Follow-up diagnosis confirmed the apparent Round 1 "progression mismatch" was expected behavior, not a sync defect. The product model, manual QA guide, and backend service tests all treat Round 1 as asynchronous per user: each player advances through their own next unanswered question independently, and `Continue Game` restores the next unanswered question for that specific user rather than a shared per-question cursor.
+- A later two-device pass on a phone plus tablet confirmed that the real app UI follows that same asynchronous model on hardware: in the same active session, one device can legitimately show Question 3 while the other still shows Question 2, because Round 1 progress is tracked per user rather than by a shared couple question index.
+
 ## 8. Screen-by-Screen UX Spec
 
 ## 8.1 Sign In
@@ -464,7 +469,12 @@ Current validation status:
 - `PartnerLinkScreen.test.js` now verifies:
   - partner code generation
   - successful linking into the connected state
-- Native copy/share sheet behavior still needs device-level manual verification because it depends on platform integrations outside Jest.
+- Device-level partner-linking verification is now complete on Android tablet:
+  - dashboard `Link with Partner` CTA routes correctly for an authenticated-but-unlinked account
+  - `Generate Code` produces a large readable code block
+  - `Copy Code` visibly confirms with a `Copied!` state
+  - `Share Code` opens the native Android share sheet and successfully hands off into a real Gmail compose target
+- The Android chooser integration is therefore runtime-proven, even though downstream target apps may render the received text differently once they receive the intent.
 
 ## 8.8 Category Selection
 
@@ -506,6 +516,11 @@ Current validation status:
   - non-playable custom deck shows the deck-building guidance
 - Existing dashboard regression tests remained green after this phase, which helps confirm the focused-flow changes did not destabilize adjacent navigation assumptions.
 
+Current runtime review status:
+- The linked `no active game` dashboard state now has real hardware proof on tablet: `Start New Game` routes cleanly into `CategorySelection`.
+- The custom-deck not-ready state reads clearly on-device and explains why custom play is gated.
+- Selecting a standard category from that same tablet flow transitions into the real invitation-pending gameplay surface instead of dropping the user back to dashboard or leaving them in a stale chooser state.
+
 ## 8.9 Custom Questions List
 
 Reference:
@@ -527,6 +542,11 @@ Required UI:
 
 Use bottom nav on this screen.
 
+Current runtime review status:
+- Phone and tablet both render the browse surface coherently with the new Velvet Midnight hierarchy.
+- The empty custom-deck state reads clearly on-device, with the authored-count summary and `Add Custom Question` CTA behaving as the dominant next action.
+- A later runtime pass completed populated-data validation too: a real authored question rendered in the list, opened in edit mode with the correct prefilled content, saved cleanly through the live update path, and deleted through the confirmation dialog. After deletion, the summary hero recomputed correctly and the authored list returned to the empty state.
+
 ## 8.10 Custom Question Editor
 
 Reference:
@@ -545,6 +565,11 @@ Required UI:
 - loading / saving
 
 No bottom nav.
+
+Current runtime review status:
+- The editor renders correctly on phone hardware and matches the intended focused-flow framing: strong title, supportive privacy copy, clear field sequence, and a strong primary `Create Question` action.
+- A small-screen layout polish pass is now in code: extra bottom content spacing plus `keyboardShouldPersistTaps="handled"` give the secondary `Cancel` action more breathing room and make the form feel less one-way on phone-sized screens.
+- Real-data edit behavior is now also verified on hardware: the editor hydrates existing authored content correctly, `Save Changes` returns to the list without losing the card, and the follow-on delete flow can remove that same saved item cleanly.
 
 ## 8.11 Game History
 
@@ -565,6 +590,14 @@ Required UI:
 - loading
 
 Bottom nav is allowed here.
+
+Current runtime review status:
+- Phone empty-state review is strong: the archive framing and empty copy feel intentional, and the `Refresh` path remains visible and easy to understand.
+- Populated-data runtime validation is now complete on hardware using a seeded history-bearing account.
+- `Recent` and `Oldest` visibly reorder the archive as expected.
+- `I Won` narrows correctly to the winning session only.
+- `Partner Won` renders the dedicated filtered-empty state when no partner-win sessions exist.
+- The filtered-empty `Show All` action correctly restores the full archive list.
 
 ## 8.12 Profile
 
@@ -589,6 +622,11 @@ Corrective changes:
 - replace invented entries like `Journal Archives` with real destinations/actions
 - keep share actions where supported by the real product
 
+Current runtime review status:
+- Phone review showed the live profile surface now behaving like a real product screen rather than a concept screen. The inspected lower surface contains real actions only: `Edit Profile`, `Settings`, and `Sign Out`, alongside progression and achievements framing.
+- No residual invented `Journal Archives`-style action was visible in the reviewed runtime surface.
+- Tablet runtime review now also confirms the live `Sign Out` action works and returns the user to the Velvet Midnight auth surface rather than leaving the app in a broken intermediate shell.
+
 ## 8.13 Settings
 
 Reference:
@@ -612,6 +650,17 @@ Corrective changes:
   - unsupported archival claims
 - replace with real unlink / recover partner flows from the current product
 
+Current runtime review status:
+- Phone runtime review confirms the real settings grouping is now coherent and faithful to product scope: theme, haptics, notification preferences, relationship controls, and replay onboarding are all present and readable.
+- The active-game unlink safeguard is now strengthened in code: `SettingsScreen` also checks `/game/active`, renders unlink as an explicitly unavailable guarded action while a live session exists, and shows the “Finish or expire your active game before unlinking.” guidance before the user taps.
+- This keeps the backend protection intact while making the destructive control more truthful in the interface.
+- Recover-previous-partner is now runtime-validated end to end on phone hardware.
+- The linked state renders correctly, unlink presents a final confirmation block with cooldown language and optional reason input, confirm unlink transitions the account into `COOLDOWN_ACTIVE`, and the same settings surface then exposes a `Recover Previous Partner` CTA with an absolute recovery timestamp.
+- Recovering from that cooldown state returns the same account to the linked state and restores the normal `Unlink Partner` affordance.
+- Backend verification after the runtime pass confirms both users in the disposable pair are again `LINKED` to the same couple record.
+- Re-entry testing after sign-out on the original `alphatwo` throwaway account initially failed because the remembered local credentials were stale (`a2@t.co / Testpass123` returned a real backend `401 Invalid credentials`), so that specific observation should not be misclassified as a frontend/UI regression.
+- A follow-up tablet runtime pass with a known-good paired account successfully restored the authenticated app shell, which closes the practical re-entry concern even though the old throwaway credentials remain invalid.
+
 ## 8.14 Game: Round 1 Answering
 
 Reference:
@@ -630,6 +679,33 @@ Keep:
 - fixed bottom CTA
 - no bottom nav
 
+Current implementation status:
+- `GameScreen` now uses a true focused gameplay shell with the native stack header hidden at the navigator level so the in-screen Velvet top bar is the only visible framing.
+- The live implementation preserves the existing `useGame()` contract and state machine. We did not change gameplay backend behavior; we changed how the same states are presented.
+- The current in-code gameplay surfaces now cover:
+  - loading / hydration
+  - invitation pending
+  - Round 1 answering
+  - Round 1 to Round 2 transition
+  - Round 2 guessing
+  - submission feedback
+  - waiting-for-partner review state
+  - reconnect/offline banner driven by `wsConnectionState`
+  - partner disconnected / returned notice banners driven from gameplay status payloads
+  - explicit expired-session takeover state driven from gameplay status payloads and `410` hydration responses
+- The main visual upgrades are:
+  - stronger editorial question hierarchy
+  - explicit round framing in the top bar
+  - more distinct Round 2 tone and guess prompt
+  - clearer option-card selection/submission treatment
+  - a calmer, more emotionally intentional waiting state with dashboard fallback
+  - route-aware partner-presence handling, with in-game notices preserved while `PARTNER_RETURNED` no longer interrupts browse surfaces with a modal alert
+  - a hardened mobile transport path in `WebSocketService`, so recoverable STOMP/send failures now move the app into reconnecting state and warn in logs instead of surfacing as redbox-level dev errors
+
+Implementation deviations from Stitch 2:
+- We intentionally did not invent image-backed gameplay canvases because the current product data contract does not provide that asset layer.
+- We also kept the active-question flow exitless from the top bar for safety, rather than introducing a casual close action that could increase accidental exits during live sessions.
+
 ## 8.15 Game: Round 2 Guessing
 
 Reference:
@@ -642,6 +718,13 @@ Required differentiation from Round 1:
 - explicit “guess your partner’s answer” framing
 - visible match/correctness context
 - distinct selection treatment
+
+Current implementation status:
+- Round 2 now uses:
+  - explicit guessing subtitle in the top bar
+  - a dedicated “How did your partner answer this?” prompt panel
+  - accent-toned option state treatment
+  - running correctness context in the header status pill when data exists
 
 ## 8.16 Game: Waiting for Partner
 
@@ -661,6 +744,61 @@ Required UX:
 
 Corrective change:
 - no menu-style browse framing; keep the state focused and session-aware
+
+Current implementation status:
+- The waiting state now has:
+  - clear completion acknowledgment
+  - a centered emotional waiting hero
+  - submitted-answer / submitted-guess review list
+  - refresh-status action
+  - partner presence notice banners when the other player disconnects or returns
+
+## 8.17 Game: Expired Session and Presence Interruptions
+
+Target file:
+- [`GameScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameScreen.js)
+- [`GameContext.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/GameContext.js)
+
+Required UX:
+- if the partner disconnects, the active gameplay surface should stay in place and explain that the session is still being held
+- if the partner returns, the player should see a calm recovery notice instead of a modal interruption
+- if the session expires, gameplay should switch into an explicit non-playable state with a clear dashboard recovery path
+
+Current implementation status:
+- `GameContext` now translates `PARTNER_LEFT`, `PARTNER_RETURNED`, and `SESSION_EXPIRED` status payloads into dedicated gameplay state instead of letting them remain alert-only side effects.
+- `GameScreen` consumes that state as:
+  - inline notice banners for partner-left / partner-returned events
+  - a focused expired-session takeover with a single safe recovery action back to dashboard
+- Hydration from `/game/:sessionId/current-question` now treats `410` as a first-class expired-session outcome, which matters because expiry can be discovered during reconnect/reload, not only from realtime events.
+- `AuthContext` still preserves the broader recovery UX off-screen, but it now avoids duplicating alert interruptions when the user is already inside that exact game route and the gameplay screen can represent the status itself.
+
+Validation status:
+- `GameScreen.test.js` now verifies:
+  - partner-left notice rendering during an active question
+  - explicit expired-session rendering from a `410` hydration failure
+- `GameContext.test.js` now verifies:
+  - partner presence notice state
+  - expired-session state transition
+  - explicit back-to-dashboard fallback
+
+Current validation status:
+- `GameScreen.test.js` verifies:
+  - loading state
+  - custom question badge state
+  - Round 2 guessing state
+  - waiting-for-partner review state
+  - invitation-pending state
+  - reconnect banner treatment
+- Existing transactional-screen regression tests stayed green after the gameplay refactor, which helps confirm the new gameplay shell did not destabilize adjacent focused-flow navigation.
+
+Current runtime review status:
+- Two-device hardware review now confirms the invite handoff path is coherent end to end in the redesigned UI:
+  - inviter sees the dedicated invitation-pending surface
+  - partner sees the route-level invitation modal
+  - accepting the invite moves both devices into the same Round 1 gameplay screen
+- On both phone and tablet, the first question renders clearly with the Velvet Midnight answering shell.
+- Choosing an option and submitting advances both devices from Question 1 to Question 2, which gives us functional proof that the redesigned first-answer path is not just visually correct but operational.
+- One UX nuance surfaced during this pass: on tablet landscape, the primary `Lock Selection` CTA sits just below the initial viewport and becomes visible after a small natural scroll. This is usable, but it is worth tracking as a potential layout polish opportunity if we want the first-answer CTA to remain fully above the fold on larger landscape devices.
 
 ## 8.17 Results
 
@@ -683,6 +821,38 @@ Required UI:
 - share result
 - play again
 - back to dashboard
+
+Current implementation status:
+- The full Velvet Midnight visual redesign for `ResultsScreen` is still pending, but the screen now has stronger state handling than before:
+  - if results are present, the existing celebratory/share flow still renders
+  - if `/api/game/{sessionId}/results` returns `409`, the UI now shows a dedicated “Results Aren't Ready Yet” recovery state instead of a generic failure
+  - that recovery state offers:
+    - return to the active game
+    - refresh results
+    - back to dashboard
+  - if the endpoint returns `404` or another non-recoverable failure, the UI still falls back to “Results Unavailable”
+
+Why this matters:
+- Backend semantics here are meaningful: `409` does not mean the result is gone, it means the session exists but the finishing condition has not been met yet. Treating that as a distinct user-facing state prevents a dead-end experience when one partner opens Results early from a notification or deeplink.
+
+Validation status:
+- `ResultsScreen.test.js` now verifies:
+  - normal happy-path rendering
+  - share-result action
+  - play-again and dashboard exits
+  - dedicated `409` not-ready recovery state
+  - refresh-from-not-ready behavior
+
+Manual runtime note:
+- On-device Android validation now reaches the real auth UI through the dev client, which confirms the app boots on hardware.
+- The full two-device gameplay path is now runtime-proven on a phone and tablet:
+  - invite from category selection
+  - accept on the partner device
+  - Round 1 answering
+  - Round 2 guessing
+  - waiting-for-partner after the faster finisher completes Round 2
+  - final shared results on both devices once the slower device finishes
+- This closes the earlier uncertainty around later-round completion and real results reveal behavior.
 
 ## 9. Component Breakdown
 

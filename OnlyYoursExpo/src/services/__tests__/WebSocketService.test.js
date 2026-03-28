@@ -23,6 +23,7 @@ function setupDefaultClient() {
   Client.mockImplementation((config) => ({
     _config: config,
     active: true,
+    connected: true,
     activate: jest.fn(() => {
       Promise.resolve().then(() => config.onConnect());
     }),
@@ -61,6 +62,7 @@ describe('WebSocketService', () => {
     });
 
     it('should reject on STOMP error', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
       Client.mockImplementation((config) => ({
         active: false,
         activate: jest.fn(() => {
@@ -75,6 +77,8 @@ describe('WebSocketService', () => {
 
       await expect(service.connect('http://localhost:8080')).rejects.toThrow('Auth failed');
       expect(service.connected).toBe(false);
+      expect(warnSpy).toHaveBeenCalledWith('[WebSocket] STOMP error:', 'Auth failed');
+      warnSpy.mockRestore();
     });
 
     it('should reject on timeout', async () => {
@@ -258,6 +262,36 @@ describe('WebSocketService', () => {
       service.connected = false;
       service.sendMessage('/app/game.answer', { answer: 'A' });
       expect(service.client.publish).not.toHaveBeenCalled();
+    });
+
+    it('should not publish when stomp client is not fully connected', async () => {
+      await service.connect('http://localhost:8080');
+      service.client.connected = false;
+
+      const sent = service.sendMessage('/app/game.answer', { answer: 'A' });
+
+      expect(sent).toBe(false);
+      expect(service.client.publish).not.toHaveBeenCalled();
+    });
+
+    it('should gracefully handle publish failures and switch to reconnecting', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const listener = jest.fn();
+      service.setConnectionStateListener(listener);
+      await service.connect('http://localhost:8080');
+      service.client.publish.mockImplementation(() => {
+        throw new Error('Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]');
+      });
+
+      const sent = service.sendMessage('/app/game.answer', { answer: 'A' });
+
+      expect(sent).toBe(false);
+      expect(service.connected).toBe(false);
+      expect(listener).toHaveBeenCalledWith('reconnecting');
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[WebSocket] Failed to publish to /app/game.answer: Failed to send message to ExecutorSubscribableChannel[clientInboundChannel]'
+      );
+      warnSpy.mockRestore();
     });
   });
 });

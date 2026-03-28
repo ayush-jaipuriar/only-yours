@@ -97,8 +97,7 @@ const AppNavigator = () => {
               name="Game" 
               component={GameScreen}
               options={{
-                title: 'Game',
-                headerLeft: null,
+                headerShown: false,
                 gestureEnabled: false,
               }}
             />

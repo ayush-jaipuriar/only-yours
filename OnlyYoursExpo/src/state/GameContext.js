@@ -26,6 +26,8 @@ export const GameProvider = ({ children }) => {
   const [waitingForPartner, setWaitingForPartner] = useState(false);
   const [roundState, setRoundState] = useState(null);
   const [gameStatus, setGameStatus] = useState(null);
+  const [statusNotice, setStatusNotice] = useState(null);
+  const [expiredMessage, setExpiredMessage] = useState(null);
 
   const [round, setRound] = useState(null);
   const [guessResult, setGuessResult] = useState(null);
@@ -71,6 +73,8 @@ export const GameProvider = ({ children }) => {
       setIsSubmitting(false);
       setGuessResult(null);
       setGameStatus('playing');
+      setStatusNotice(null);
+      setExpiredMessage(null);
       setCorrectCount(payload.round === 'ROUND2' ? payload.correctCountSoFar || 0 : 0);
       setIsTransitioning(false);
       setIsInvitationPending(false);
@@ -86,6 +90,8 @@ export const GameProvider = ({ children }) => {
       setWaitingForPartner(payload.status === 'WAITING_FOR_PARTNER');
       setGuessResult(null);
       setGameStatus('waiting');
+      setStatusNotice(null);
+      setExpiredMessage(null);
       setCorrectCount(payload.round === 'ROUND2' ? payload.correctCount || 0 : 0);
       setIsTransitioning(false);
       setIsInvitationPending(false);
@@ -104,8 +110,41 @@ export const GameProvider = ({ children }) => {
       setMyAnswer(null);
       setWaitingForPartner(false);
       setGameStatus('playing');
+      setStatusNotice(null);
+      setExpiredMessage(null);
       setIsInvitationPending(false);
       setIsSubmitting(false);
+      return true;
+    }
+
+    if (payload.type === 'STATUS' && payload.status === 'PARTNER_LEFT') {
+      setStatusNotice({
+        type: 'partner-left',
+        message: payload.message || 'Your partner stepped away. We will keep this session ready for them.',
+      });
+      return true;
+    }
+
+    if (payload.type === 'STATUS' && payload.status === 'PARTNER_RETURNED') {
+      setStatusNotice({
+        type: 'partner-returned',
+        message: payload.message || 'Your partner is back. You can continue together.',
+      });
+      return true;
+    }
+
+    if (payload.type === 'STATUS' && payload.status === 'SESSION_EXPIRED') {
+      clearSubmitRecoveryTimeout();
+      setCurrentQuestion(null);
+      setRoundState(null);
+      setWaitingForPartner(false);
+      setMyAnswer(null);
+      setIsSubmitting(false);
+      setIsTransitioning(false);
+      setIsInvitationPending(false);
+      setStatusNotice(null);
+      setExpiredMessage(payload.message || 'This session has expired. Start a new game from the dashboard.');
+      setGameStatus('expired');
       return true;
     }
 
@@ -119,6 +158,8 @@ export const GameProvider = ({ children }) => {
       setIsSubmitting(false);
       setScores(payload);
       setGameStatus('completed');
+      setStatusNotice(null);
+      setExpiredMessage(null);
       setIsTransitioning(false);
       setIsInvitationPending(false);
       return true;
@@ -158,6 +199,21 @@ export const GameProvider = ({ children }) => {
 
       const status = error?.response?.status;
       if (status === 404 || status === 410) {
+        if (status === 410) {
+          clearSubmitRecoveryTimeout();
+          setCurrentQuestion(null);
+          setRoundState(null);
+          setWaitingForPartner(false);
+          setMyAnswer(null);
+          setIsSubmitting(false);
+          setIsTransitioning(false);
+          setIsInvitationPending(false);
+          setStatusNotice(null);
+          setExpiredMessage(
+            error?.response?.data?.message || 'This session has expired. Start a new game from the dashboard.'
+          );
+          setGameStatus('expired');
+        }
         return;
       }
 
@@ -169,6 +225,8 @@ export const GameProvider = ({ children }) => {
           if (activeSessionId === String(sessionId) && activeSession?.status === 'INVITED') {
             setGameStatus('invited');
             setIsInvitationPending(true);
+            setStatusNotice(null);
+            setExpiredMessage(null);
             return;
           }
         } catch (activeSessionError) {
@@ -251,6 +309,8 @@ export const GameProvider = ({ children }) => {
     setIsTransitioning(false);
     setIsInvitationPending(false);
     setIsSubmitting(false);
+    setStatusNotice(null);
+    setExpiredMessage(null);
     clearSubmitRecoveryTimeout();
 
     ensureTopicSubscription(sessionId);
@@ -392,6 +452,8 @@ export const GameProvider = ({ children }) => {
     setIsTransitioning(false);
     setIsInvitationPending(false);
     setIsSubmitting(false);
+    setStatusNotice(null);
+    setExpiredMessage(null);
     clearSubmitRecoveryTimeout();
   }, [clearSubmitRecoveryTimeout, unsubscribeTopic]);
 
@@ -427,6 +489,8 @@ export const GameProvider = ({ children }) => {
     waitingForPartner,
     roundState,
     gameStatus,
+    statusNotice,
+    expiredMessage,
     round,
     guessResult,
     scores,

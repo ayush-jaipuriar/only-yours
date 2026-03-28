@@ -43,7 +43,7 @@ class WebSocketService {
   }
 
   isConnected() {
-    return Boolean(this.client && this.client.active && this.connected);
+    return Boolean(this.client && this.client.active && this.client.connected && this.connected);
   }
 
   hasActiveClient() {
@@ -158,10 +158,15 @@ class WebSocketService {
         },
 
         onStompError: (frame) => {
-          console.error('[WebSocket] STOMP error:', frame.headers['message']);
+          const message = frame?.headers?.message || 'STOMP connection error';
+          console.warn('[WebSocket] STOMP error:', message);
           this.connected = false;
-          this._emitConnectionState('reconnecting');
-          rejectOnce(frame.headers['message'] || 'STOMP connection error');
+          if (this.client && this.client.active) {
+            this._emitConnectionState('reconnecting');
+          } else {
+            this._emitConnectionState('disconnected');
+          }
+          rejectOnce(message);
         },
 
         onWebSocketClose: (event) => {
@@ -267,10 +272,24 @@ class WebSocketService {
   }
 
   sendMessage(destination, body) {
-    if (!this.client || !this.connected) return false;
+    if (!this.client || !this.client.active || !this.client.connected || !this.connected) {
+      return false;
+    }
     const payload = typeof body === 'string' ? body : JSON.stringify(body);
-    this.client.publish({ destination, body: payload });
-    return true;
+    try {
+      this.client.publish({ destination, body: payload });
+      return true;
+    } catch (error) {
+      const message = error?.message || 'Unknown publish failure';
+      console.warn(`[WebSocket] Failed to publish to ${destination}: ${message}`);
+      this.connected = false;
+      if (this.client && this.client.active) {
+        this._emitConnectionState('reconnecting');
+      } else {
+        this._emitConnectionState('disconnected');
+      }
+      return false;
+    }
   }
 
   getConnectionState() {

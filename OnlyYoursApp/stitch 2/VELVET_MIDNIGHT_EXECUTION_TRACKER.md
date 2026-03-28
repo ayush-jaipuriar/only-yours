@@ -175,7 +175,7 @@ Status convention:
 
 ### Notes / Blockers
 - Notes: `DashboardScreen` now uses a state-driven Velvet Midnight structure instead of a mostly linear utility stack. The screen keeps the existing `useDashboardGameFlow` contract and navigation behavior, but reorganizes the content into a stronger browse-home shape: editorial greeting, stateful hero (`active game`, `ready to start`, `not linked`), quick destination cards, progression as a richer narrative section, a bento-style celebration area, denser stats lower in the scroll, and achievements with clearer section framing. The implementation now consumes more of the shared primitive layer directly: `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` alongside the existing browse shell and card primitives. Automated validation now covers both halves of the dashboard contract: `DashboardScreen.test.js` verifies the three main screen states plus their primary CTAs, and `useDashboardGameFlow.test.js` continues to cover the underlying data/loading behavior. Neighboring browse-surface flow tests (`ProfileScreenFlow`, `useGameHistoryFlow`) also remain green after the redesign.
-- Blockers: Manual/runtime dashboard visual QA is still recommended before we call the broader Phase 4 browse-surface work fully closed.
+- Blockers: Manual/runtime dashboard QA is now partially complete and surfaced one important continuation-risk. The tablet runtime has been repaired and now also lands back in the authenticated app on the active-session hero (`ROUND1 • QUESTION 2/8`) after reseeding local storage, which restores the two-device QA setup. The earlier browse-surface recovery concern still stands, though: the phone had previously been left on `CategorySelection` while the backend already had an active Round 1 session, which suggests browse-surface recovery back to the active-session pathway is still not fully resilient if a user leaves gameplay mid-flow and later lands on another transactional screen.
 
 ---
 
@@ -196,7 +196,7 @@ Status convention:
 
 ### Validation
 - [x] Generate code works
-- [ ] Copy/share code works
+- [x] Copy/share code works
 - [x] Enter/connect flow works
 - [x] Connected success flow works
 - [x] Category selection works for standard categories
@@ -207,120 +207,121 @@ Status convention:
 - [x] Record any category-state additions needed beyond Stitch 2
 
 ### Notes / Blockers
-- Notes: `PartnerLinkScreen` now uses the focused Velvet Midnight shell and has been reframed as a true two-step transactional flow: editorial intro, generated-code hero, explicit enter-their-code panel, and a calmer explanatory helper card. The previous success alert has been replaced with an in-screen connected state that gives the user a clean next choice between starting the first game and returning to the dashboard. `CategorySelectionScreen` has also been rebuilt around clearer hierarchy: a stronger intro, a featured custom-deck hero, a standard-category section with better readiness/invite status treatment, and a helper panel that explains the role of authored custom prompts. The new design keeps all prior behavior contracts intact: custom-deck readiness gating, sensitive-content confirmation, invite-in-flight locking, WebSocket invite sending, and existing loading/error/empty fallbacks.
-- Blockers: Manual verification is still recommended for native copy/share behavior on a real device. Automated coverage currently proves generate, connect, success-state rendering, standard-category invites, and custom-deck readiness paths.
+- Notes: `PartnerLinkScreen` now uses the focused Velvet Midnight shell and has been reframed as a true two-step transactional flow: editorial intro, generated-code hero, explicit enter-their-code panel, and a calmer explanatory helper card. The previous success alert has been replaced with an in-screen connected state that gives the user a clean next choice between starting the first game and returning to the dashboard. `CategorySelectionScreen` has also been rebuilt around clearer hierarchy: a stronger intro, a featured custom-deck hero, a standard-category section with better readiness/invite status treatment, and a helper panel that explains the role of authored custom prompts. The new design keeps all prior behavior contracts intact: custom-deck readiness gating, sensitive-content confirmation, invite-in-flight locking, WebSocket invite sending, and existing loading/error/empty fallbacks. Hardware review on the paired tablet now confirms the linked `no active game` dashboard state routes cleanly into `CategorySelection`, the custom-deck not-ready message reads clearly, and selecting a standard category transitions into the real invitation-pending gameplay surface. Device-level partner-linking validation is now also complete on tablet: generating a code produced a large readable code block, tapping `Copy Code` updated the button to `Copied!`, and tapping `Share Code` opened the native Android share sheet and handed off into a real Gmail compose target.
+- Blockers: None currently blocking Phase 5. The native share payload is integration-proven through Android chooser handoff, though third-party target apps may still present the shared text differently once they receive it.
 
 ---
 
 ## Phase 6. Gameplay Surfaces
 
 ### Implementation
-- [ ] Rebuild [`GameScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameScreen.js) using focused gameplay shell
-- [ ] Implement Round 1 answering UI
-- [ ] Implement Round 2 guessing UI
-- [ ] Implement waiting-for-partner UI
-- [ ] Restyle progress indicator
-- [ ] Restyle answer-option cards
-- [ ] Restyle fixed action footer
-- [ ] Add custom deck badge styling
-- [ ] Design in-code invitation pending state
-- [ ] Design in-code session refresh state
-- [ ] Design in-code reconnect/offline banner state
-- [ ] Design in-code partner disconnected/returned state
-- [ ] Design in-code expired session state
-- [ ] Design in-code results-not-ready state
-- [ ] Ensure no bottom nav appears in gameplay
+- [x] Rebuild [`GameScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameScreen.js) using focused gameplay shell
+- [x] Implement Round 1 answering UI
+- [x] Implement Round 2 guessing UI
+- [x] Implement waiting-for-partner UI
+- [x] Restyle progress indicator
+- [x] Restyle answer-option cards
+- [x] Restyle fixed action footer
+- [x] Add custom deck badge styling
+- [x] Design in-code invitation pending state
+- [x] Design in-code session refresh state
+- [x] Design in-code reconnect/offline banner state
+- [x] Design in-code partner disconnected/returned state
+- [x] Design in-code expired session state
+- [x] Design in-code results-not-ready state
+- [x] Ensure no bottom nav appears in gameplay
 
 ### Validation
-- [ ] Round 1 renders correctly
-- [ ] Round 2 renders distinctly from Round 1
-- [ ] Waiting state feels intentional and clear
-- [ ] Invitation pending flow is understandable
-- [ ] Reconnect/offline state is calm and usable
-- [ ] Expired session state is actionable
-- [ ] Existing gameplay behavior still functions correctly
+- [x] Round 1 renders correctly
+- [x] Round 2 renders distinctly from Round 1
+- [x] Waiting state feels intentional and clear
+- [x] Invitation pending flow is understandable
+- [x] Reconnect/offline state is calm and usable
+- [x] Expired session state is actionable
+- [x] Existing gameplay behavior still functions correctly
+- [x] Results reveal works on real devices
 
 ### Docs
-- [ ] Record all extra gameplay states designed beyond Stitch 2
-- [ ] Update spec if gameplay shell behavior changes during implementation
+- [x] Record all extra gameplay states designed beyond Stitch 2
+- [x] Update spec if gameplay shell behavior changes during implementation
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: `GameScreen` now uses a focused Velvet Midnight gameplay shell rather than a generic stacked utility layout. The implementation preserves the full `useGame()` state machine and result navigation, but re-frames each real state with stronger hierarchy: minimal top bar, cinematic question hero, explicit Round 2 prompt, stronger option selection treatment, calmer waiting panels, and a more intentional action footer. We also hid the native stack header for the `Game` route so the custom gameplay top bar is now the single visible header source. The redesign now covers the live states we truly receive today: loading, invitation pending, Round 1 answering, Round 2 guessing, submission feedback, waiting for partner with review list, round transition, realtime reconnect banner treatment via `wsConnectionState`, partner disconnected / returned notices, and an explicit expired-session takeover state. The gameplay context now translates `PARTNER_LEFT`, `PARTNER_RETURNED`, and `SESSION_EXPIRED` payloads into screen state directly, and hydration now also treats `410` responses from `/current-question` as an expired-session surface instead of dropping back to a generic loader. Automated validation now includes direct gameplay tests for loading, custom-question badge rendering, Round 2 guessing, waiting review state, invitation-pending state, reconnect-banner treatment, partner-left notice rendering, expired-session rendering, and targeted `GameContext` coverage for the new status payload handling. Manual Android runtime verification now includes both a phone and a tablet authenticated as the live paired account. On hardware we confirmed: the invite modal appears route-appropriately on phone while the inviter sees the invitation-pending screen on tablet, accepting the invite moves both devices into the same Round 1 question, and after choosing an option and submitting, both devices advance from Question 1 to Question 2 as expected. We also validated the late-round path end to end: the faster phone finished Round 2 and correctly landed on the `Round 2 Complete` waiting state, the slower tablet completed its remaining Round 2 guesses, and both devices then transitioned into the shared results screen with the same final score breakdown.
+- Blockers: The earlier Question 3 vs Question 2 observation is no longer treated as a gameplay defect. Repo validation and backend service tests confirm Round 1 is intentionally asynchronous per user: each player advances through their own next unanswered question without per-question partner blocking, and `Continue Game` should restore the next unanswered question for that specific user. Two-device runtime behavior matched that model. The STOMP dev-runtime escalation has been hardened in code and no longer redboxes in the reproduced phone flow. No current gameplay blocker remains from the tested invite-through-results path.
 
 ---
 
 ## Phase 7. Custom Questions and History
 
 ### Implementation
-- [ ] Rebuild [`CustomQuestionsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/CustomQuestionsScreen.js)
-- [ ] Rebuild [`CustomQuestionEditorScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/CustomQuestionEditorScreen.js)
-- [ ] Rebuild [`GameHistoryScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameHistoryScreen.js)
-- [ ] Restyle custom-question summary hero
-- [ ] Restyle custom-question authored cards
-- [ ] Restyle custom-question empty state
-- [ ] Restyle editor form and validation states
-- [ ] Restyle history filter pills/controls
-- [ ] Restyle history cards
-- [ ] Restyle history loading/empty/error states
+- [x] Rebuild [`CustomQuestionsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/CustomQuestionsScreen.js)
+- [x] Rebuild [`CustomQuestionEditorScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/CustomQuestionEditorScreen.js)
+- [x] Rebuild [`GameHistoryScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameHistoryScreen.js)
+- [x] Restyle custom-question summary hero
+- [x] Restyle custom-question authored cards
+- [x] Restyle custom-question empty state
+- [x] Restyle editor form and validation states
+- [x] Restyle history filter pills/controls
+- [x] Restyle history cards
+- [x] Restyle history loading/empty/error states
 
 ### Validation
-- [ ] Custom question create works
-- [ ] Custom question edit works
-- [ ] Custom question delete works
-- [ ] History sort works
-- [ ] History winner filters work
-- [ ] Empty and error states remain functional
+- [x] Custom question create works
+- [x] Custom question edit works
+- [x] Custom question delete works
+- [x] History sort works
+- [x] History winner filters work
+- [x] Empty and error states remain functional
 
 ### Docs
-- [ ] Record any custom-question or history state deviations from Stitch 2
+- [x] Record any custom-question or history state deviations from Stitch 2
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: Runtime review is now complete for the most important custom-question and history surfaces. `CustomQuestionsScreen` presents well on both form factors: the summary hero, deck-readiness explanation, authored empty state, and `Add Custom Question` CTA all read clearly and match the intended premium browse-surface direction. `GameHistoryScreen` empty-state review on phone also looked strong: the archive title, empty-state copy, and refresh action were readable and emotionally consistent rather than feeling like a bare placeholder. We also applied a focused editor polish pass: `CustomQuestionEditorScreen` now has extra bottom breathing room and handled keyboard taps more gracefully. On hardware, `Cancel` still is not in the very first phone viewport, but after a small natural scroll it now appears cleanly with comfortable spacing instead of feeling pinned to the bottom edge. A later phone run confirmed full custom-question CRUD with real saved data: a disposable authored question rendered in the list, opened in edit mode with the correct prefilled values, saved successfully through the live update path, and then deleted through the destructive confirmation flow. After deletion, the summary hero recomputed correctly to `0` authored questions, `0` active couple deck count, and `8` still needed to play, and the authored list returned to the empty state. We then seeded the phone with a history-bearing account and completed populated-data runtime validation on `GameHistoryScreen`: `Recent` and `Oldest` visibly reorder the archive, `I Won` narrows to the winning session only, `Partner Won` shows the dedicated filtered-empty state, and the `Show All` recovery action returns the user to the full archive list.
+- Blockers: No current blockers in the custom-question/history slice. The earlier history-validation gap is now closed.
 
 ---
 
 ## Phase 8. Profile and Settings
 
 ### Implementation
-- [ ] Rebuild [`ProfileScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ProfileScreen.js)
-- [ ] Remove unsupported profile concepts such as journal archives
+- [x] Rebuild [`ProfileScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ProfileScreen.js)
+- [x] Remove unsupported profile concepts such as journal archives
 - [ ] Preserve real profile actions:
   - edit profile
   - settings
   - sign out
   - progression
   - achievements
-- [ ] Rebuild [`SettingsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SettingsScreen.js)
-- [ ] Remove unsupported settings concepts:
+- [x] Rebuild [`SettingsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SettingsScreen.js)
+- [x] Remove unsupported settings concepts:
   - secret key
   - export shared data
   - chat history references
   - unsupported retention promises
-- [ ] Restyle theme controls
-- [ ] Restyle haptics controls
-- [ ] Restyle notification preferences
-- [ ] Restyle relationship controls
-- [ ] Restyle unlink flow
-- [ ] Restyle recover previous partner flow
-- [ ] Restyle replay onboarding action
+- [x] Restyle theme controls
+- [x] Restyle haptics controls
+- [x] Restyle notification preferences
+- [x] Restyle relationship controls
+- [x] Restyle unlink flow
+- [x] Restyle recover previous partner flow
+- [x] Restyle replay onboarding action
 
 ### Validation
-- [ ] Profile data still renders correctly
+- [x] Profile data still renders correctly
 - [ ] Edit profile still works
 - [ ] Settings preferences still persist
-- [ ] Unlink flow still works
-- [ ] Recover previous partner flow still works
-- [ ] Sign out still works
+- [x] Unlink flow still works
+- [x] Recover previous partner flow still works
+- [x] Sign out still works
 
 ### Docs
-- [ ] Record every unsupported Stitch feature removed from profile/settings
-- [ ] Update spec if any control-grouping changes are made for usability
+- [x] Record every unsupported Stitch feature removed from profile/settings
+- [x] Update spec if any control-grouping changes are made for usability
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: Runtime review is now broad and concrete on phone and tablet. `ProfileScreen` looked strong in the live app: progression, achievements, `Edit Profile`, `Settings`, and `Sign Out` all render as real product actions with no leftover invented Stitch concepts visible in the inspected surface. `SettingsScreen` upper and lower sections also rendered coherently in hardware review, including theme controls, haptics, notification preferences, relationship controls, and replay onboarding. The unlink safeguard is now improved in code for the active-game state: `SettingsScreen` loads `/game/active`, renders unlink as an explicitly unavailable guarded action when a live session exists, and shows pre-tap guidance instead of relying on a post-tap backend rejection. This guarded unlink state is now also visually confirmed on hardware. A tablet runtime pass confirms the real sign-out path works from the live profile screen and resets the app back to the Velvet Midnight auth surface. A follow-up tablet re-entry pass with a known-good paired account also successfully restored the live app shell, which confirms the earlier `alphatwo` confusion was stale test-data drift rather than a frontend auth regression. Recover-previous-partner is now hardware-validated on phone end to end: the linked state rendered correctly, unlink opened a final confirmation block with 24-hour cooldown language, confirm unlink transitioned the screen into `COOLDOWN_ACTIVE` with an absolute recovery timestamp and `Recover Previous Partner` CTA, and recovery returned the same account to the linked state. Backend verification after the runtime pass confirms both users in the disposable pair are again `LINKED` to the same couple record.
+- Blockers: No current blocker in the profile/settings validation slice. The earlier `alphatwo` problem is now documented as stale credentials (`a2@t.co / Testpass123` returned a real backend `401 Invalid credentials`), not a confirmed UI defect.
 
 ---
 
@@ -334,26 +335,26 @@ Status convention:
 - [ ] Implement share-result CTA styling
 - [ ] Implement play-again/dashboard exit actions
 - [ ] Design in-code results loading state
-- [ ] Design in-code results unavailable/error state
+- [x] Design in-code results unavailable/error state
 - [ ] Add forgot-password success/error styling if still incomplete
 - [ ] Add reset-password success/error styling if still incomplete
 - [ ] Add unlink confirmation panel styling if still incomplete
 - [ ] Add recover partner state styling if still incomplete
 
 ### Validation
-- [ ] Results render correctly with real data
+- [x] Results render correctly with real data
 - [ ] Play again works
 - [ ] Back to dashboard works
 - [ ] Share result action still works
-- [ ] Results fallback state is understandable
+- [x] Results fallback state is understandable
 
 ### Docs
-- [ ] Add notes for results design decisions since Stitch 2 has no dedicated export
-- [ ] Update master spec with the implemented results direction
+- [x] Add notes for results design decisions since Stitch 2 has no dedicated export
+- [x] Update master spec with the implemented results direction
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: Before the full Velvet Midnight results redesign, we hardened `ResultsScreen` so backend result states now map to distinct UX. A `409` from `/api/game/{sessionId}/results` now renders an explicit “Results Aren't Ready Yet” recovery surface with `Return to Game`, `Refresh Results`, and `Back to Dashboard` actions instead of collapsing into a generic unavailable error. `404` and other failures still route to the unavailable fallback. Jest validation now covers the new `409` recovery path and refresh behavior in `ResultsScreen.test.js`, while existing play-again, back-to-dashboard, and share-card behaviors remain green. Manual two-device runtime QA now also confirms that real finished sessions land on the shared results screen on both devices with matching final scores and unlocked-milestone content.
+- Blockers: The broader visual redesign of `ResultsScreen` itself still belongs to Phase 9 and has not been fully restyled to the Velvet Midnight spec yet.
 
 ---
 

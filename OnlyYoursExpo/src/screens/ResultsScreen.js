@@ -27,13 +27,37 @@ const ResultsScreen = ({ route, navigation }) => {
   const { endGame } = useGame();
   const [scores, setScores] = useState(incomingScores);
   const [isLoadingScores, setIsLoadingScores] = useState(!incomingScores && Boolean(sessionId));
-  const [scoreLoadError, setScoreLoadError] = useState(false);
+  const [scoreLoadError, setScoreLoadError] = useState(null);
   const { isSharing, shareCard, shareHost } = useShareCardComposer();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
   const p1ScoreAnim = useRef(new Animated.Value(0)).current;
   const p2ScoreAnim = useRef(new Animated.Value(0)).current;
+
+  const loadResults = React.useCallback(async () => {
+    if (!sessionId || incomingScores) {
+      return;
+    }
+
+    setIsLoadingScores(true);
+    setScoreLoadError(null);
+
+    try {
+      const response = await api.get(`/game/${sessionId}/results`);
+      setScores(response.data);
+      setScoreLoadError(null);
+    } catch (error) {
+      const status = error?.response?.status;
+      if (status === 409) {
+        setScoreLoadError('not-ready');
+      } else {
+        setScoreLoadError('unavailable');
+      }
+    } finally {
+      setIsLoadingScores(false);
+    }
+  }, [incomingScores, sessionId]);
 
   useEffect(() => {
     let isMounted = true;
@@ -43,17 +67,20 @@ const ResultsScreen = ({ route, navigation }) => {
 
     (async () => {
       try {
+        setIsLoadingScores(true);
+        setScoreLoadError(null);
         const response = await api.get(`/game/${sessionId}/results`);
         if (!isMounted) {
           return;
         }
         setScores(response.data);
-        setScoreLoadError(false);
+        setScoreLoadError(null);
       } catch (error) {
         if (!isMounted) {
           return;
         }
-        setScoreLoadError(true);
+        const status = error?.response?.status;
+        setScoreLoadError(status === 409 ? 'not-ready' : 'unavailable');
       } finally {
         if (isMounted) {
           setIsLoadingScores(false);
@@ -126,6 +153,14 @@ const ResultsScreen = ({ route, navigation }) => {
   const handleBackToDashboard = () => {
     endGame();
     navigation.replace('Dashboard');
+  };
+
+  const handleReturnToGame = () => {
+    if (!sessionId) {
+      handleBackToDashboard();
+      return;
+    }
+    navigation.replace('Game', { sessionId });
   };
 
   const handleShareResult = () => {
@@ -214,6 +249,44 @@ const ResultsScreen = ({ route, navigation }) => {
   }
 
   if (scoreLoadError || !scores) {
+    if (scoreLoadError === 'not-ready') {
+      return (
+        <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+          <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Aren&apos;t Ready Yet</Text>
+          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} {...accessibilityAlertProps}>
+            Your session is still active, but final results have not unlocked yet. Return to the game or refresh after your partner finishes.
+          </Text>
+          <TouchableOpacity
+            style={[styles.playAgainButton, dynamicStyles.playAgainButton, { marginTop: 12 }]}
+            onPress={handleReturnToGame}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Return to game"
+          >
+            <Text style={[styles.playAgainText, dynamicStyles.playAgainText]}>Return to Game</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.dashboardButton, dynamicStyles.dashboardButton, { marginTop: 12 }]}
+            onPress={loadResults}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Refresh results"
+          >
+            <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Refresh Results</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.dashboardButton, dynamicStyles.dashboardButton, { marginTop: 12 }]}
+            onPress={handleBackToDashboard}
+            activeOpacity={0.8}
+            accessibilityRole="button"
+            accessibilityLabel="Back to dashboard"
+          >
+            <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
+          </TouchableOpacity>
+        </View>
+      );
+    }
+
     return (
       <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
         <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Unavailable</Text>

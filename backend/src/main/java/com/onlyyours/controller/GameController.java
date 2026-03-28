@@ -309,9 +309,9 @@ public class GameController {
      * Flow:
      * 1. Submit answer via GameService
      * 2. Send confirmation to this player
-     * 3. If both players answered:
-     *    a. If next question exists: broadcast it to both players
-     *    b. If Round 1 complete: broadcast completion status
+     * 3. Send the submitter their own next unanswered question (or waiting state)
+     * 4. If Round 1 becomes fully complete for both players, broadcast the shared
+     *    round-transition status and first Round 2 question
      * 
      * @param request AnswerRequestDto with sessionId, questionId, answer
      * @param principal Authenticated user (player submitting answer)
