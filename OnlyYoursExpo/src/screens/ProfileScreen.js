@@ -1,37 +1,21 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, TextInput } from 'react-native';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import EmptyState from '../components/EmptyState';
+import LoadingSpinner from '../components/LoadingSpinner';
+import { VelvetBrowseLayout, VelvetSectionCard } from '../components/velvet';
+import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import api from '../services/api';
 import { AuthContext } from '../state/AuthContext';
-import LoadingSpinner from '../components/LoadingSpinner';
-import EmptyState from '../components/EmptyState';
-import BadgeChip from '../components/BadgeChip';
-import MilestoneHighlights from '../components/MilestoneHighlights';
-import ProgressionCard from '../components/ProgressionCard';
-import { VelvetBrowseLayout } from '../components/velvet';
-import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 import useTheme from '../theme/useTheme';
 import { accessibilityAlertProps } from '../accessibility';
-import {
-  buildAchievementsShareCard,
-  buildMilestoneShareCard,
-  useShareCardComposer,
-} from '../sharing';
 
-/**
- * ProfileScreen — displays the current user's profile and logout option.
- *
- * Sprint 6: Replaced inline ActivityIndicator with reusable LoadingSpinner.
- * Added EmptyState for when the profile fails to load.
- */
-// eslint-disable-next-line react/prop-types
+/* eslint-disable react/prop-types */
+
 const ProfileScreen = ({ navigation }) => {
   const { logout } = useContext(AuthContext);
   const { triggerHaptic } = useHaptics();
   const { theme } = useTheme();
-  const { isSharing, shareCard, shareHost } = useShareCardComposer();
   const [profile, setProfile] = useState(null);
-  const [progression, setProgression] = useState(null);
-  const [badges, setBadges] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -58,18 +42,16 @@ const ProfileScreen = ({ navigation }) => {
         },
         card: {
           width: '100%',
-          maxWidth: 700,
-          backgroundColor: theme.colors.surface,
-          borderRadius: 18,
-          padding: 20,
-          borderWidth: 1,
-          borderColor: theme.colors.border,
+          maxWidth: 620,
+          marginBottom: 14,
+        },
+        identityCard: {
           alignItems: 'center',
         },
         avatarContainer: {
-          width: 80,
-          height: 80,
-          borderRadius: 40,
+          width: 84,
+          height: 84,
+          borderRadius: 42,
           backgroundColor: theme.colors.primary,
           justifyContent: 'center',
           alignItems: 'center',
@@ -78,7 +60,7 @@ const ProfileScreen = ({ navigation }) => {
           shadowColor: theme.colors.primary,
         },
         avatarInitial: {
-          fontSize: 36,
+          fontSize: 38,
           fontWeight: '700',
           color: theme.colors.primaryContrast,
         },
@@ -103,51 +85,18 @@ const ProfileScreen = ({ navigation }) => {
           color: theme.colors.textSecondary,
           textAlign: 'center',
           lineHeight: 20,
-          marginBottom: 20,
         },
-        divider: {
-          width: '100%',
-          height: 1,
-          backgroundColor: theme.colors.border,
-          marginBottom: 20,
-        },
-        badgesSection: {
-          width: '100%',
-          marginBottom: 20,
-        },
-        badgesTitle: {
-          fontSize: 16,
+        sectionTitle: {
+          fontSize: 18,
           fontWeight: '700',
           color: theme.colors.textPrimary,
-          marginBottom: 10,
+          marginBottom: 8,
         },
-        emptyBadgesText: {
+        sectionSubtitle: {
           fontSize: 13,
+          lineHeight: 19,
           color: theme.colors.textSecondary,
-        },
-        progressionSection: {
-          width: '100%',
-          marginBottom: 20,
-        },
-        shareInlineButton: {
-          marginTop: 4,
-          marginBottom: 10,
-          borderWidth: 1,
-          borderColor: theme.colors.borderStrong,
-          borderRadius: 999,
-          alignSelf: 'flex-start',
-          paddingHorizontal: 14,
-          paddingVertical: 8,
-          backgroundColor: theme.colors.surfaceMuted,
-        },
-        shareInlineText: {
-          color: theme.colors.textPrimary,
-          fontSize: 13,
-          fontWeight: '700',
-        },
-        profileFormSection: {
-          width: '100%',
-          marginBottom: 20,
+          marginBottom: 14,
         },
         inputLabel: {
           fontSize: 13,
@@ -158,7 +107,7 @@ const ProfileScreen = ({ navigation }) => {
         input: {
           borderWidth: 1,
           borderColor: theme.colors.border,
-          borderRadius: 10,
+          borderRadius: 12,
           backgroundColor: theme.colors.surfaceMuted,
           color: theme.colors.textPrimary,
           paddingHorizontal: 12,
@@ -174,30 +123,15 @@ const ProfileScreen = ({ navigation }) => {
           color: theme.colors.danger,
           fontSize: 12,
           marginTop: -2,
-          marginBottom: 4,
+          marginBottom: 6,
         },
         actionsRow: {
           width: '100%',
           flexDirection: 'row',
           flexWrap: 'wrap',
           justifyContent: 'center',
-          marginTop: 6,
         },
-        settingsButton: {
-          borderWidth: 1,
-          borderColor: theme.colors.primary,
-          borderRadius: 25,
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          marginHorizontal: 6,
-          marginBottom: 10,
-        },
-        settingsText: {
-          color: theme.colors.primary,
-          fontSize: 15,
-          fontWeight: '600',
-        },
-        editButton: {
+        primaryButton: {
           borderWidth: 1,
           borderColor: theme.colors.primary,
           borderRadius: 25,
@@ -208,28 +142,12 @@ const ProfileScreen = ({ navigation }) => {
           backgroundColor: theme.colors.primary,
           opacity: isSavingProfile ? 0.65 : 1,
         },
-        editText: {
+        primaryButtonText: {
           color: theme.colors.primaryContrast,
           fontSize: 15,
           fontWeight: '700',
         },
-        saveButton: {
-          borderWidth: 1,
-          borderColor: theme.colors.success,
-          borderRadius: 25,
-          paddingHorizontal: 24,
-          paddingVertical: 12,
-          marginHorizontal: 6,
-          marginBottom: 10,
-          backgroundColor: theme.colors.success,
-          opacity: isSavingProfile ? 0.65 : 1,
-        },
-        saveText: {
-          color: theme.colors.textOnEmphasis,
-          fontSize: 15,
-          fontWeight: '700',
-        },
-        cancelButton: {
+        secondaryButton: {
           borderWidth: 1,
           borderColor: theme.colors.border,
           borderRadius: 25,
@@ -239,23 +157,23 @@ const ProfileScreen = ({ navigation }) => {
           marginBottom: 10,
           backgroundColor: theme.colors.surfaceMuted,
         },
-        cancelText: {
-          color: theme.colors.textSecondary,
+        secondaryButtonText: {
+          color: theme.colors.textPrimary,
           fontSize: 15,
           fontWeight: '600',
         },
-        logoutButton: {
+        destructiveButton: {
           borderWidth: 1.5,
           borderColor: theme.colors.danger,
+          borderRadius: 25,
           paddingHorizontal: 24,
           paddingVertical: 12,
-          borderRadius: 25,
           marginHorizontal: 6,
           marginBottom: 10,
         },
-        logoutText: {
+        destructiveButtonText: {
           color: theme.colors.danger,
-          fontSize: 16,
+          fontSize: 15,
           fontWeight: '600',
         },
       }),
@@ -270,21 +188,16 @@ const ProfileScreen = ({ navigation }) => {
     setLoading(true);
     setLoadError(false);
     try {
-      const [profileResponse, badgeResponse] = await Promise.all([
-        api.get('/user/me'),
-        api.get('/game/progression').catch(() => ({ data: null })),
-      ]);
-      const nextProfile = profileResponse.data;
+      const response = await api.get('/user/me');
+      const nextProfile = response.data;
       setProfile(nextProfile);
       setProfileDraft({
         username: nextProfile.username || '',
         bio: nextProfile.bio || '',
       });
       setProfileFormError('');
-      setProgression(badgeResponse?.data || null);
-      setBadges(badgeResponse?.data?.achievements || []);
-    } catch (e) {
-      console.error('Error loading profile:', e);
+    } catch (error) {
+      console.error('Error loading profile:', error);
       setLoadError(true);
     } finally {
       setLoading(false);
@@ -331,14 +244,11 @@ const ProfileScreen = ({ navigation }) => {
         username: profileDraft.username.trim().toLowerCase(),
         bio: profileDraft.bio.trim(),
       });
-      const progressionResponse = await api.get('/game/progression').catch(() => ({ data: progression }));
       setProfile(response.data);
       setProfileDraft({
         username: response.data.username || '',
         bio: response.data.bio || '',
       });
-      setProgression(progressionResponse?.data || progression);
-      setBadges(progressionResponse?.data?.achievements || badges);
       setIsEditingProfile(false);
       triggerHaptic(HAPTIC_EVENTS.PROFILE_SAVED);
     } catch (error) {
@@ -356,7 +266,7 @@ const ProfileScreen = ({ navigation }) => {
         navigation={navigation}
         activeNavKey="profile"
         contentContainerStyle={styles.container}
-        contentMaxWidth={760}
+        contentMaxWidth={680}
       >
         <View style={styles.stateContent}>
           <LoadingSpinner message="Loading profile..." />
@@ -371,7 +281,7 @@ const ProfileScreen = ({ navigation }) => {
         navigation={navigation}
         activeNavKey="profile"
         contentContainerStyle={styles.container}
-        contentMaxWidth={760}
+        contentMaxWidth={680}
       >
         <View style={styles.stateContent}>
           <EmptyState
@@ -386,16 +296,14 @@ const ProfileScreen = ({ navigation }) => {
     );
   }
 
-  const latestMilestone = progression?.recentMilestones?.[0] || null;
-
   return (
     <VelvetBrowseLayout
       navigation={navigation}
       activeNavKey="profile"
       contentContainerStyle={styles.container}
-      contentMaxWidth={760}
+      contentMaxWidth={680}
     >
-      <View style={styles.card}>
+      <VelvetSectionCard style={[styles.card, styles.identityCard]}>
         <View style={styles.avatarContainer} accessible={false}>
           <Text style={styles.avatarInitial}>
             {(profile.username || profile.name || '?').charAt(0).toUpperCase()}
@@ -406,32 +314,16 @@ const ProfileScreen = ({ navigation }) => {
         <Text style={styles.email}>{profile.email}</Text>
         <Text style={styles.username}>@{profile.username || 'username'}</Text>
         {profile.bio ? <Text style={styles.bioText}>{profile.bio}</Text> : null}
+      </VelvetSectionCard>
 
-        <View style={styles.divider} />
+      <VelvetSectionCard style={styles.card}>
+        <Text style={styles.sectionTitle}>Profile</Text>
+        <Text style={styles.sectionSubtitle}>
+          Update your username and bio, then manage your account settings here.
+        </Text>
 
-        <View style={styles.progressionSection}>
-          <ProgressionCard snapshot={progression?.coupleProgression} />
-          <ProgressionCard snapshot={progression?.individualProgression} compact />
-        </View>
-
-        <MilestoneHighlights milestones={progression?.recentMilestones} title="Latest Celebrations" />
-        {latestMilestone ? (
-          <TouchableOpacity
-            style={styles.shareInlineButton}
-            onPress={() => shareCard(buildMilestoneShareCard(latestMilestone))}
-            disabled={isSharing}
-            accessibilityRole="button"
-            accessibilityLabel="Share latest celebration"
-            accessibilityHint="Generates a branded image card for your latest milestone, level-up, or streak."
-          >
-            <Text style={styles.shareInlineText}>
-              {isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
-
-        {isEditingProfile && (
-          <View style={styles.profileFormSection}>
+        {isEditingProfile ? (
+          <>
             <Text style={styles.inputLabel}>Username</Text>
             <TextInput
               value={profileDraft.username}
@@ -442,7 +334,6 @@ const ProfileScreen = ({ navigation }) => {
               placeholder="username"
               placeholderTextColor={theme.colors.textTertiary}
               accessibilityLabel="Username"
-              accessibilityHint="Edit your public username."
             />
 
             <Text style={styles.inputLabel}>Bio</Text>
@@ -455,43 +346,20 @@ const ProfileScreen = ({ navigation }) => {
               placeholder="Share a short bio..."
               placeholderTextColor={theme.colors.textTertiary}
               accessibilityLabel="Bio"
-              accessibilityHint="Add a short profile bio."
             />
-            {profileFormError ? <Text style={styles.formError} {...accessibilityAlertProps}>{profileFormError}</Text> : null}
-          </View>
-        )}
-
-        <View style={styles.badgesSection}>
-          <Text style={styles.badgesTitle}>Achievements</Text>
-          {badges.length ? (
-            <>
-              <TouchableOpacity
-                style={styles.shareInlineButton}
-                onPress={() => shareCard(buildAchievementsShareCard({
-                  ownerLabel: profile.name,
-                  achievements: badges,
-                }))}
-                disabled={isSharing}
-                accessibilityRole="button"
-                accessibilityLabel="Share achievements snapshot"
-                accessibilityHint="Generates a branded image card for your achievement collection."
-              >
-            <Text style={styles.shareInlineText}>
-              {isSharing ? 'Preparing Share...' : 'Share Achievement Snapshot'}
-            </Text>
-              </TouchableOpacity>
-              {badges.map((badge) => <BadgeChip key={badge.code} badge={badge} />)}
-            </>
-          ) : (
-            <Text style={styles.emptyBadgesText}>No achievements yet.</Text>
-          )}
-        </View>
+            {profileFormError ? (
+              <Text style={styles.formError} {...accessibilityAlertProps}>
+                {profileFormError}
+              </Text>
+            ) : null}
+          </>
+        ) : null}
 
         <View style={styles.actionsRow}>
           {isEditingProfile ? (
             <>
               <TouchableOpacity
-                style={styles.saveButton}
+                style={styles.primaryButton}
                 onPress={handleSaveProfile}
                 activeOpacity={0.8}
                 disabled={isSavingProfile}
@@ -499,54 +367,52 @@ const ProfileScreen = ({ navigation }) => {
                 accessibilityLabel={isSavingProfile ? 'Saving profile' : 'Save profile'}
                 accessibilityState={{ disabled: isSavingProfile }}
               >
-                <Text style={styles.saveText}>{isSavingProfile ? 'Saving...' : 'Save'}</Text>
+                <Text style={styles.primaryButtonText}>{isSavingProfile ? 'Saving...' : 'Save'}</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={styles.cancelButton}
+                style={styles.secondaryButton}
                 onPress={handleCancelProfileEdit}
                 activeOpacity={0.8}
                 disabled={isSavingProfile}
                 accessibilityRole="button"
                 accessibilityLabel="Cancel profile editing"
-                accessibilityState={{ disabled: isSavingProfile }}
               >
-                <Text style={styles.cancelText}>Cancel</Text>
+                <Text style={styles.secondaryButtonText}>Cancel</Text>
               </TouchableOpacity>
             </>
           ) : (
             <TouchableOpacity
-              style={styles.editButton}
+              style={styles.primaryButton}
               onPress={() => setIsEditingProfile(true)}
               activeOpacity={0.8}
               accessibilityRole="button"
               accessibilityLabel="Edit profile"
             >
-              <Text style={styles.editText}>Edit Profile</Text>
+              <Text style={styles.primaryButtonText}>Edit Profile</Text>
             </TouchableOpacity>
           )}
 
           <TouchableOpacity
-            style={styles.settingsButton}
+            style={styles.secondaryButton}
             onPress={() => navigation.navigate('Settings')}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Open settings"
           >
-            <Text style={styles.settingsText}>Settings</Text>
+            <Text style={styles.secondaryButtonText}>Settings</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.logoutButton}
+            style={styles.destructiveButton}
             onPress={logout}
             activeOpacity={0.8}
             accessibilityRole="button"
             accessibilityLabel="Sign out"
           >
-            <Text style={styles.logoutText}>Sign Out</Text>
+            <Text style={styles.destructiveButtonText}>Sign Out</Text>
           </TouchableOpacity>
         </View>
-        {shareHost}
-      </View>
+      </VelvetSectionCard>
     </VelvetBrowseLayout>
   );
 };

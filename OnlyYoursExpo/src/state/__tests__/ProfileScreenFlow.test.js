@@ -31,38 +31,6 @@ describe('ProfileScreen flow', () => {
           },
         });
       }
-      if (url === '/game/progression') {
-        return Promise.resolve({
-          data: {
-            individualProgression: {
-              scope: 'USER',
-              label: 'You',
-              level: 2,
-              xp: 180,
-              xpIntoCurrentLevel: 60,
-              xpNeededForNextLevel: 160,
-              xpToNextLevel: 100,
-              progressPercent: 38,
-              currentStreakDays: 1,
-              longestStreakDays: 2,
-              achievementsUnlocked: 1,
-            },
-            coupleProgression: null,
-            achievements: [
-              { code: 'FIRST_GAME', title: 'First Spark', description: 'Complete your first game.' },
-            ],
-            recentMilestones: [
-              {
-                type: 'ACHIEVEMENT_UNLOCK',
-                scope: 'USER',
-                ownerLabel: 'You',
-                title: 'First Spark',
-                description: 'Complete your first game.',
-              },
-            ],
-          },
-        });
-      }
       return Promise.resolve({ data: {} });
     });
     api.put.mockResolvedValue({
@@ -94,8 +62,10 @@ describe('ProfileScreen flow', () => {
       expect(getByText('@phase_user')).toBeTruthy();
     });
 
-    expect(getByText('Share Achievement Snapshot')).toBeTruthy();
-    expect(getByText('Share Latest Celebration')).toBeTruthy();
+    expect(getByText('Phase User')).toBeTruthy();
+    expect(getByText('phase@test.com')).toBeTruthy();
+    expect(getByText('Settings')).toBeTruthy();
+    expect(getByText('Sign Out')).toBeTruthy();
 
     fireEvent.press(getByText('Edit Profile'));
     fireEvent.changeText(getByDisplayValue('phase_user'), 'updated_user');
@@ -107,7 +77,6 @@ describe('ProfileScreen flow', () => {
         username: 'updated_user',
         bio: 'Updated bio',
       });
-      expect(api.get).toHaveBeenCalledWith('/game/progression');
       expect(getByText('@updated_user')).toBeTruthy();
       expect(getByText('Updated bio')).toBeTruthy();
     });

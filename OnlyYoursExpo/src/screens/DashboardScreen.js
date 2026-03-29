@@ -1,46 +1,16 @@
 import React, { useMemo } from 'react';
-import {
-  ActivityIndicator,
-  StyleSheet,
-  Text,
-  View,
-  useWindowDimensions,
-} from 'react-native';
-import BadgeChip from '../components/BadgeChip';
-import MilestoneHighlights from '../components/MilestoneHighlights';
-import ProgressionCard from '../components/ProgressionCard';
+import { ActivityIndicator, StyleSheet, Text, View, useWindowDimensions } from 'react-native';
 import {
   VelvetBrowseLayout,
   VelvetHeroCard,
   VelvetPrimaryButton,
   VelvetProgressBar,
   VelvetScreen,
-  VelvetSectionCard,
   VelvetSecondaryButton,
-  VelvetStatCard,
   VelvetStatusPill,
 } from '../components/velvet';
 import useDashboardGameFlow from './useDashboardGameFlow';
 import useTheme from '../theme/useTheme';
-import {
-  buildMilestoneShareCard,
-  buildProgressionShareCard,
-  useShareCardComposer,
-} from '../sharing';
-
-const formatResponseTime = (seconds) => {
-  if (!seconds) {
-    return '0s';
-  }
-
-  if (seconds < 60) {
-    return `${seconds}s`;
-  }
-
-  const minutes = Math.floor(seconds / 60);
-  const remainder = seconds % 60;
-  return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
-};
 
 const getHeroState = ({ couple, shouldShowContinueGame, latestCompletedSession }) => {
   if (!couple) {
@@ -63,14 +33,10 @@ const DashboardScreen = ({ navigation }) => {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
-  const { isSharing, shareCard, shareHost } = useShareCardComposer();
   const {
     user,
     couple,
     activeGame,
-    stats,
-    progression,
-    badges,
     loading,
     latestCompletedSession,
     shouldShowContinueGame,
@@ -81,19 +47,9 @@ const DashboardScreen = ({ navigation }) => {
 
   const heroState = getHeroState({ couple, shouldShowContinueGame, latestCompletedSession });
   const partnerName = getPartnerName();
-  const latestMilestone = progression?.recentMilestones?.[0] || null;
   const activeProgress = activeGame?.totalQuestions
     ? (activeGame.currentQuestionNumber || 1) / activeGame.totalQuestions
     : 0;
-
-  const metricCards = [
-    { label: 'Games Played', value: stats?.gamesPlayed ?? 0 },
-    { label: 'Average Score', value: stats?.averageScore ?? 0 },
-    { label: 'Best Score', value: stats?.bestScore ?? 0 },
-    { label: 'Streak Days', value: stats?.streakDays ?? 0 },
-    { label: 'Acceptance', value: `${stats?.invitationAcceptanceRate ?? 0}%` },
-    { label: 'Avg Accept Time', value: formatResponseTime(stats?.avgInvitationResponseSeconds ?? 0) },
-  ];
 
   const styles = useMemo(
     () =>
@@ -243,119 +199,6 @@ const DashboardScreen = ({ navigation }) => {
         heroSecondaryButton: {
           flex: isTablet ? 0.75 : 1,
         },
-        sectionCard: {
-          width: '100%',
-          marginBottom: 14,
-        },
-        sectionHeader: {
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: 12,
-        },
-        sectionHeadingWrap: {
-          flex: 1,
-          paddingRight: 12,
-        },
-        sectionTitle: {
-          fontSize: 22,
-          lineHeight: 26,
-          color: theme.colors.textPrimary,
-          fontFamily: theme.fontFamilies.heading,
-          marginBottom: 4,
-        },
-        sectionSubtitle: {
-          fontSize: 13,
-          lineHeight: 19,
-          color: theme.colors.textSecondary,
-        },
-        stackedSection: {
-          marginBottom: 12,
-        },
-        progressionActions: {
-          flexDirection: isTablet ? 'row' : 'column',
-          marginTop: 4,
-        },
-        inlineActionButton: {
-          marginRight: isTablet ? 10 : 0,
-          marginBottom: isTablet ? 0 : 10,
-          flex: isTablet ? 1 : 0,
-        },
-        bentoRow: {
-          width: '100%',
-          flexDirection: isTablet ? 'row' : 'column',
-          justifyContent: 'space-between',
-        },
-        bentoPrimary: {
-          width: isTablet ? '58%' : '100%',
-        },
-        bentoSecondary: {
-          width: isTablet ? '39%' : '100%',
-        },
-        celebrationCard: {
-          minHeight: 220,
-          justifyContent: 'space-between',
-        },
-        celebrationIcon: {
-          fontSize: 28,
-          marginBottom: 12,
-        },
-        celebrationTitle: {
-          fontSize: 22,
-          lineHeight: 26,
-          color: theme.colors.textPrimary,
-          fontFamily: theme.fontFamilies.heading,
-          marginBottom: 8,
-        },
-        celebrationBody: {
-          fontSize: 13,
-          lineHeight: 20,
-          color: theme.colors.textSecondary,
-          marginBottom: 14,
-        },
-        emptyStateCard: {
-          minHeight: 180,
-          justifyContent: 'space-between',
-        },
-        emptyStateTitle: {
-          fontSize: 22,
-          lineHeight: 26,
-          color: theme.colors.textPrimary,
-          fontFamily: theme.fontFamilies.heading,
-          marginBottom: 8,
-        },
-        emptyStateBody: {
-          fontSize: 14,
-          lineHeight: 21,
-          color: theme.colors.textSecondary,
-        },
-        metricsGrid: {
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-        },
-        metricItem: {
-          width: isTablet ? '31.8%' : '48.3%',
-          marginBottom: 10,
-        },
-        metricValue: {
-          fontSize: 18,
-          fontWeight: '800',
-          color: theme.colors.textPrimary,
-          marginBottom: 2,
-        },
-        metricLabel: {
-          fontSize: 12,
-          color: theme.colors.textSecondary,
-        },
-        badgeList: {
-          width: '100%',
-        },
-        emptyBadgeText: {
-          fontSize: 14,
-          lineHeight: 21,
-          color: theme.colors.textSecondary,
-        },
       }),
     [isTablet, theme]
   );
@@ -489,11 +332,11 @@ const DashboardScreen = ({ navigation }) => {
               accessibilityHint="Opens category selection to invite your partner to a new game."
             />
             <VelvetSecondaryButton
-              label="Custom Questions"
-              onPress={() => navigation.navigate('CustomQuestions')}
+              label="Open Stats"
+              onPress={() => navigation.navigate('Stats')}
               style={styles.heroSecondaryButton}
-              accessibilityLabel="Open custom questions"
-              accessibilityHint="Shows the custom questions you created for your couple deck."
+              accessibilityLabel="Open stats"
+              accessibilityHint="Shows progression, celebrations, achievements, and gameplay stats."
             />
           </View>
         ) : null}
@@ -544,169 +387,15 @@ const DashboardScreen = ({ navigation }) => {
               accessibilityHint="Opens the partner linking screen."
             />
             <VelvetSecondaryButton
-              label="See History"
-              onPress={() => navigation.navigate('GameHistory')}
+              label="Open Stats"
+              onPress={() => navigation.navigate('Stats')}
               style={styles.heroSecondaryButton}
-              accessibilityLabel="Open game history"
-              accessibilityHint="Shows your previous games and filters."
+              accessibilityLabel="Open stats"
+              accessibilityHint="Shows your growth once you link your partner."
             />
           </View>
         ) : null}
       </VelvetHeroCard>
-
-      <VelvetSectionCard style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionHeadingWrap}>
-            <Text style={styles.sectionTitle}>Progression</Text>
-            <Text style={styles.sectionSubtitle}>
-              Shared and personal progress.
-            </Text>
-          </View>
-          <VelvetStatusPill
-            label={progression?.coupleProgression ? progression.coupleProgression.label : 'Getting started'}
-            tone={progression?.coupleProgression ? 'primary' : 'neutral'}
-          />
-        </View>
-
-        {progression?.coupleProgression || progression?.individualProgression ? (
-          <>
-            {progression?.coupleProgression ? (
-              <View style={styles.stackedSection}>
-                <ProgressionCard snapshot={progression.coupleProgression} />
-              </View>
-            ) : null}
-            {progression?.individualProgression ? <ProgressionCard snapshot={progression.individualProgression} compact /> : null}
-
-            {progression?.coupleProgression ? (
-              <View style={styles.progressionActions}>
-                <VelvetSecondaryButton
-                  label={isSharing ? 'Preparing Share...' : 'Share Couple Progress'}
-                  onPress={() => shareCard(buildProgressionShareCard(progression.coupleProgression))}
-                  disabled={isSharing}
-                  style={styles.inlineActionButton}
-                  accessibilityLabel="Share couple progression"
-                  accessibilityHint="Generates a branded image card for your couple progression."
-                />
-                <VelvetSecondaryButton
-                  label="View Profile"
-                  onPress={() => navigation.navigate('Profile')}
-                  accessibilityLabel="Open profile"
-                  accessibilityHint="Shows your profile and account details."
-                />
-              </View>
-            ) : null}
-          </>
-        ) : (
-          <VelvetStatCard style={styles.emptyStateCard}>
-            <View>
-              <Text style={styles.emptyStateTitle}>Your next level starts with one shared session.</Text>
-              <Text style={styles.emptyStateBody}>
-                Play a few games and your progress will show up here.
-              </Text>
-            </View>
-            {couple ? (
-              <VelvetPrimaryButton
-                label="Start New Game"
-                onPress={handleStartGame}
-                accessibilityLabel="Start new game"
-                accessibilityHint="Opens category selection to invite your partner to a new game."
-              />
-            ) : (
-              <VelvetPrimaryButton
-                label="Link with Partner"
-                onPress={() => navigation.navigate('PartnerLink')}
-                accessibilityLabel="Link with partner"
-                accessibilityHint="Opens the partner linking screen."
-              />
-            )}
-          </VelvetStatCard>
-        )}
-      </VelvetSectionCard>
-
-      <View style={styles.bentoRow}>
-        <View style={styles.bentoPrimary}>
-          <MilestoneHighlights milestones={progression?.recentMilestones} title="Recent Celebrations" />
-        </View>
-        <View style={styles.bentoSecondary}>
-          <VelvetSectionCard style={styles.celebrationCard}>
-            <View>
-              <Text style={styles.celebrationIcon}>{latestMilestone ? '✨' : '💞'}</Text>
-              <Text style={styles.celebrationTitle}>
-                {latestMilestone ? latestMilestone.title : 'Your next celebration is waiting'}
-              </Text>
-              <Text style={styles.celebrationBody}>
-                {latestMilestone
-                  ? latestMilestone.description
-                  : 'Complete games together to unlock milestones.'}
-              </Text>
-            </View>
-            {latestMilestone ? (
-              <VelvetSecondaryButton
-                label={isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
-                onPress={() => shareCard(buildMilestoneShareCard(latestMilestone))}
-                disabled={isSharing}
-                accessibilityLabel="Share latest celebration"
-                accessibilityHint="Generates a branded image card for the newest milestone or streak."
-              />
-            ) : (
-              <VelvetSecondaryButton
-                label={couple ? 'Start a Session' : 'Link First'}
-                onPress={couple ? handleStartGame : () => navigation.navigate('PartnerLink')}
-              />
-            )}
-          </VelvetSectionCard>
-        </View>
-      </View>
-
-      <VelvetSectionCard style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionHeadingWrap}>
-            <Text style={styles.sectionTitle}>Stats</Text>
-            <Text style={styles.sectionSubtitle}>
-              A quick read on your sessions.
-            </Text>
-          </View>
-        </View>
-        <View style={styles.metricsGrid}>
-          {metricCards.map((item) => (
-            <VelvetStatCard
-              key={item.label}
-              style={styles.metricItem}
-              accessible
-              accessibilityLabel={`${item.label}: ${item.value}`}
-            >
-              <Text style={styles.metricValue}>{item.value}</Text>
-              <Text style={styles.metricLabel}>{item.label}</Text>
-            </VelvetStatCard>
-          ))}
-        </View>
-      </VelvetSectionCard>
-
-      <VelvetSectionCard style={styles.sectionCard}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionHeadingWrap}>
-            <Text style={styles.sectionTitle}>Achievements</Text>
-            <Text style={styles.sectionSubtitle}>
-              Badges you unlock over time.
-            </Text>
-          </View>
-          <VelvetStatusPill label={`${badges?.length || 0} unlocked`} tone={badges?.length ? 'success' : 'neutral'} />
-        </View>
-
-        {badges?.length ? (
-          <View style={styles.badgeList}>
-            {badges.map((badge) => (
-              <BadgeChip key={badge.code} badge={badge} />
-            ))}
-          </View>
-        ) : (
-          <Text style={styles.emptyBadgeText}>
-            No achievements yet. Keep playing to unlock them.
-          </Text>
-        )}
-      </VelvetSectionCard>
-
-      {shareHost}
     </VelvetBrowseLayout>
   );
 };

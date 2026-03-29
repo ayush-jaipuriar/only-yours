@@ -5,17 +5,6 @@ import { ThemeProvider } from '../../theme';
 
 jest.mock('../useDashboardGameFlow', () => jest.fn());
 
-jest.mock('../../sharing', () => ({
-  __esModule: true,
-  buildMilestoneShareCard: jest.fn((milestone) => milestone),
-  buildProgressionShareCard: jest.fn((snapshot) => snapshot),
-  useShareCardComposer: jest.fn(() => ({
-    isSharing: false,
-    shareCard: jest.fn(),
-    shareHost: null,
-  })),
-}));
-
 const useDashboardGameFlow = require('../useDashboardGameFlow');
 
 const buildBaseFlow = (overrides = {}) => ({
@@ -76,14 +65,6 @@ const buildBaseFlow = (overrides = {}) => ({
       },
     ],
   },
-  badges: [
-    {
-      code: 'FIRST_GAME',
-      title: 'First Spark',
-      description: 'Complete your first game together.',
-      scope: 'COUPLE',
-    },
-  ],
   loading: false,
   shouldShowContinueGame: true,
   handleStartGame: jest.fn(),
@@ -129,7 +110,7 @@ describe('DashboardScreen', () => {
 
   it('renders the linked-without-active-game state and starts a new game', async () => {
     const handleStartGame = jest.fn();
-    const { getAllByText, getByText, getByLabelText } = renderScreen({
+    const { getByText, getByLabelText } = renderScreen({
       activeGame: null,
       shouldShowContinueGame: false,
       handleStartGame,
@@ -137,7 +118,7 @@ describe('DashboardScreen', () => {
 
     await waitFor(() => {
       expect(getByText('Start your next game')).toBeTruthy();
-      expect(getAllByText('Custom Questions').length).toBeGreaterThan(0);
+      expect(getByText('Open Stats')).toBeTruthy();
     });
 
     fireEvent.press(getByLabelText('Start new game'));

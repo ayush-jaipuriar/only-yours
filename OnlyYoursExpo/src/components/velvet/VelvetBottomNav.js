@@ -11,13 +11,16 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
     () =>
       StyleSheet.create({
         safeArea: {
+          width: '100%',
+          alignSelf: 'stretch',
           backgroundColor: theme.mode === 'light' ? theme.colors.surfaceOverlay : theme.colors.surface,
         },
         container: {
+          width: '100%',
           flexDirection: 'row',
-          justifyContent: 'space-around',
+          justifyContent: 'space-between',
           alignItems: 'center',
-          paddingHorizontal: isTablet ? 20 : 12,
+          paddingHorizontal: isTablet ? 18 : 6,
           paddingTop: isTablet ? 12 : 10,
           paddingBottom: isTablet ? 10 : 8,
           backgroundColor: theme.mode === 'light' ? theme.colors.surfaceOverlay : theme.colors.surface,
@@ -25,25 +28,28 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
           borderTopColor: theme.colors.border,
         },
         item: {
-          minWidth: isTablet ? 92 : 78,
+          flex: 1,
+          minWidth: 0,
           alignItems: 'center',
           justifyContent: 'center',
           paddingVertical: isTablet ? 8 : 6,
-          paddingHorizontal: 8,
+          paddingHorizontal: isTablet ? 8 : 2,
         },
         iconText: {
-          fontSize: isTablet ? 27 : 24,
-          lineHeight: isTablet ? 30 : 27,
+          fontSize: isTablet ? 26 : 22,
+          lineHeight: isTablet ? 29 : 25,
           fontWeight: '700',
         },
         label: {
-          marginTop: 5,
-          fontSize: isTablet ? 13 : 12,
+          marginTop: 4,
+          fontSize: isTablet ? 13 : 10,
           fontWeight: '600',
-          letterSpacing: 0.2,
+          letterSpacing: isTablet ? 0.2 : 0.1,
+          width: '100%',
+          textAlign: 'center',
         },
         indicator: {
-          marginTop: 5,
+          marginTop: 4,
           width: 5,
           height: 5,
           borderRadius: 999,
@@ -84,6 +90,8 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
                   styles.label,
                   { color: isActive ? theme.colors.primary : theme.colors.textSecondary },
                 ]}
+                numberOfLines={1}
+                ellipsizeMode="clip"
               >
                 {item.label}
               </Text>

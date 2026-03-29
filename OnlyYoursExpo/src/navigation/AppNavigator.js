@@ -7,6 +7,7 @@ import SignUpScreen from '../screens/SignUpScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import DashboardScreen from '../screens/DashboardScreen';
+import StatsScreen from '../screens/StatsScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import GameHistoryScreen from '../screens/GameHistoryScreen';
 import OnboardingScreen from '../screens/OnboardingScreen';
@@ -76,6 +77,11 @@ const AppNavigator = () => {
             <Stack.Screen 
               name="Dashboard" 
               component={DashboardScreen}
+              options={{ headerShown: false }}
+            />
+            <Stack.Screen 
+              name="Stats" 
+              component={StatsScreen}
               options={{ headerShown: false }}
             />
             <Stack.Screen 

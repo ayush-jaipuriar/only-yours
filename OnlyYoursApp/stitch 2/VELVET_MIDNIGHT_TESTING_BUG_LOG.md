@@ -96,7 +96,7 @@ Severity guide:
   - After moving into Round 1 and force-stopping the phone mid-question, the app cold-launched back to the active-session hero labeled `ROUND1 • QUESTION 1/8`.
   - `Continue Game` returned to the same live question screen.
 - Important note:
-  - The earlier branch-specific uncertainty is now fully closed for in-progress sessions. The remaining recovery concern moved forward into post-completion results continuity and is tracked separately as `VM-OPEN-002`.
+  - The earlier branch-specific uncertainty is now fully closed for in-progress sessions. The remaining recovery concern moved forward into post-completion results continuity and was later closed as `VM-FIXED-007`.
 
 ### VM-FIXED-006
 - Title: Later-phase active-session recovery lacked real-device proof
@@ -185,6 +185,50 @@ Severity guide:
     - [`ThemeProvider.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/theme/__tests__/ThemeProvider.test.js)
   - Hardware:
     - themed settings screenshot: [`/tmp/onlyyours-tablet-settings-headerfix.png`](/tmp/onlyyours-tablet-settings-headerfix.png)
+
+### VM-FIXED-011
+- Title: Five-tab bottom nav clipped the `Profile` tab on phone
+- Status: `Fixed`
+- Severity: `P2`
+- Area: browse shell / bottom navigation responsiveness
+- Original symptom:
+  - After expanding the browse footer to `Home`, `History`, `Custom`, `Stats`, `Profile`, the rightmost `Profile` tab was partially pushed off-screen on phone.
+- Fix:
+  - [`VelvetBottomNav.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/components/velvet/VelvetBottomNav.js) now uses full-width safe-area/container sizing plus equal-flex nav items instead of a four-tab-biased fixed-width layout.
+  - Phone spacing was tightened further with lower horizontal padding, label centering, and explicit width handling so all five tabs fit consistently.
+- Validation:
+  - Phone footer screenshot after the fix: [`/tmp/onlyyours-phone-nav-check-5.png`](/tmp/onlyyours-phone-nav-check-5.png)
+  - Tablet footer remained coherent: [`/tmp/onlyyours-tablet-nav-check-2.png`](/tmp/onlyyours-tablet-nav-check-2.png)
+  - Phone runtime also successfully continued through `Profile` and into `Settings` after the fix:
+    - [`/tmp/onlyyours-phone-profile.png`](/tmp/onlyyours-phone-profile.png)
+    - [`/tmp/onlyyours-phone-settings-flow-2.png`](/tmp/onlyyours-phone-settings-flow-2.png)
+
+### VM-FIXED-012
+- Title: `Stats` tab rendered malformed on phone runtime after the five-tab IA split
+- Status: `Fixed`
+- Severity: `P2`
+- Area: stats tab / browse-surface runtime rendering
+- Original symptom:
+  - After the new `Home`, `History`, `Custom`, `Stats`, `Profile` footer landed, the phone could navigate into `Stats`, but the live surface looked nearly empty instead of showing progression, celebrations, metrics, and achievements.
+  - The footer correctly highlighted `Stats`, which made this especially confusing: the route itself was active, but the body did not resemble the intended screen.
+- What we learned:
+  - Focused Jest coverage for [`StatsScreenFlow.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/__tests__/StatsScreenFlow.test.js) was already green, which narrowed the problem to runtime rendering rather than the basic screen contract.
+  - A clean Expo restart and direct runtime logging showed that real data was present on-device; the more brittle part was the prior nested screen composition plus stale dev-runtime state.
+- Fix:
+  - The Metro/dev-client bundle was refreshed with a clean cache so the phone was running the current code.
+  - [`StatsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/StatsScreen.js) was simplified to use direct Velvet primitives instead of the earlier more layered composition:
+    - `VelvetBrowseLayout`
+    - `VelvetSectionCard`
+    - `VelvetStatCard`
+    - `VelvetSecondaryButton`
+  - The screen now renders progression, recent celebrations, game stats, and achievements directly from `useDashboardGameFlow(...)` in a flatter, more predictable browse layout.
+- Validation:
+  - Focused Jest regression still passed after the simplification:
+    - [`StatsScreenFlow.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/__tests__/StatsScreenFlow.test.js)
+    - [`ProfileScreenFlow.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/__tests__/ProfileScreenFlow.test.js)
+    - [`DashboardScreen.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/__tests__/DashboardScreen.test.js)
+  - Phone runtime now shows the intended simplified stats surface:
+    - [`/tmp/onlyyours-phone-stats-simplified.png`](/tmp/onlyyours-phone-stats-simplified.png)
 
 ### VM-FIXED-004
 - Title: Settings unlink control was not truthful enough while an active game existed

@@ -29,6 +29,7 @@ This spec covers the current real app surface in [`AppNavigator.js`](/Users/ayus
 - `ResetPassword`
 - `Onboarding`
 - `Dashboard`
+- `Stats`
 - `Profile`
 - `Settings`
 - `GameHistory`
@@ -134,6 +135,7 @@ Persistent bottom nav is allowed on browse/hub surfaces:
 - Dashboard
 - GameHistory
 - CustomQuestions
+- Stats
 - Profile
 
 Bottom nav should be suppressed on focused/transactional flows:
@@ -172,7 +174,7 @@ Settings may be implemented without bottom nav and accessed from profile/top uti
 | `game_round_2_guessing` | [`GameScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameScreen.js) Round 2 |
 | `game_waiting_for_partner` | [`GameScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameScreen.js) wait state |
 | `game_history_archive` | [`GameHistoryScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/GameHistoryScreen.js) |
-| `profile_progression` | [`ProfileScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ProfileScreen.js) |
+| `profile_progression` | [`StatsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/StatsScreen.js), [`ProfileScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ProfileScreen.js) |
 | `settings_controls` | [`SettingsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SettingsScreen.js) |
 
 ### 6.2 Real Screens Not Yet Represented Cleanly in Stitch 2
@@ -208,12 +210,12 @@ Primary sequence:
 3. from `Dashboard` user can go to:
    - `PartnerLink`
    - `CategorySelection`
-   - `CustomQuestions`
-   - `GameHistory`
+   - `Stats`
    - `Profile`
-4. from `Profile` user can go to `Settings`
-5. active sessions route into `Game`
-6. completed sessions route into `Results`
+4. browse tabs also provide direct access to `GameHistory` and `CustomQuestions`
+5. from `Profile` user can go to `Settings`
+6. active sessions route into `Game`
+7. completed sessions route into `Results`
 
 ### 7.2 Logged-Out Flow
 
@@ -402,36 +404,27 @@ Required sections:
 - greeting
 - partner status
 - hero action card
-- couple progression
-- milestone highlights
-- stats
-- achievements
-- custom questions entry
-- history entry
-- profile entry
 
 Implementation rule:
 - keep bottom nav here
 - keep strong hero hierarchy
-- preserve product density without making it feel crowded
+- keep Home action-oriented rather than analytics-heavy
 
 Current implementation status:
 - `DashboardScreen` now uses a true state-driven Velvet Midnight layout instead of a mostly linear migrated stack.
 - The live implementation preserves the existing `useDashboardGameFlow` contract and works only with currently available dashboard data, which keeps the redesign safe from backend drift.
 - The hero now branches cleanly across the three mandatory dashboard states:
   - active game: continuation-focused hero with round/question context and progress bar
-  - linked without active game: start-new-session hero with custom-question secondary action
-  - not linked: partner-linking hero with a softer history fallback
-- Supporting sections now better match the Stitch 2 intent:
-  - stronger progression framing with share/profile actions
-  - a dedicated celebration/milestone area rather than one flat list of content
-  - stats and achievements pushed lower in the hierarchy so the screen feels motivating before analytical
+  - linked without active game: start-new-session hero with a secondary path into `Stats`
+  - not linked: partner-linking hero with a softer path into `Stats`
 - A later browse-shell simplification removed the extra `Custom Questions`, `Game History`, and `Profile` destination cards from Home. Those routes already exist in the persistent bottom nav, so keeping them in the dashboard as large repeated cards made the screen feel more verbose and sitemap-like than necessary.
+- The browse IA was then tightened one step further: progression, recent celebrations, gameplay metrics, and achievements were moved into a dedicated `Stats` tab, so Home now focuses on the question “what should I do now?” rather than duplicating the app’s analytics and growth surfaces.
 
 Implementation deviations from Stitch 2:
 - We intentionally did not invent any “recent history preview” content cards because the current dashboard data contract does not provide that payload directly.
 - We also avoided introducing unsupported avatar/media treatments from the Stitch mockup; the implemented version stays within the current product’s real data surface.
 - Bottom nav behavior remains consistent through `VelvetBrowseLayout`, which matches the browse-surface rule from the spec.
+- The shipped browse IA intentionally diverges from the earliest Stitch grouping by introducing `Stats` as a dedicated browse destination and reserving `Profile` for identity/account actions only.
 
 Current validation status:
 - `DashboardScreen.test.js` now verifies the three dashboard hero states directly:
@@ -610,32 +603,41 @@ Current runtime review status:
 - `Partner Won` renders the dedicated filtered-empty state when no partner-win sessions exist.
 - The filtered-empty `Show All` action correctly restores the full archive list.
 
-## 8.12 Profile
+## 8.12 Stats and Profile
 
 Reference:
 - [`profile_progression`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursApp/stitch%202/profile_progression/code.html)
 
-Target file:
+Target files:
+- [`StatsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/StatsScreen.js)
 - [`ProfileScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ProfileScreen.js)
 
-Required UI:
-- avatar / identity
-- username and bio
-- edit profile action
-- settings entry
+Required UI for `Stats`:
 - couple progression
 - personal progression
 - milestone highlights
 - achievements
+- gameplay stats
+- share celebration / achievement actions where supported
+
+Required UI for `Profile`:
+- avatar / identity
+- username and bio
+- edit profile action
+- settings entry
 - sign out
 
 Corrective changes:
 - replace invented entries like `Journal Archives` with real destinations/actions
-- keep share actions where supported by the real product
+- keep share actions where supported by the real product, but locate them in `Stats` rather than the identity/account surface
 
 Current runtime review status:
-- Phone review showed the live profile surface now behaving like a real product screen rather than a concept screen. The inspected lower surface contains real actions only: `Edit Profile`, `Settings`, and `Sign Out`, alongside progression and achievements framing.
+- The browse IA now uses five tabs: `Home`, `History`, `Custom`, `Stats`, and `Profile`.
+- `StatsScreen` owns progression, recent celebrations, achievements, and gameplay metrics, which removes the earlier redundancy between Home and Profile.
+- `ProfileScreen` is now intentionally lean and account-focused: avatar, name, email, username, bio, `Edit Profile`, `Settings`, and `Sign Out`.
 - No residual invented `Journal Archives`-style action was visible in the reviewed runtime surface.
+- The first phone runtime pass exposed a useful implementation lesson: the initial `Stats` surface looked malformed despite green screen tests, which pointed to a combination of stale dev-runtime state and an overly layered screen composition. After a clean Metro refresh and a simplified `StatsScreen` built directly from `VelvetBrowseLayout`, `VelvetSectionCard`, `VelvetStatCard`, and `VelvetSecondaryButton`, the phone now renders progression, celebrations, metrics, and achievements correctly.
+- A follow-up tablet sweep now also confirms the large-screen browse path is coherent after the IA split: `Stats` shows the intended progression-led surface, `Profile` remains lean and action-oriented, and the handoff into `Settings` still feels structurally correct.
 - Tablet runtime review now also confirms the live `Sign Out` action works and returns the user to the Velvet Midnight auth surface rather than leaving the app in a broken intermediate shell.
 - On large tablet surfaces, the lower profile actions are reachable, but the inner content column must be scrolled directly; broad outer-area swipes can make the page feel stuck even though the content is still scrollable. That should be treated as a tablet usability polish note rather than a core functional defect.
 
@@ -675,6 +677,7 @@ Current runtime review status:
 - Replay onboarding is now runtime-safe again. The bug came from trying to `replace('Onboarding')` directly from `SettingsScreen` before the route was mounted in the logged-in stack. The fix moved replay into a state-driven app-shell reset in `AppNavigator`, and a follow-up tablet hardware pass confirmed that tapping `Replay Onboarding` now lands on `STEP 1 OF 3` instead of throwing a navigator error.
 - The auth-shell runtime is also more truthful now: the global real-time reconnection banner is hidden while signed out, which removes the misleading `No connection` state from the sign-in experience when there is no authenticated WebSocket session yet.
 - A later shell-polish pass also themed the native `Settings` stack header from the active Velvet Midnight tokens. This removed the bright platform-default header that was visually clashing with the otherwise dark settings surface on tablet hardware.
+- The latest tablet verification pass still shows that themed header in place and confirms the upper settings groups (`Theme`, `Haptics`, and `Notification Preferences`) remain readable after the `Stats/Profile` IA split.
 
 ## 8.14 Game: Round 1 Answering
 
@@ -928,15 +931,17 @@ Current adoption:
 - `DashboardScreen` now uses `VelvetBrowseLayout` as its outer browse container
 - `GameHistoryScreen` now uses `VelvetBrowseLayout` as its outer browse container
 - `CustomQuestionsScreen` now uses `VelvetBrowseLayout` as its outer browse container
+- `StatsScreen` now uses `VelvetBrowseLayout` as its outer browse container
 - `ProfileScreen` now uses `VelvetBrowseLayout` as its outer browse container
 - Native stack headers are hidden for browse destinations so the Velvet shell remains the visible source of browse-surface framing
 - `PartnerLinkScreen`, `CategorySelectionScreen`, and `CustomQuestionEditorScreen` now use the focused shell path with native stack headers hidden
+- The `Stats` browse destination now intentionally stays flatter than the old profile-growth composition: direct section cards, direct stat cards, and simpler share buttons proved more reliable in live runtime than reusing a more nested account-oriented surface structure.
 
 Implementation note:
 - The remaining Phase 2 work is no longer “invent the shell abstraction.”
 - Browse-screen framing is now standardized through `VelvetBrowseLayout`.
 - The main browse tabs no longer render a redundant in-screen top title/subtitle by default; the active tab state in the bottom nav is now treated as the primary browse-location indicator.
-- Later polish also increased the visual weight of the bottom-nav icons so Home/History/Custom/Profile read more clearly on both phone and tablet.
+- Later polish also increased the visual weight of the bottom-nav icons and then reworked the footer into a full-width equal-flex layout so Home/History/Custom/Stats/Profile fit on phone and tablet without clipping the rightmost tab.
 - Focused-screen top-bar/back behavior is now standardized through `VelvetFocusedScreen`.
 - Later phases can now consume the shell system rather than inventing new framing patterns.
 

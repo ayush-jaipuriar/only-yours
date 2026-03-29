@@ -9,6 +9,7 @@ const DEFAULT_NAV_ITEMS = [
   { key: 'dashboard', label: 'Home', icon: '⌂', route: 'Dashboard' },
   { key: 'history', label: 'History', icon: '◷', route: 'GameHistory' },
   { key: 'customQuestions', label: 'Custom', icon: '✦', route: 'CustomQuestions' },
+  { key: 'stats', label: 'Stats', icon: '◎', route: 'Stats' },
   { key: 'profile', label: 'Profile', icon: '◌', route: 'Profile' },
 ];
 
