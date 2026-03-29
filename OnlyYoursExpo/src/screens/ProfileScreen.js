@@ -355,13 +355,11 @@ const ProfileScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="profile"
-        headerTitle="Profile"
-        headerSubtitle="Your growth and celebrations"
         contentContainerStyle={styles.container}
         contentMaxWidth={760}
       >
         <View style={styles.stateContent}>
-          <LoadingSpinner message="Loading your profile..." />
+          <LoadingSpinner message="Loading profile..." />
         </View>
       </VelvetBrowseLayout>
     );
@@ -372,8 +370,6 @@ const ProfileScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="profile"
-        headerTitle="Profile"
-        headerSubtitle="Your growth and celebrations"
         contentContainerStyle={styles.container}
         contentMaxWidth={760}
       >
@@ -381,7 +377,7 @@ const ProfileScreen = ({ navigation }) => {
           <EmptyState
             icon="⚠️"
             title="Couldn't Load Profile"
-            message="Something went wrong. Please check your connection."
+            message="Something went wrong. Please try again."
             actionLabel="Retry"
             onAction={fetchProfile}
           />
@@ -396,8 +392,6 @@ const ProfileScreen = ({ navigation }) => {
     <VelvetBrowseLayout
       navigation={navigation}
       activeNavKey="profile"
-      headerTitle={profile.name || 'Profile'}
-      headerSubtitle="Your growth and celebrations"
       contentContainerStyle={styles.container}
       contentMaxWidth={760}
     >
@@ -482,14 +476,14 @@ const ProfileScreen = ({ navigation }) => {
                 accessibilityLabel="Share achievements snapshot"
                 accessibilityHint="Generates a branded image card for your achievement collection."
               >
-                <Text style={styles.shareInlineText}>
-                  {isSharing ? 'Preparing Share...' : 'Share Achievement Snapshot'}
-                </Text>
+            <Text style={styles.shareInlineText}>
+              {isSharing ? 'Preparing Share...' : 'Share Achievement Snapshot'}
+            </Text>
               </TouchableOpacity>
               {badges.map((badge) => <BadgeChip key={badge.code} badge={badge} />)}
             </>
           ) : (
-            <Text style={styles.emptyBadgesText}>No achievements yet. Keep playing to unlock milestones.</Text>
+            <Text style={styles.emptyBadgesText}>No achievements yet.</Text>
           )}
         </View>
 

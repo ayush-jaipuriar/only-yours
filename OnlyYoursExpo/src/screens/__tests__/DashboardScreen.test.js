@@ -118,7 +118,7 @@ describe('DashboardScreen', () => {
     const { getByText, getByLabelText } = renderScreen({ handleContinueGame });
 
     await waitFor(() => {
-      expect(getByText('Continue your journey tonight')).toBeTruthy();
+      expect(getByText('Continue your game')).toBeTruthy();
       expect(getByText('Your next question is waiting')).toBeTruthy();
     });
 
@@ -136,7 +136,7 @@ describe('DashboardScreen', () => {
     });
 
     await waitFor(() => {
-      expect(getByText('Start a new ritual together')).toBeTruthy();
+      expect(getByText('Start your next game')).toBeTruthy();
       expect(getAllByText('Custom Questions').length).toBeGreaterThan(0);
     });
 
@@ -153,7 +153,7 @@ describe('DashboardScreen', () => {
     });
 
     await waitFor(() => {
-      expect(getByText('Revisit the last reveal together')).toBeTruthy();
+      expect(getByText('Latest results are ready')).toBeTruthy();
       expect(getByText('Latest completed session ready')).toBeTruthy();
     });
 
@@ -171,7 +171,7 @@ describe('DashboardScreen', () => {
     });
 
     await waitFor(() => {
-      expect(getByText('Invite your partner into your private space')).toBeTruthy();
+      expect(getByText('Link your partner')).toBeTruthy();
       expect(queryByText('Custom Questions')).toBeNull();
     });
 

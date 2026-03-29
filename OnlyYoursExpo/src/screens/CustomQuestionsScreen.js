@@ -17,7 +17,7 @@ import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 
 const FALLBACK_SUMMARY = {
   deckName: 'Custom Couple Questions',
-  deckDescription: 'Create private questions that become playable as a shared couple deck.',
+  deckDescription: 'Create private questions for your shared deck.',
   authoredQuestionCount: 0,
   couplePlayableQuestionCount: 0,
   minimumQuestionsRequired: 8,
@@ -246,14 +246,12 @@ const CustomQuestionsScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="customQuestions"
-        headerTitle="Custom Questions"
-        headerSubtitle="Build your private couple deck"
         scrollStyle={styles.container}
         contentContainerStyle={styles.content}
         contentMaxWidth={isTablet ? 760 : 520}
       >
         <View style={styles.stateContent}>
-          <LoadingSpinner message="Loading your custom questions..." />
+          <LoadingSpinner message="Loading custom questions..." />
         </View>
       </VelvetBrowseLayout>
     );
@@ -264,8 +262,6 @@ const CustomQuestionsScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="customQuestions"
-        headerTitle="Custom Questions"
-        headerSubtitle="Build your private couple deck"
         scrollStyle={styles.container}
         contentContainerStyle={styles.content}
         contentMaxWidth={isTablet ? 760 : 520}
@@ -274,7 +270,7 @@ const CustomQuestionsScreen = ({ navigation }) => {
           <EmptyState
             icon="⚠️"
             title="Couldn’t Load Custom Questions"
-            message="We couldn’t fetch your authored questions or deck summary right now."
+            message="We couldn’t load your questions right now."
             actionLabel="Retry"
             onAction={loadScreen}
           />
@@ -287,8 +283,6 @@ const CustomQuestionsScreen = ({ navigation }) => {
     <VelvetBrowseLayout
       navigation={navigation}
       activeNavKey="customQuestions"
-      headerTitle="Custom Questions"
-      headerSubtitle="Build your private couple deck"
       scrollStyle={styles.container}
       contentContainerStyle={styles.content}
       contentMaxWidth={isTablet ? 760 : 520}
@@ -300,23 +294,23 @@ const CustomQuestionsScreen = ({ navigation }) => {
         <View style={styles.statsRow}>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{summary.authoredQuestionCount ?? 0}</Text>
-            <Text style={styles.statLabel}>Questions You Wrote</Text>
+            <Text style={styles.statLabel}>Authored</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{summary.couplePlayableQuestionCount ?? 0}</Text>
-            <Text style={styles.statLabel}>Active Couple Deck Count</Text>
+            <Text style={styles.statLabel}>In Deck</Text>
           </View>
           <View style={styles.statCard}>
             <Text style={styles.statValue}>{summary.questionsNeededToPlay ?? 0}</Text>
-            <Text style={styles.statLabel}>More Needed To Play</Text>
+            <Text style={styles.statLabel}>Needed</Text>
           </View>
         </View>
 
         <View style={styles.helperBanner}>
           <Text style={styles.helperText}>
             {summary.playable
-              ? 'Your custom deck is ready. Start a new game and choose the custom couple deck.'
-              : `Your couple needs ${summary.questionsNeededToPlay} more active custom questions before a custom game can start.`}
+              ? 'Your custom deck is ready to play.'
+              : `${summary.questionsNeededToPlay} more questions needed to play.`}
           </Text>
         </View>
 
@@ -331,14 +325,14 @@ const CustomQuestionsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </VelvetHeroCard>
 
-      <Text style={styles.sectionTitle}>Your Authored Questions</Text>
+      <Text style={styles.sectionTitle}>Your Questions</Text>
 
       {!questions.length ? (
         <View style={styles.stateContent}>
           <EmptyState
             icon="✍️"
             title="No Custom Questions Yet"
-            message="Create your first private question. It will stay visible only to you outside the game, but it becomes part of the shared custom deck when played."
+            message="Create your first question to start building your deck."
             actionLabel="Create First Question"
             onAction={() => navigation.navigate('CustomQuestionEditor')}
           />

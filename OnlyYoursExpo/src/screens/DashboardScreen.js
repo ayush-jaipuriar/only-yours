@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
   useWindowDimensions,
 } from 'react-native';
@@ -59,31 +58,6 @@ const getHeroState = ({ couple, shouldShowContinueGame, latestCompletedSession }
   return 'ready_to_start';
 };
 
-const QUICK_ACTIONS = [
-  {
-    key: 'custom',
-    title: 'Custom Questions',
-    description: 'Shape a more personal deck for the two of you.',
-    route: 'CustomQuestions',
-    requiresCouple: true,
-    eyebrow: 'Create',
-  },
-  {
-    key: 'history',
-    title: 'Game History',
-    description: 'Revisit the sessions, scores, and moments you have shared.',
-    route: 'GameHistory',
-    eyebrow: 'Reflect',
-  },
-  {
-    key: 'profile',
-    title: 'Profile',
-    description: 'Update your presence, milestones, and relationship identity.',
-    route: 'Profile',
-    eyebrow: 'You',
-  },
-];
-
 // eslint-disable-next-line react/prop-types
 const DashboardScreen = ({ navigation }) => {
   const { theme } = useTheme();
@@ -120,8 +94,6 @@ const DashboardScreen = ({ navigation }) => {
     { label: 'Acceptance', value: `${stats?.invitationAcceptanceRate ?? 0}%` },
     { label: 'Avg Accept Time', value: formatResponseTime(stats?.avgInvitationResponseSeconds ?? 0) },
   ];
-
-  const quickActions = QUICK_ACTIONS.filter((action) => !action.requiresCouple || couple);
 
   const styles = useMemo(
     () =>
@@ -271,49 +243,6 @@ const DashboardScreen = ({ navigation }) => {
         heroSecondaryButton: {
           flex: isTablet ? 0.75 : 1,
         },
-        quickGrid: {
-          width: '100%',
-          flexDirection: 'row',
-          flexWrap: 'wrap',
-          justifyContent: 'space-between',
-          marginBottom: 14,
-        },
-        quickCardPressable: {
-          width: isTablet ? '31.6%' : '48.3%',
-          marginBottom: 12,
-        },
-        quickCard: {
-          minHeight: 154,
-          justifyContent: 'space-between',
-        },
-        quickEyebrow: {
-          fontSize: 10,
-          fontWeight: '700',
-          letterSpacing: 1.1,
-          textTransform: 'uppercase',
-          color: theme.colors.textTertiary,
-          marginBottom: 10,
-        },
-        quickTitle: {
-          fontSize: 20,
-          lineHeight: 24,
-          color: theme.colors.textPrimary,
-          fontFamily: theme.fontFamilies.heading,
-          marginBottom: 6,
-        },
-        quickDescription: {
-          fontSize: 13,
-          lineHeight: 19,
-          color: theme.colors.textSecondary,
-        },
-        quickFooter: {
-          marginTop: 12,
-          fontSize: 12,
-          fontWeight: '700',
-          color: theme.colors.primary,
-          letterSpacing: 0.7,
-          textTransform: 'uppercase',
-        },
         sectionCard: {
           width: '100%',
           marginBottom: 14,
@@ -437,7 +366,7 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.centered}>
           <VelvetHeroCard style={styles.loadingCard}>
             <ActivityIndicator size="large" color={theme.colors.primary} />
-            <Text style={styles.loadingText}>Gathering your relationship dashboard...</Text>
+            <Text style={styles.loadingText}>Loading your dashboard...</Text>
           </VelvetHeroCard>
         </View>
       </VelvetScreen>
@@ -445,25 +374,23 @@ const DashboardScreen = ({ navigation }) => {
   }
 
   const heroTitleByState = {
-    active_game: 'Continue your journey tonight',
-    results_ready: 'Revisit the last reveal together',
-    ready_to_start: 'Start a new ritual together',
-    not_linked: 'Invite your partner into your private space',
+    active_game: 'Continue your game',
+    results_ready: 'Latest results are ready',
+    ready_to_start: 'Start your next game',
+    not_linked: 'Link your partner',
   };
 
   const heroCopyByState = {
-    active_game: `Your session with ${partnerName} is waiting right where you left it. Pick up the next question and keep the momentum going.`,
-    results_ready: `Your latest session with ${partnerName} is complete. Step back into the shared reveal, revisit the score, and decide whether to celebrate it or begin another round.`,
-    ready_to_start: `You and ${partnerName} are connected and ready. Choose a category and begin a new round of questions, guesses, and milestones.`,
-    not_linked: 'Link with your partner to unlock shared games, progression, celebrations, and the rituals that make this app feel like a world for two.',
+    active_game: `Your session with ${partnerName} is ready where you left it.`,
+    results_ready: `Your last session with ${partnerName} is finished and ready to open.`,
+    ready_to_start: `${partnerName} is connected. Pick a category and begin.`,
+    not_linked: 'Link your partner to unlock games, progress, and shared milestones.',
   };
 
   return (
     <VelvetBrowseLayout
       navigation={navigation}
       activeNavKey="dashboard"
-      headerTitle="Only Yours"
-      headerSubtitle={couple ? `Connected with ${partnerName}` : 'Your private space for two'}
       contentContainerStyle={styles.container}
       contentMaxWidth={isTablet ? 780 : 460}
     >
@@ -476,8 +403,8 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.subtitleDot} />
           <Text style={styles.subtitle}>
             {couple
-              ? `Connected with ${partnerName} and ready for your next moment together.`
-              : 'Build your shared space first, then the rest of the dashboard comes alive for both of you.'}
+              ? `Connected with ${partnerName}.`
+              : 'Link your partner to unlock the rest of the app.'}
           </Text>
         </View>
       </View>
@@ -529,7 +456,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               <VelvetProgressBar progress={activeProgress} />
               <Text style={styles.heroHelperText}>
-                Stay in rhythm with {partnerName}. Results unlock after both of you finish the full session.
+                Results unlock after both of you finish.
               </Text>
             </View>
 
@@ -601,7 +528,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               <VelvetProgressBar progress={1} />
               <Text style={styles.heroHelperText}>
-                Open the final score, milestones, and keepsake share actions before you move on to the next session.
+                Open the score and milestones before you start another round.
               </Text>
             </View>
           </>
@@ -627,35 +554,12 @@ const DashboardScreen = ({ navigation }) => {
         ) : null}
       </VelvetHeroCard>
 
-      <View style={styles.quickGrid}>
-        {quickActions.map((action) => (
-          <TouchableOpacity
-            key={action.key}
-            style={styles.quickCardPressable}
-            onPress={() => navigation.navigate(action.route)}
-            accessibilityRole="button"
-            accessibilityLabel={`Open ${action.title.toLowerCase()}`}
-            accessibilityHint={action.description}
-            activeOpacity={0.88}
-          >
-            <VelvetStatCard style={styles.quickCard}>
-              <View>
-                <Text style={styles.quickEyebrow}>{action.eyebrow}</Text>
-                <Text style={styles.quickTitle}>{action.title}</Text>
-                <Text style={styles.quickDescription}>{action.description}</Text>
-              </View>
-              <Text style={styles.quickFooter}>Open</Text>
-            </VelvetStatCard>
-          </TouchableOpacity>
-        ))}
-      </View>
-
       <VelvetSectionCard style={styles.sectionCard}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionHeadingWrap}>
             <Text style={styles.sectionTitle}>Progression</Text>
             <Text style={styles.sectionSubtitle}>
-              Track your shared momentum and the growth that belongs to you personally.
+              Shared and personal progress.
             </Text>
           </View>
           <VelvetStatusPill
@@ -697,7 +601,7 @@ const DashboardScreen = ({ navigation }) => {
             <View>
               <Text style={styles.emptyStateTitle}>Your next level starts with one shared session.</Text>
               <Text style={styles.emptyStateBody}>
-                Once you play a few games, this section will show couple milestones, personal XP, and streak momentum.
+                Play a few games and your progress will show up here.
               </Text>
             </View>
             {couple ? (
@@ -733,7 +637,7 @@ const DashboardScreen = ({ navigation }) => {
               <Text style={styles.celebrationBody}>
                 {latestMilestone
                   ? latestMilestone.description
-                  : 'Complete games together to unlock milestone moments that can be revisited and shared.'}
+                  : 'Complete games together to unlock milestones.'}
               </Text>
             </View>
             {latestMilestone ? (
@@ -759,7 +663,7 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.sectionHeadingWrap}>
             <Text style={styles.sectionTitle}>Stats</Text>
             <Text style={styles.sectionSubtitle}>
-              A quick read on consistency, response habits, and how your sessions are trending.
+              A quick read on your sessions.
             </Text>
           </View>
         </View>
@@ -783,7 +687,7 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.sectionHeadingWrap}>
             <Text style={styles.sectionTitle}>Achievements</Text>
             <Text style={styles.sectionSubtitle}>
-              Earn badges by showing up, guessing well, and building shared streaks over time.
+              Badges you unlock over time.
             </Text>
           </View>
           <VelvetStatusPill label={`${badges?.length || 0} unlocked`} tone={badges?.length ? 'success' : 'neutral'} />
@@ -797,7 +701,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <Text style={styles.emptyBadgeText}>
-            No achievements yet. Finish sessions and keep your streak alive to start collecting keepsake badges.
+            No achievements yet. Keep playing to unlock them.
           </Text>
         )}
       </VelvetSectionCard>

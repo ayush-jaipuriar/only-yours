@@ -19,7 +19,7 @@ const VelvetBrowseLayout = ({
   headerTitle,
   headerSubtitle,
   headerRightContent,
-  showHeader = true,
+  showHeader = false,
   navItems = DEFAULT_NAV_ITEMS,
   contentMaxWidth = 760,
   horizontalPadding = 20,
@@ -74,7 +74,7 @@ const VelvetBrowseLayout = ({
     <VelvetScreen
       withAtmosphere={withAtmosphere}
       atmosphere={atmosphere}
-      safeAreaEdges={['left', 'right']}
+      safeAreaEdges={showHeader ? ['left', 'right'] : ['top', 'left', 'right']}
     >
       <View style={styles.root}>
         {showHeader ? (

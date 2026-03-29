@@ -217,14 +217,12 @@ const GameHistoryScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="history"
-        headerTitle="Game History"
-        headerSubtitle="Your relationship archive"
         scrollStyle={styles.container}
         contentContainerStyle={styles.content}
         contentMaxWidth={isTablet ? 760 : 460}
       >
         <View style={styles.stateContent}>
-          <LoadingSpinner message="Loading your game history..." />
+          <LoadingSpinner message="Loading history..." />
         </View>
       </VelvetBrowseLayout>
     );
@@ -235,8 +233,6 @@ const GameHistoryScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="history"
-        headerTitle="Game History"
-        headerSubtitle="Your relationship archive"
         scrollStyle={styles.container}
         contentContainerStyle={styles.content}
         contentMaxWidth={isTablet ? 760 : 460}
@@ -245,7 +241,7 @@ const GameHistoryScreen = ({ navigation }) => {
           <EmptyState
             icon="⚠️"
             title="Couldn’t Load History"
-            message="We couldn’t fetch your recent games right now."
+            message="We couldn’t load your recent games."
             actionLabel="Retry"
             onAction={reload}
           />
@@ -259,8 +255,6 @@ const GameHistoryScreen = ({ navigation }) => {
       <VelvetBrowseLayout
         navigation={navigation}
         activeNavKey="history"
-        headerTitle="Game History"
-        headerSubtitle="Your relationship archive"
         scrollStyle={styles.container}
         contentContainerStyle={styles.content}
         contentMaxWidth={isTablet ? 760 : 460}
@@ -276,8 +270,6 @@ const GameHistoryScreen = ({ navigation }) => {
     <VelvetBrowseLayout
       navigation={navigation}
       activeNavKey="history"
-      headerTitle="Game History"
-      headerSubtitle="Your relationship archive"
       scrollStyle={styles.container}
       contentContainerStyle={styles.content}
       contentMaxWidth={isTablet ? 760 : 460}
@@ -335,7 +327,7 @@ const GameHistoryScreen = ({ navigation }) => {
                 </Text>
               </View>
             </View>
-            <Text style={styles.partnerText}>Played with {item.partnerName}</Text>
+            <Text style={styles.partnerText}>{item.partnerName}</Text>
             <View style={styles.scoreRow}>
               <View style={styles.scoreBlock}>
                 <Text style={styles.scoreLabel}>You</Text>

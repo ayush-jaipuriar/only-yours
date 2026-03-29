@@ -423,10 +423,10 @@ Current implementation status:
   - linked without active game: start-new-session hero with custom-question secondary action
   - not linked: partner-linking hero with a softer history fallback
 - Supporting sections now better match the Stitch 2 intent:
-  - quick destination cards for `Custom Questions`, `Game History`, and `Profile`
   - stronger progression framing with share/profile actions
   - a dedicated celebration/milestone area rather than one flat list of content
   - stats and achievements pushed lower in the hierarchy so the screen feels motivating before analytical
+- A later browse-shell simplification removed the extra `Custom Questions`, `Game History`, and `Profile` destination cards from Home. Those routes already exist in the persistent bottom nav, so keeping them in the dashboard as large repeated cards made the screen feel more verbose and sitemap-like than necessary.
 
 Implementation deviations from Stitch 2:
 - We intentionally did not invent any “recent history preview” content cards because the current dashboard data contract does not provide that payload directly.
@@ -934,7 +934,9 @@ Current adoption:
 
 Implementation note:
 - The remaining Phase 2 work is no longer “invent the shell abstraction.”
-- Browse-screen top-bar behavior is now standardized through `VelvetBrowseLayout`.
+- Browse-screen framing is now standardized through `VelvetBrowseLayout`.
+- The main browse tabs no longer render a redundant in-screen top title/subtitle by default; the active tab state in the bottom nav is now treated as the primary browse-location indicator.
+- Later polish also increased the visual weight of the bottom-nav icons so Home/History/Custom/Profile read more clearly on both phone and tablet.
 - Focused-screen top-bar/back behavior is now standardized through `VelvetFocusedScreen`.
 - Later phases can now consume the shell system rather than inventing new framing patterns.
 
@@ -943,8 +945,8 @@ Rules:
 - bottom nav only on browse/hub surfaces
 - shell blur/background treatment should be centralized, not reauthored per screen
 - safe-area ownership should stay explicit to avoid doubled insets:
-  - browse layout owns left/right framing
-  - top bar owns top inset
+  - browse layout owns top/left/right framing when no in-screen browse header is shown
+  - top bar owns top inset when a screen opts into a browse or focused header
   - bottom nav owns bottom inset
 
 ## 9.2 Buttons

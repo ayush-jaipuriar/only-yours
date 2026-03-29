@@ -1,10 +1,12 @@
 import React, { useMemo } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import useTheme from '../../theme/useTheme';
 
 const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
   const { theme } = useTheme();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
   const styles = useMemo(
     () =>
       StyleSheet.create({
@@ -15,35 +17,40 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
           flexDirection: 'row',
           justifyContent: 'space-around',
           alignItems: 'center',
-          paddingHorizontal: 12,
-          paddingTop: 10,
-          paddingBottom: 8,
+          paddingHorizontal: isTablet ? 20 : 12,
+          paddingTop: isTablet ? 12 : 10,
+          paddingBottom: isTablet ? 10 : 8,
           backgroundColor: theme.mode === 'light' ? theme.colors.surfaceOverlay : theme.colors.surface,
           borderTopWidth: 1,
           borderTopColor: theme.colors.border,
         },
         item: {
-          minWidth: 64,
+          minWidth: isTablet ? 92 : 78,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingVertical: 6,
+          paddingVertical: isTablet ? 8 : 6,
           paddingHorizontal: 8,
         },
+        iconText: {
+          fontSize: isTablet ? 27 : 24,
+          lineHeight: isTablet ? 30 : 27,
+          fontWeight: '700',
+        },
         label: {
-          marginTop: 4,
-          fontSize: 11,
+          marginTop: 5,
+          fontSize: isTablet ? 13 : 12,
           fontWeight: '600',
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
         },
         indicator: {
-          marginTop: 4,
-          width: 4,
-          height: 4,
-          borderRadius: 2,
+          marginTop: 5,
+          width: 5,
+          height: 5,
+          borderRadius: 999,
           backgroundColor: theme.colors.primary,
         },
       }),
-    [theme]
+    [isTablet, theme]
   );
 
   return (
@@ -61,7 +68,12 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
               accessibilityState={{ selected: isActive }}
             >
               {typeof item.icon === 'string' ? (
-                <Text style={{ color: isActive ? theme.colors.primary : theme.colors.textSecondary }}>
+                <Text
+                  style={[
+                    styles.iconText,
+                    { color: isActive ? theme.colors.primary : theme.colors.textSecondary },
+                  ]}
+                >
                   {item.icon}
                 </Text>
               ) : (
