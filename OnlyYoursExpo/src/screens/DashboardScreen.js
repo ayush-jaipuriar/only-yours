@@ -15,6 +15,7 @@ import {
   VelvetHeroCard,
   VelvetPrimaryButton,
   VelvetProgressBar,
+  VelvetScreen,
   VelvetSectionCard,
   VelvetSecondaryButton,
   VelvetStatCard,
@@ -42,13 +43,17 @@ const formatResponseTime = (seconds) => {
   return remainder ? `${minutes}m ${remainder}s` : `${minutes}m`;
 };
 
-const getHeroState = ({ couple, shouldShowContinueGame }) => {
+const getHeroState = ({ couple, shouldShowContinueGame, latestCompletedSession }) => {
   if (!couple) {
     return 'not_linked';
   }
 
   if (shouldShowContinueGame) {
     return 'active_game';
+  }
+
+  if (latestCompletedSession?.sessionId) {
+    return 'results_ready';
   }
 
   return 'ready_to_start';
@@ -93,13 +98,14 @@ const DashboardScreen = ({ navigation }) => {
     progression,
     badges,
     loading,
+    latestCompletedSession,
     shouldShowContinueGame,
     handleStartGame,
     handleContinueGame,
     getPartnerName,
   } = useDashboardGameFlow(navigation);
 
-  const heroState = getHeroState({ couple, shouldShowContinueGame });
+  const heroState = getHeroState({ couple, shouldShowContinueGame, latestCompletedSession });
   const partnerName = getPartnerName();
   const latestMilestone = progression?.recentMilestones?.[0] || null;
   const activeProgress = activeGame?.totalQuestions
@@ -124,12 +130,19 @@ const DashboardScreen = ({ navigation }) => {
           flex: 1,
           justifyContent: 'center',
           alignItems: 'center',
-          backgroundColor: theme.colors.background,
+          paddingHorizontal: 24,
+          paddingVertical: 24,
+        },
+        loadingCard: {
+          width: '100%',
+          maxWidth: 420,
+          alignItems: 'center',
         },
         loadingText: {
-          marginTop: 12,
+          marginTop: 14,
           fontSize: 15,
           color: theme.colors.textSecondary,
+          textAlign: 'center',
         },
         container: {
           paddingHorizontal: isTablet ? 8 : 0,
@@ -420,21 +433,27 @@ const DashboardScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.centered}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={styles.loadingText}>Gathering your relationship dashboard...</Text>
-      </View>
+      <VelvetScreen withAtmosphere atmosphere="browse" safeAreaEdges={['top', 'left', 'right']}>
+        <View style={styles.centered}>
+          <VelvetHeroCard style={styles.loadingCard}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.loadingText}>Gathering your relationship dashboard...</Text>
+          </VelvetHeroCard>
+        </View>
+      </VelvetScreen>
     );
   }
 
   const heroTitleByState = {
     active_game: 'Continue your journey tonight',
+    results_ready: 'Revisit the last reveal together',
     ready_to_start: 'Start a new ritual together',
     not_linked: 'Invite your partner into your private space',
   };
 
   const heroCopyByState = {
     active_game: `Your session with ${partnerName} is waiting right where you left it. Pick up the next question and keep the momentum going.`,
+    results_ready: `Your latest session with ${partnerName} is complete. Step back into the shared reveal, revisit the score, and decide whether to celebrate it or begin another round.`,
     ready_to_start: `You and ${partnerName} are connected and ready. Choose a category and begin a new round of questions, guesses, and milestones.`,
     not_linked: 'Link with your partner to unlock shared games, progression, celebrations, and the rituals that make this app feel like a world for two.',
   };
@@ -473,6 +492,8 @@ const DashboardScreen = ({ navigation }) => {
                   ? 'Active session'
                   : heroState === 'ready_to_start'
                     ? 'Ready to begin'
+                    : heroState === 'results_ready'
+                      ? 'Results ready'
                     : 'Link required'
               }
               tone={
@@ -480,6 +501,8 @@ const DashboardScreen = ({ navigation }) => {
                   ? 'accent'
                   : heroState === 'ready_to_start'
                     ? 'primary'
+                    : heroState === 'results_ready'
+                      ? 'success'
                     : 'warning'
               }
             />
@@ -546,6 +569,42 @@ const DashboardScreen = ({ navigation }) => {
               accessibilityHint="Shows the custom questions you created for your couple deck."
             />
           </View>
+        ) : null}
+
+        {heroState === 'results_ready' ? (
+          <>
+            <View style={styles.heroActionsRow}>
+              <VelvetPrimaryButton
+                label="View Latest Results"
+                onPress={() => navigation.navigate('Results', { sessionId: latestCompletedSession.sessionId })}
+                style={styles.heroPrimaryButton}
+                accessibilityLabel="View latest results"
+                accessibilityHint="Opens the latest completed game results."
+              />
+              <VelvetSecondaryButton
+                label="Start New Game"
+                onPress={handleStartGame}
+                style={styles.heroSecondaryButton}
+                accessibilityLabel="Start new game"
+                accessibilityHint="Begins a fresh session instead of reopening the latest result."
+              />
+            </View>
+
+            <View style={styles.heroMetaRow}>
+              <Text style={styles.heroMetaLine}>Latest completed session ready</Text>
+              <View style={styles.heroStatsRow}>
+                <Text style={styles.heroStatsText}>Your shared results are still waiting</Text>
+                <VelvetStatusPill
+                  label="View Results"
+                  tone="success"
+                />
+              </View>
+              <VelvetProgressBar progress={1} />
+              <Text style={styles.heroHelperText}>
+                Open the final score, milestones, and keepsake share actions before you move on to the next session.
+              </Text>
+            </View>
+          </>
         ) : null}
 
         {heroState === 'not_linked' ? (

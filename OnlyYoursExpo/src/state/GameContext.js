@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef, useCallback } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import WebSocketService from '../services/WebSocketService';
 import api from '../services/api';
 import { Alert } from 'react-native';
@@ -6,6 +7,8 @@ import { AuthContext } from './AuthContext';
 import { HAPTIC_EVENTS, useHaptics } from '../haptics';
 
 const GameContext = createContext();
+const LATEST_COMPLETED_SESSION_STORAGE_KEY = 'latest_completed_session_v1';
+const RESULTS_RECOVERY_TTL_MS = 30 * 60 * 1000;
 
 export const useGame = () => {
   const context = useContext(GameContext);
@@ -28,6 +31,7 @@ export const GameProvider = ({ children }) => {
   const [gameStatus, setGameStatus] = useState(null);
   const [statusNotice, setStatusNotice] = useState(null);
   const [expiredMessage, setExpiredMessage] = useState(null);
+  const [latestCompletedSession, setLatestCompletedSession] = useState(null);
 
   const [round, setRound] = useState(null);
   const [guessResult, setGuessResult] = useState(null);
@@ -46,6 +50,30 @@ export const GameProvider = ({ children }) => {
     if (submitRecoveryTimeoutRef.current) {
       clearTimeout(submitRecoveryTimeoutRef.current);
       submitRecoveryTimeoutRef.current = null;
+    }
+  }, []);
+
+  const persistLatestCompletedSession = useCallback(async (sessionSnapshot) => {
+    if (!sessionSnapshot?.sessionId) {
+      return;
+    }
+
+    try {
+      await AsyncStorage.setItem(
+        LATEST_COMPLETED_SESSION_STORAGE_KEY,
+        JSON.stringify(sessionSnapshot)
+      );
+    } catch (error) {
+      console.warn('[GameContext] Failed to persist latest completed session:', error?.message || error);
+    }
+  }, []);
+
+  const clearLatestCompletedSession = useCallback(async () => {
+    setLatestCompletedSession(null);
+    try {
+      await AsyncStorage.removeItem(LATEST_COMPLETED_SESSION_STORAGE_KEY);
+    } catch (error) {
+      console.warn('[GameContext] Failed to clear latest completed session:', error?.message || error);
     }
   }, []);
 
@@ -152,16 +180,24 @@ export const GameProvider = ({ children }) => {
       clearSubmitRecoveryTimeout();
       console.log('[GameContext] Game completed:', payload);
       triggerHaptic(HAPTIC_EVENTS.GAME_COMPLETED);
+      const completedSnapshot = {
+        sessionId: payloadSessionId || String(activeSessionRef.current || ''),
+        createdAt: Date.now(),
+      };
       setCurrentQuestion(null);
       setRoundState(null);
       setWaitingForPartner(false);
       setIsSubmitting(false);
       setScores(payload);
+      setLatestCompletedSession(completedSnapshot.sessionId ? completedSnapshot : null);
       setGameStatus('completed');
       setStatusNotice(null);
       setExpiredMessage(null);
       setIsTransitioning(false);
       setIsInvitationPending(false);
+      if (completedSnapshot.sessionId) {
+        persistLatestCompletedSession(completedSnapshot);
+      }
       return true;
     }
 
@@ -312,6 +348,10 @@ export const GameProvider = ({ children }) => {
     setStatusNotice(null);
     setExpiredMessage(null);
     clearSubmitRecoveryTimeout();
+    setLatestCompletedSession(null);
+    AsyncStorage.removeItem(LATEST_COMPLETED_SESSION_STORAGE_KEY).catch((error) => {
+      console.warn('[GameContext] Failed to clear latest completed session on start:', error?.message || error);
+    });
 
     ensureTopicSubscription(sessionId);
     hydrateCurrentQuestion(sessionId);
@@ -455,7 +495,43 @@ export const GameProvider = ({ children }) => {
     setStatusNotice(null);
     setExpiredMessage(null);
     clearSubmitRecoveryTimeout();
+    setLatestCompletedSession(null);
+    AsyncStorage.removeItem(LATEST_COMPLETED_SESSION_STORAGE_KEY).catch((error) => {
+      console.warn('[GameContext] Failed to clear latest completed session on end:', error?.message || error);
+    });
   }, [clearSubmitRecoveryTimeout, unsubscribeTopic]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    (async () => {
+      try {
+        const rawValue = await AsyncStorage.getItem(LATEST_COMPLETED_SESSION_STORAGE_KEY);
+        if (!isMounted || !rawValue) {
+          return;
+        }
+
+        const parsed = JSON.parse(rawValue);
+        const isFreshEnough =
+          parsed?.sessionId &&
+          parsed?.createdAt &&
+          Date.now() - parsed.createdAt < RESULTS_RECOVERY_TTL_MS;
+
+        if (isFreshEnough) {
+          setLatestCompletedSession(parsed);
+          return;
+        }
+
+        await AsyncStorage.removeItem(LATEST_COMPLETED_SESSION_STORAGE_KEY);
+      } catch (error) {
+        console.warn('[GameContext] Failed to hydrate latest completed session:', error?.message || error);
+      }
+    })();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (wsConnectionState !== 'connected' || !activeSessionRef.current) {
@@ -491,6 +567,7 @@ export const GameProvider = ({ children }) => {
     gameStatus,
     statusNotice,
     expiredMessage,
+    latestCompletedSession,
     round,
     guessResult,
     scores,
@@ -505,6 +582,7 @@ export const GameProvider = ({ children }) => {
     acceptPendingInvitation,
     refreshCurrentQuestion,
     clearGuessResult,
+    clearLatestCompletedSession,
     endGame,
   };
 

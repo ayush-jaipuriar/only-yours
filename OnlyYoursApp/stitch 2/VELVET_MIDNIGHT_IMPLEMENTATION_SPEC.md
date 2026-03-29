@@ -99,6 +99,7 @@ Practical engineering note:
 - Stitch still leans on `#FF4E7B` in several places.
 - We can keep it as a nearby support token if needed.
 - The dominant CTA feel should still read as hot pink, not soft coral.
+- The light-mode implementation should not collapse into near-white utility surfaces. A later polish pass intentionally pushed browse/auth screens toward blush-plum layering so `system` / `light` still reads as the same brand family as the dark hero mode.
 
 ### 5.2 Typography
 
@@ -673,6 +674,7 @@ Current runtime review status:
 - A follow-up tablet runtime pass with a known-good paired account successfully restored the authenticated app shell, which closes the practical re-entry concern even though the old throwaway credentials remain invalid.
 - Replay onboarding is now runtime-safe again. The bug came from trying to `replace('Onboarding')` directly from `SettingsScreen` before the route was mounted in the logged-in stack. The fix moved replay into a state-driven app-shell reset in `AppNavigator`, and a follow-up tablet hardware pass confirmed that tapping `Replay Onboarding` now lands on `STEP 1 OF 3` instead of throwing a navigator error.
 - The auth-shell runtime is also more truthful now: the global real-time reconnection banner is hidden while signed out, which removes the misleading `No connection` state from the sign-in experience when there is no authenticated WebSocket session yet.
+- A later shell-polish pass also themed the native `Settings` stack header from the active Velvet Midnight tokens. This removed the bright platform-default header that was visually clashing with the otherwise dark settings surface on tablet hardware.
 
 ## 8.14 Game: Round 1 Answering
 
@@ -843,14 +845,22 @@ Required UI:
 - back to dashboard
 
 Current implementation status:
-- The full Velvet Midnight visual redesign for `ResultsScreen` is still pending, but the screen now has stronger state handling than before:
-  - if results are present, the existing celebratory/share flow still renders
-  - if `/api/game/{sessionId}/results` returns `409`, the UI now shows a dedicated “Results Aren't Ready Yet” recovery state instead of a generic failure
-  - that recovery state offers:
-    - return to the active game
-    - refresh results
-    - back to dashboard
-  - if the endpoint returns `404` or another non-recoverable failure, the UI still falls back to “Results Unavailable”
+- `ResultsScreen` now uses the Velvet Midnight screen primitives directly rather than a legacy utility layout:
+  - `VelvetScreen`
+  - `VelvetTopBar`
+  - `VelvetHeroCard`
+  - `VelvetSectionCard`
+  - `VelvetStatCard`
+  - `VelvetPrimaryButton`
+  - `VelvetSecondaryButton`
+  - `VelvetStatusPill`
+- The screen now supports the complete intended state family:
+  - loading results for a known `sessionId`
+  - celebratory loaded result
+  - `409` “Results Aren't Ready Yet” recovery state
+  - unavailable fallback for `404` and non-recoverable failures
+- It also now owns its own navigation chrome, and `AppNavigator` hides the native stack header for `Results` so the screen does not render duplicate headers.
+- Exit actions now intentionally clear the temporary latest-results recovery snapshot so the dashboard does not keep surfacing stale completion context after the user has explicitly moved on.
 
 Why this matters:
 - Backend semantics here are meaningful: `409` does not mean the result is gone, it means the session exists but the finishing condition has not been met yet. Treating that as a distinct user-facing state prevents a dead-end experience when one partner opens Results early from a notification or deeplink.
@@ -869,8 +879,9 @@ Validation status:
   - `Back to Dashboard` now returns to the linked dashboard on hardware on both phone and tablet after recreating a fresh clean results route specifically for that validation
 
 Manual runtime note:
-- The functional results path is now proven end to end. The remaining work on this screen is primarily visual restyling to bring the final results surface fully in line with the Velvet Midnight spec.
+- The functional results path is now proven end to end, and the main remaining work on this screen is visual QA rather than missing implementation.
 - On-device Android validation now reaches the real auth UI through the dev client, which confirms the app boots on hardware.
+- A later shared-foundation polish pass also deepened the light-mode token hierarchy and browse-shell atmosphere so auth and dashboard surfaces no longer read like flat near-white utility screens in `system` / `light`. This improved brand coherence on-device, but the approved design intent still treats dark mode as the hero expression of Velvet Midnight.
 - The full two-device gameplay path is now runtime-proven on a phone and tablet:
   - invite from category selection
   - accept on the partner device
@@ -879,7 +890,12 @@ Manual runtime note:
   - waiting-for-partner after the faster finisher completes Round 2
   - final shared results on both devices once the slower device finishes
 - This closes the earlier uncertainty around later-round completion and real results reveal behavior.
-- One post-completion continuity nuance remains: after results have already rendered, a hard relaunch currently brings the phone back to the normal linked dashboard `Ready to Begin` hero instead of restoring the just-finished results context. That is not a blocker for in-session completion, but it is an open product decision around whether the latest completed session should be recoverable on reopen.
+- The post-completion continuity gap has now been addressed in code. `GameContext` persists a short-lived `latest_completed_session_v1` snapshot, `useDashboardGameFlow` exposes it, and `DashboardScreen` renders a dedicated `results_ready` hero with a `View Latest Results` recovery path instead of dropping the user into a generic fresh-start state.
+- Follow-up regression after the shared shell/token polish also confirmed:
+  - phone can still deep-link into the real auth surface through the dev client
+  - tablet dark browse surfaces remain visually coherent after enabling browse atmosphere by default
+  - `Start New Game` still transitions from dashboard into `CategorySelection` on tablet after the shell changes
+- Seeded device validation on phone confirmed that this recovery hero renders with real completed-session data after app rehydration, and a follow-up dashboard polish pass moved the primary recovery CTA above the metadata block so the action is visible earlier on smaller screens.
 - Broader frontend regression is also green after these flows: `npm test -- --runInBand` passed with 26/26 suites and 127/127 tests.
 
 ## 9. Component Breakdown

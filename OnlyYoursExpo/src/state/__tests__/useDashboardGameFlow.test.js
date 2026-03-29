@@ -2,6 +2,7 @@ import { renderHook, act } from '@testing-library/react-hooks/native';
 import useDashboardGameFlow from '../../screens/useDashboardGameFlow';
 import api from '../../services/api';
 import { useAuth } from '../AuthContext';
+import { useGame } from '../GameContext';
 
 jest.mock('../../services/api', () => ({
   __esModule: true,
@@ -12,6 +13,10 @@ jest.mock('../../services/api', () => ({
 
 jest.mock('../AuthContext', () => ({
   useAuth: jest.fn(),
+}));
+
+jest.mock('../GameContext', () => ({
+  useGame: jest.fn(),
 }));
 
 const flushMicrotasks = async () => {
@@ -36,6 +41,9 @@ describe('useDashboardGameFlow', () => {
     jest.clearAllMocks();
     useAuth.mockReturnValue({
       user: { id: 'user-1', name: 'User One' },
+    });
+    useGame.mockReturnValue({
+      latestCompletedSession: null,
     });
     alertApi = { alert: jest.fn() };
   });
@@ -315,5 +323,64 @@ describe('useDashboardGameFlow', () => {
       result.current.handleStartGame();
     });
     expect(navigation.navigate).toHaveBeenCalledWith('CategorySelection');
+  });
+
+  it('surfaces latest completed session context from GameContext', async () => {
+    useGame.mockReturnValue({
+      latestCompletedSession: {
+        sessionId: 'session-results-123',
+        createdAt: Date.now(),
+      },
+    });
+
+    api.get.mockImplementation((url) => {
+      if (url === '/couple') {
+        return Promise.resolve({
+          data: {
+            user1: { id: 'user-1', name: 'User One' },
+            user2: { id: 'user-2', name: 'User Two' },
+          },
+        });
+      }
+      if (url === '/game/active') {
+        return Promise.reject({ response: { status: 404 } });
+      }
+      if (url === '/game/stats') {
+        return Promise.resolve({
+          data: {
+            gamesPlayed: 8,
+            averageScore: 6.5,
+            bestScore: 9,
+            streakDays: 5,
+            invitationAcceptanceRate: 88,
+            avgInvitationResponseSeconds: 42,
+          },
+        });
+      }
+      if (url === '/game/progression') {
+        return Promise.resolve({
+          data: {
+            individualProgression: null,
+            coupleProgression: null,
+            achievements: [],
+            recentMilestones: [],
+          },
+        });
+      }
+      return Promise.reject(new Error(`Unexpected URL: ${url}`));
+    });
+
+    const navigation = createNavigationMock();
+    const { result } = renderHook(() => useDashboardGameFlow(navigation, alertApi));
+
+    await act(async () => {
+      await flushMicrotasks();
+    });
+
+    expect(result.current.latestCompletedSession).toEqual({
+      sessionId: 'session-results-123',
+      createdAt: expect.any(Number),
+    });
+    expect(result.current.shouldShowContinueGame).toBe(false);
   });
 });

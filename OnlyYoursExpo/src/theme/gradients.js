@@ -5,20 +5,20 @@ const gradientTokens = {
       fallback: '#FF3B78',
     },
     romanceSoft: {
-      stops: ['#FFF7F6', '#F8EEF2', '#F2E8EF'],
-      fallback: '#F8EEF2',
+      stops: ['#FAEEF3', '#F3E3EB', '#EEDDE7'],
+      fallback: '#F3E3EB',
     },
     auraPurple: {
       stops: ['#3A2D56', '#2B1F3B', '#1C1830'],
       fallback: '#2B1F3B',
     },
     celebrationGlow: {
-      stops: ['#F9E3EB', '#F6E4EC', '#EEE7F4'],
-      fallback: '#F6E4EC',
+      stops: ['#F6DDE7', '#EFD5E1', '#E7D8E9'],
+      fallback: '#EFD5E1',
     },
     velvetHero: {
-      stops: ['#FFF1F5', '#F8EEF4', '#EDE0E9'],
-      fallback: '#F8EEF4',
+      stops: ['#F6E8EF', '#F0DFE8', '#E6D2DE'],
+      fallback: '#F0DFE8',
     },
   },
   dark: {

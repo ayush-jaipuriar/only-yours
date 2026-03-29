@@ -145,6 +145,23 @@ describe('DashboardScreen', () => {
     expect(handleStartGame).toHaveBeenCalled();
   });
 
+  it('renders the latest-results recovery state when a completed session is available', async () => {
+    const { getByText, getByLabelText, navigation } = renderScreen({
+      activeGame: null,
+      latestCompletedSession: { sessionId: 'session-results-123', createdAt: Date.now() },
+      shouldShowContinueGame: false,
+    });
+
+    await waitFor(() => {
+      expect(getByText('Revisit the last reveal together')).toBeTruthy();
+      expect(getByText('Latest completed session ready')).toBeTruthy();
+    });
+
+    fireEvent.press(getByLabelText('View latest results'));
+
+    expect(navigation.navigate).toHaveBeenCalledWith('Results', { sessionId: 'session-results-123' });
+  });
+
   it('renders the not-linked state and routes to partner linking', async () => {
     const { getByText, getByLabelText, queryByText, navigation } = renderScreen({
       couple: null,

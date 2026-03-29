@@ -1,12 +1,11 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
   Animated,
   ScrollView,
+  StyleSheet,
+  Text,
+  View,
   useWindowDimensions,
 } from 'react-native';
 import { useGame } from '../state/GameContext';
@@ -15,25 +14,39 @@ import api from '../services/api';
 import { accessibilityAlertProps, announceForAccessibility, decorativeAccessibilityProps } from '../accessibility';
 import MilestoneHighlights from '../components/MilestoneHighlights';
 import ProgressionCard from '../components/ProgressionCard';
+import {
+  VelvetHeroCard,
+  VelvetPrimaryButton,
+  VelvetScreen,
+  VelvetSecondaryButton,
+  VelvetSectionCard,
+  VelvetStatCard,
+  VelvetStatusPill,
+  VelvetTopBar,
+} from '../components/velvet';
 import { buildMilestoneShareCard, buildResultShareCard, useShareCardComposer } from '../sharing';
 
-// eslint-disable-next-line react/prop-types
+const RESULTS_SUBTITLE = 'Your shared reveal';
+
 const ResultsScreen = ({ route, navigation }) => {
   const { theme } = useTheme();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const incomingScores = route?.params?.scores || null;
-  const sessionId = route?.params?.sessionId || null;
-  const { endGame } = useGame();
+  const sessionId = route?.params?.sessionId || incomingScores?.sessionId || null;
+  const { clearLatestCompletedSession, endGame } = useGame();
   const [scores, setScores] = useState(incomingScores);
   const [isLoadingScores, setIsLoadingScores] = useState(!incomingScores && Boolean(sessionId));
   const [scoreLoadError, setScoreLoadError] = useState(null);
   const { isSharing, shareCard, shareHost } = useShareCardComposer();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+  const scaleAnim = useRef(new Animated.Value(0.92)).current;
   const p1ScoreAnim = useRef(new Animated.Value(0)).current;
   const p2ScoreAnim = useRef(new Animated.Value(0)).current;
+
+  const combinedScore = (scores?.player1Score || 0) + (scores?.player2Score || 0);
+  const maxCombined = (scores?.totalQuestions || 0) * 2;
 
   const loadResults = React.useCallback(async () => {
     if (!sessionId || incomingScores) {
@@ -49,11 +62,7 @@ const ResultsScreen = ({ route, navigation }) => {
       setScoreLoadError(null);
     } catch (error) {
       const status = error?.response?.status;
-      if (status === 409) {
-        setScoreLoadError('not-ready');
-      } else {
-        setScoreLoadError('unavailable');
-      }
+      setScoreLoadError(status === 409 ? 'not-ready' : 'unavailable');
     } finally {
       setIsLoadingScores(false);
     }
@@ -61,14 +70,16 @@ const ResultsScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     let isMounted = true;
+
     if (incomingScores || !sessionId) {
       return undefined;
     }
 
     (async () => {
+      setIsLoadingScores(true);
+      setScoreLoadError(null);
+
       try {
-        setIsLoadingScores(true);
-        setScoreLoadError(null);
         const response = await api.get(`/game/${sessionId}/results`);
         if (!isMounted) {
           return;
@@ -101,57 +112,58 @@ const ResultsScreen = ({ route, navigation }) => {
     const entryAnimation = Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 600,
+        duration: 420,
         useNativeDriver: true,
       }),
       Animated.spring(scaleAnim, {
         toValue: 1,
-        tension: 50,
-        friction: 7,
+        tension: 48,
+        friction: 8,
         useNativeDriver: true,
+      }),
+      Animated.timing(p1ScoreAnim, {
+        toValue: scores.player1Score,
+        duration: 900,
+        delay: 180,
+        useNativeDriver: false,
+      }),
+      Animated.timing(p2ScoreAnim, {
+        toValue: scores.player2Score,
+        duration: 900,
+        delay: 180,
+        useNativeDriver: false,
       }),
     ]);
 
-    const playerOneAnimation = Animated.timing(p1ScoreAnim, {
-      toValue: scores.player1Score,
-      duration: 1200,
-      delay: 400,
-      useNativeDriver: false,
-    });
-
-    const playerTwoAnimation = Animated.timing(p2ScoreAnim, {
-      toValue: scores.player2Score,
-      duration: 1200,
-      delay: 400,
-      useNativeDriver: false,
-    });
-
     entryAnimation.start();
-    playerOneAnimation.start();
-    playerTwoAnimation.start();
 
     return () => {
       entryAnimation.stop();
-      playerOneAnimation.stop();
-      playerTwoAnimation.stop();
     };
-  }, [scores, fadeAnim, p1ScoreAnim, p2ScoreAnim, scaleAnim]);
+  }, [fadeAnim, p1ScoreAnim, p2ScoreAnim, scaleAnim, scores]);
 
   useEffect(() => {
     if (!scores) {
       return;
     }
 
-    announceForAccessibility(`Game complete. ${scores.message}. Combined score ${combinedScore} out of ${maxCombined}.`);
+    announceForAccessibility(
+      `Game complete. ${scores.message}. Combined score ${combinedScore} out of ${maxCombined}.`
+    );
   }, [combinedScore, maxCombined, scores]);
 
-  const handlePlayAgain = () => {
+  const leaveResultsContext = React.useCallback(() => {
+    clearLatestCompletedSession();
     endGame();
+  }, [clearLatestCompletedSession, endGame]);
+
+  const handlePlayAgain = () => {
+    leaveResultsContext();
     navigation.replace('CategorySelection');
   };
 
   const handleBackToDashboard = () => {
-    endGame();
+    leaveResultsContext();
     navigation.replace('Dashboard');
   };
 
@@ -164,268 +176,382 @@ const ResultsScreen = ({ route, navigation }) => {
   };
 
   const handleShareResult = () => {
+    if (!scores) {
+      return;
+    }
     shareCard(buildResultShareCard(scores));
   };
 
   const handleShareMilestone = () => {
-    shareCard(buildMilestoneShareCard(scores?.recentMilestones?.[0]));
+    if (!scores?.recentMilestones?.[0]) {
+      return;
+    }
+    shareCard(buildMilestoneShareCard(scores.recentMilestones[0]));
   };
 
-  const combinedScore = (scores?.player1Score || 0) + (scores?.player2Score || 0);
-  const maxCombined = (scores?.totalQuestions || 0) * 2;
-  const dynamicStyles = useMemo(
+  const styles = useMemo(
     () =>
       StyleSheet.create({
-        scrollContainer: {
-          backgroundColor: theme.colors.background,
+        root: {
+          flex: 1,
         },
-        title: {
+        scroll: {
+          flex: 1,
+        },
+        scrollContent: {
+          flexGrow: 1,
+          paddingHorizontal: isTablet ? 28 : 20,
+          paddingTop: 20,
+          paddingBottom: 30,
+          alignItems: 'center',
+        },
+        contentWrap: {
+          width: '100%',
+          maxWidth: isTablet ? 860 : 560,
+        },
+        centeredWrap: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: isTablet ? 40 : 24,
+          paddingVertical: 24,
+        },
+        recoveryCard: {
+          width: '100%',
+          maxWidth: 620,
+          alignItems: 'center',
+        },
+        recoveryTitle: {
           color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 34 : 30,
+          lineHeight: isTablet ? 38 : 34,
+          textAlign: 'center',
+          marginTop: 14,
+          marginBottom: 10,
+        },
+        recoveryBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 15,
+          lineHeight: 22,
+          textAlign: 'center',
+          marginBottom: 20,
+        },
+        recoveryAction: {
+          width: '100%',
+          marginTop: 10,
+        },
+        heroCard: {
+          width: '100%',
+          marginBottom: 14,
+          overflow: 'hidden',
+        },
+        heroGlow: {
+          position: 'absolute',
+          top: -40,
+          right: -20,
+          width: isTablet ? 240 : 180,
+          height: isTablet ? 240 : 180,
+          borderRadius: 999,
+          backgroundColor: theme.colors.glowPrimary,
+          opacity: theme.mode === 'light' ? 0.72 : 0.48,
+        },
+        heroEyebrowRow: {
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: 18,
+        },
+        heroEmoji: {
+          fontSize: isTablet ? 56 : 50,
+          marginBottom: 6,
+          textAlign: 'center',
+        },
+        heroTitle: {
+          color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: isTablet ? 42 : 36,
+          lineHeight: isTablet ? 46 : 40,
+          textAlign: 'center',
+          marginBottom: 10,
+        },
+        heroBody: {
+          color: theme.colors.textSecondary,
+          fontSize: 16,
+          lineHeight: 24,
+          textAlign: 'center',
+        },
+        combinedRow: {
+          marginTop: 18,
+          alignItems: 'center',
+        },
+        combinedLabel: {
+          color: theme.colors.textTertiary,
+          fontSize: 12,
+          fontWeight: '700',
+          letterSpacing: 1,
+          textTransform: 'uppercase',
+          marginBottom: 6,
+        },
+        combinedValue: {
+          color: theme.colors.textPrimary,
+          fontSize: isTablet ? 26 : 22,
+          fontWeight: '800',
+        },
+        scoresRow: {
+          width: '100%',
+          flexDirection: isTablet ? 'row' : 'column',
+          justifyContent: 'space-between',
+          marginBottom: 14,
         },
         scoreCard: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderColor: theme.colors.border,
-          shadowColor: theme.colors.overlayScrim,
+          width: isTablet ? '48.5%' : '100%',
+          marginBottom: isTablet ? 0 : 12,
+          alignItems: 'center',
+          paddingTop: 18,
+          paddingBottom: 18,
         },
         playerName: {
           color: theme.colors.textSecondary,
+          fontSize: 14,
+          fontWeight: '700',
+          marginBottom: 12,
         },
         scoreCircle: {
-          backgroundColor: theme.colors.surfaceEmphasis,
+          width: isTablet ? 124 : 112,
+          height: isTablet ? 124 : 112,
+          borderRadius: 999,
+          backgroundColor: theme.colors.surfaceHero,
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 10,
         },
-        vsText: {
+        scoreHint: {
           color: theme.colors.textTertiary,
+          fontSize: 12,
+          textTransform: 'uppercase',
+          letterSpacing: 0.8,
+          fontWeight: '700',
         },
-        messageContainer: {
-          backgroundColor: theme.colors.surfaceOverlay,
-          borderColor: theme.colors.borderAccent,
-          shadowColor: theme.colors.overlayScrim,
+        actionsCard: {
+          width: '100%',
+          marginBottom: 14,
         },
-        messageText: {
+        actionsTitle: {
           color: theme.colors.textPrimary,
+          fontFamily: theme.fontFamilies.heading,
+          fontSize: 24,
+          lineHeight: 28,
+          marginBottom: 8,
         },
-        combinedScore: {
+        actionsBody: {
           color: theme.colors.textSecondary,
+          fontSize: 14,
+          lineHeight: 21,
+          marginBottom: 14,
         },
-        playAgainButton: {
-          backgroundColor: theme.colors.primary,
-          shadowColor: theme.colors.glowPrimary,
-        },
-        playAgainText: {
-          color: theme.colors.primaryContrast,
-        },
-        dashboardButton: {
-          backgroundColor: theme.colors.surfaceElevated,
-          borderColor: theme.colors.primary,
-        },
-        dashboardText: {
-          color: theme.colors.primary,
-        },
-        shareButton: {
-          backgroundColor: theme.colors.accent,
-          shadowColor: theme.colors.glowAccent,
-        },
-        shareButtonText: {
-          color: theme.colors.primaryContrast,
+        actionButton: {
+          marginBottom: 10,
         },
       }),
-    [theme]
+    [isTablet, theme]
   );
-
-  const getHeaderEmoji = () => {
-    if (combinedScore >= 14) return '💕';
-    if (combinedScore >= 10) return '🎉';
-    if (combinedScore >= 6) return '👍';
-    return '💪';
-  };
 
   if (isLoadingScores) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]}>Loading results...</Text>
-      </View>
+      <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+        <VelvetTopBar title="Results" subtitle={RESULTS_SUBTITLE} />
+        <View style={styles.centeredWrap}>
+          <VelvetHeroCard style={styles.recoveryCard}>
+            <ActivityIndicator size="large" color={theme.colors.primary} />
+            <Text style={styles.recoveryTitle}>Loading results...</Text>
+            <Text style={styles.recoveryBody}>
+              We&apos;re pulling the final score and milestone details for this session.
+            </Text>
+          </VelvetHeroCard>
+        </View>
+      </VelvetScreen>
     );
   }
 
   if (scoreLoadError || !scores) {
-    if (scoreLoadError === 'not-ready') {
-      return (
-        <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-          <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Aren&apos;t Ready Yet</Text>
-          <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} {...accessibilityAlertProps}>
-            Your session is still active, but final results have not unlocked yet. Return to the game or refresh after your partner finishes.
-          </Text>
-          <TouchableOpacity
-            style={[styles.playAgainButton, dynamicStyles.playAgainButton, { marginTop: 12 }]}
-            onPress={handleReturnToGame}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Return to game"
-          >
-            <Text style={[styles.playAgainText, dynamicStyles.playAgainText]}>Return to Game</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.dashboardButton, dynamicStyles.dashboardButton, { marginTop: 12 }]}
-            onPress={loadResults}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Refresh results"
-          >
-            <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Refresh Results</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.dashboardButton, dynamicStyles.dashboardButton, { marginTop: 12 }]}
-            onPress={handleBackToDashboard}
-            activeOpacity={0.8}
-            accessibilityRole="button"
-            accessibilityLabel="Back to dashboard"
-          >
-            <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
-          </TouchableOpacity>
-        </View>
-      );
-    }
+    const isNotReady = scoreLoadError === 'not-ready';
 
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
-        <Text style={[styles.errorTitle, { color: theme.colors.textPrimary }]}>Results Unavailable</Text>
-        <Text style={[styles.loadingText, { color: theme.colors.textSecondary }]} {...accessibilityAlertProps}>
-          This game result is no longer available.
-        </Text>
-        <TouchableOpacity
-          style={[styles.dashboardButton, dynamicStyles.dashboardButton, { marginTop: 12 }]}
-          onPress={handleBackToDashboard}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Back to dashboard"
-        >
-          <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
-        </TouchableOpacity>
-      </View>
+      <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+        <VelvetTopBar title="Results" subtitle={RESULTS_SUBTITLE} />
+        <View style={styles.centeredWrap}>
+          <VelvetHeroCard style={styles.recoveryCard}>
+            <VelvetStatusPill
+              label={isNotReady ? 'Results pending' : 'Unavailable'}
+              tone={isNotReady ? 'warning' : 'neutral'}
+            />
+            <Text style={styles.recoveryTitle}>
+              {isNotReady ? "Results Aren't Ready Yet" : 'Results Unavailable'}
+            </Text>
+            <Text style={styles.recoveryBody} {...accessibilityAlertProps}>
+              {isNotReady
+                ? 'Your session is still active, but final results have not unlocked yet. Return to the game or refresh after your partner finishes.'
+                : 'This game result is no longer available.'}
+            </Text>
+
+            {isNotReady ? (
+              <>
+                <VelvetPrimaryButton
+                  label="Return to Game"
+                  onPress={handleReturnToGame}
+                  style={styles.recoveryAction}
+                  accessibilityLabel="Return to game"
+                />
+                <VelvetSecondaryButton
+                  label="Refresh Results"
+                  onPress={loadResults}
+                  style={styles.recoveryAction}
+                  accessibilityLabel="Refresh results"
+                />
+              </>
+            ) : null}
+
+            <VelvetSecondaryButton
+              label="Back to Dashboard"
+              onPress={handleBackToDashboard}
+              style={styles.recoveryAction}
+              accessibilityLabel="Back to dashboard"
+            />
+          </VelvetHeroCard>
+        </View>
+      </VelvetScreen>
     );
   }
 
   return (
-    <ScrollView
-      style={[styles.scrollContainer, dynamicStyles.scrollContainer]}
-      contentContainerStyle={styles.container}>
-      <Animated.View
-        style={[
-          styles.content,
-          { width: '100%', maxWidth: isTablet ? 820 : 560 },
-          { opacity: fadeAnim, transform: [{ scale: scaleAnim }] },
-        ]}>
-        {/* Header */}
-        <Text style={styles.emoji} {...decorativeAccessibilityProps}>{getHeaderEmoji()}</Text>
-        <Text style={[styles.title, dynamicStyles.title]}>Game Complete!</Text>
-
-        {/* Score Cards */}
-        <View style={styles.scoresRow}>
-          <View
-            style={[styles.scoreCard, dynamicStyles.scoreCard]}
-            accessible
-            accessibilityLabel={`${scores.player1Name} scored ${scores.player1Score} out of ${scores.totalQuestions}.`}
-          >
-            <Text style={[styles.playerName, dynamicStyles.playerName]} numberOfLines={1}>
-              {scores.player1Name}
-            </Text>
-            <View style={[styles.scoreCircle, dynamicStyles.scoreCircle]}>
-              <AnimatedScore
-                animatedValue={p1ScoreAnim}
-                total={scores.totalQuestions}
-                theme={theme}
-              />
-            </View>
-          </View>
-
-          <View style={styles.vsContainer}>
-            <Text style={[styles.vsText, dynamicStyles.vsText]}>vs</Text>
-          </View>
-
-          <View
-            style={[styles.scoreCard, dynamicStyles.scoreCard]}
-            accessible
-            accessibilityLabel={`${scores.player2Name} scored ${scores.player2Score} out of ${scores.totalQuestions}.`}
-          >
-            <Text style={[styles.playerName, dynamicStyles.playerName]} numberOfLines={1}>
-              {scores.player2Name}
-            </Text>
-            <View style={[styles.scoreCircle, dynamicStyles.scoreCircle]}>
-              <AnimatedScore
-                animatedValue={p2ScoreAnim}
-                total={scores.totalQuestions}
-                theme={theme}
-              />
-            </View>
-          </View>
-        </View>
-
-        {/* Result Message */}
-        <View style={[styles.messageContainer, dynamicStyles.messageContainer]} accessible {...accessibilityAlertProps}>
-          <Text style={[styles.messageText, dynamicStyles.messageText]}>{scores.message}</Text>
-          <Text style={[styles.combinedScore, dynamicStyles.combinedScore]}>
-            Combined: {combinedScore}/{maxCombined}
-          </Text>
-        </View>
-
-        <MilestoneHighlights milestones={scores.recentMilestones} title="Unlocked This Game" />
-        <ProgressionCard snapshot={scores.coupleProgression} />
-
-        {/* Buttons */}
-        <TouchableOpacity
-          style={[styles.playAgainButton, dynamicStyles.shareButton]}
-          onPress={handleShareResult}
-          activeOpacity={0.8}
-          disabled={isSharing}
-          accessibilityRole="button"
-          accessibilityLabel="Share result card"
-          accessibilityHint="Generates a branded image card for this game result."
+    <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
+      <View style={styles.root}>
+        <VelvetTopBar title="Results" subtitle={RESULTS_SUBTITLE} />
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
         >
-          <Text style={[styles.playAgainText, dynamicStyles.shareButtonText]}>
-            {isSharing ? 'Preparing Share...' : 'Share Result Card'}
-          </Text>
-        </TouchableOpacity>
-
-        {scores?.recentMilestones?.length ? (
-          <TouchableOpacity
-            style={[styles.dashboardButton, dynamicStyles.dashboardButton]}
-            onPress={handleShareMilestone}
-            activeOpacity={0.8}
-            disabled={isSharing}
-            accessibilityRole="button"
-            accessibilityLabel="Share latest celebration"
-            accessibilityHint="Generates a branded image card for the latest unlocked celebration."
+          <Animated.View
+            style={[
+              styles.contentWrap,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
           >
-            <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>
-              {isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
-            </Text>
-          </TouchableOpacity>
-        ) : null}
+            <VelvetHeroCard style={styles.heroCard}>
+              <View style={styles.heroGlow} />
+              <View style={styles.heroEyebrowRow}>
+                <VelvetStatusPill label="Session complete" tone="accent" />
+                <VelvetStatusPill label={`${combinedScore}/${maxCombined} combined`} tone="success" />
+              </View>
+              <Text style={styles.heroEmoji} {...decorativeAccessibilityProps}>
+                {getHeaderEmoji(combinedScore)}
+              </Text>
+              <Text style={styles.heroTitle}>Game Complete!</Text>
+              <Text style={styles.heroBody} {...accessibilityAlertProps}>
+                {scores.message}
+              </Text>
+              <View style={styles.combinedRow}>
+                <Text style={styles.combinedLabel}>Shared Score</Text>
+                <Text style={styles.combinedValue}>Combined: {combinedScore}/{maxCombined}</Text>
+              </View>
+            </VelvetHeroCard>
 
-        <TouchableOpacity
-          style={[styles.playAgainButton, dynamicStyles.playAgainButton]}
-          onPress={handlePlayAgain}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Play again"
-          accessibilityHint="Starts a new game from category selection.">
-          <Text style={[styles.playAgainText, dynamicStyles.playAgainText]}>Play Again</Text>
-        </TouchableOpacity>
+            <View style={styles.scoresRow}>
+              <VelvetStatCard
+                style={styles.scoreCard}
+                accessible
+                accessibilityLabel={`${scores.player1Name} scored ${scores.player1Score} out of ${scores.totalQuestions}.`}
+              >
+                <Text style={styles.playerName} numberOfLines={1}>{scores.player1Name}</Text>
+                <View style={styles.scoreCircle}>
+                  <AnimatedScore
+                    animatedValue={p1ScoreAnim}
+                    total={scores.totalQuestions}
+                    theme={theme}
+                  />
+                </View>
+                <Text style={styles.scoreHint}>Your match score</Text>
+              </VelvetStatCard>
 
-        <TouchableOpacity
-          style={[styles.dashboardButton, dynamicStyles.dashboardButton]}
-          onPress={handleBackToDashboard}
-          activeOpacity={0.8}
-          accessibilityRole="button"
-          accessibilityLabel="Back to dashboard"
-          accessibilityHint="Returns to the dashboard.">
-          <Text style={[styles.dashboardText, dynamicStyles.dashboardText]}>Back to Dashboard</Text>
-        </TouchableOpacity>
-        {shareHost}
-      </Animated.View>
-    </ScrollView>
+              <VelvetStatCard
+                style={styles.scoreCard}
+                accessible
+                accessibilityLabel={`${scores.player2Name} scored ${scores.player2Score} out of ${scores.totalQuestions}.`}
+              >
+                <Text style={styles.playerName} numberOfLines={1}>{scores.player2Name}</Text>
+                <View style={styles.scoreCircle}>
+                  <AnimatedScore
+                    animatedValue={p2ScoreAnim}
+                    total={scores.totalQuestions}
+                    theme={theme}
+                  />
+                </View>
+                <Text style={styles.scoreHint}>Partner match score</Text>
+              </VelvetStatCard>
+            </View>
+
+            <MilestoneHighlights milestones={scores.recentMilestones} title="Unlocked This Game" />
+            <ProgressionCard snapshot={scores.coupleProgression} />
+
+            <VelvetSectionCard style={styles.actionsCard}>
+              <Text style={styles.actionsTitle}>Choose your next moment</Text>
+              <Text style={styles.actionsBody}>
+                Share the reveal, start another ritual, or head back to your relationship home with this session wrapped up.
+              </Text>
+
+              <VelvetPrimaryButton
+                label={isSharing ? 'Preparing Share...' : 'Share Result Card'}
+                onPress={handleShareResult}
+                disabled={isSharing}
+                style={styles.actionButton}
+                accessibilityLabel="Share result card"
+                accessibilityHint="Generates a branded image card for this game result."
+              />
+
+              {scores?.recentMilestones?.length ? (
+                <VelvetSecondaryButton
+                  label={isSharing ? 'Preparing Share...' : 'Share Latest Celebration'}
+                  onPress={handleShareMilestone}
+                  disabled={isSharing}
+                  style={styles.actionButton}
+                  accessibilityLabel="Share latest celebration"
+                  accessibilityHint="Generates a branded image card for the latest unlocked celebration."
+                />
+              ) : null}
+
+              <VelvetPrimaryButton
+                label="Play Again"
+                onPress={handlePlayAgain}
+                style={styles.actionButton}
+                accessibilityLabel="Play again"
+                accessibilityHint="Starts a new game from category selection."
+              />
+
+              <VelvetSecondaryButton
+                label="Back to Dashboard"
+                onPress={handleBackToDashboard}
+                accessibilityLabel="Back to dashboard"
+                accessibilityHint="Returns to the dashboard."
+              />
+            </VelvetSectionCard>
+            {shareHost}
+          </Animated.View>
+        </ScrollView>
+      </View>
+    </VelvetScreen>
   );
+};
+
+const getHeaderEmoji = (combinedScore) => {
+  if (combinedScore >= 14) return '💕';
+  if (combinedScore >= 10) return '🎉';
+  if (combinedScore >= 6) return '✨';
+  return '💪';
 };
 
 const AnimatedScore = ({ animatedValue, total, theme }) => {
@@ -439,12 +565,12 @@ const AnimatedScore = ({ animatedValue, total, theme }) => {
         },
         score: {
           fontSize: 48,
-          fontWeight: 'bold',
+          fontWeight: '800',
           color: theme.colors.primary,
         },
         total: {
           fontSize: 22,
-          fontWeight: '600',
+          fontWeight: '700',
           color: theme.colors.textTertiary,
         },
       }),
@@ -460,9 +586,9 @@ const AnimatedScore = ({ animatedValue, total, theme }) => {
 };
 
 const AnimatedText = ({ animatedValue, scoreStyles }) => {
-  const [displayValue, setDisplayValue] = React.useState(0);
+  const [displayValue, setDisplayValue] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const id = animatedValue.addListener(({ value }) => {
       setDisplayValue(Math.round(value));
     });
@@ -471,154 +597,5 @@ const AnimatedText = ({ animatedValue, scoreStyles }) => {
 
   return <Text style={scoreStyles.score}>{displayValue}</Text>;
 };
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  errorTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  scrollContainer: {
-    flex: 1,
-    backgroundColor: '#f5f5f5',
-  },
-  container: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 24,
-  },
-  content: {
-    alignItems: 'center',
-  },
-
-  emoji: {
-    fontSize: 64,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 30,
-  },
-
-  // Scores
-  scoresRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 24,
-    width: '100%',
-  },
-  scoreCard: {
-    flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    alignItems: 'center',
-    borderWidth: 1,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 6,
-  },
-  playerName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 10,
-  },
-  scoreCircle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: '#f3e5f5',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  vsContainer: {
-    paddingHorizontal: 12,
-  },
-  vsText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#999',
-  },
-
-  // Message
-  messageContainer: {
-    backgroundColor: '#fff',
-    borderRadius: 16,
-    padding: 20,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 30,
-    borderWidth: 1,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-  },
-  messageText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-    textAlign: 'center',
-    lineHeight: 26,
-    marginBottom: 8,
-  },
-  combinedScore: {
-    fontSize: 15,
-    color: '#999',
-    fontWeight: '500',
-  },
-
-  // Buttons
-  playAgainButton: {
-    backgroundColor: '#6200ea',
-    paddingVertical: 16,
-    borderRadius: 25,
-    width: '100%',
-    alignItems: 'center',
-    marginBottom: 14,
-    elevation: 3,
-    shadowColor: '#6200ea',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-  },
-  playAgainText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  dashboardButton: {
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 25,
-    width: '100%',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#6200ea',
-  },
-  dashboardText: {
-    color: '#6200ea',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-});
 
 export default ResultsScreen;

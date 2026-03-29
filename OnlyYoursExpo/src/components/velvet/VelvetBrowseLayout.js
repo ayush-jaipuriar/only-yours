@@ -27,7 +27,7 @@ const VelvetBrowseLayout = ({
   bottomPadding = 28,
   contentContainerStyle,
   scrollStyle,
-  withAtmosphere = false,
+  withAtmosphere = true,
   atmosphere = 'default',
   showsVerticalScrollIndicator = false,
   ...scrollProps

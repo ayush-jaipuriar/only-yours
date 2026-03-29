@@ -74,8 +74,8 @@ Status convention:
 - [ ] Record final token decisions in the implementation spec if they differ from Stitch
 
 ### Notes / Blockers
-- Notes: Token names were intentionally preserved to avoid breaking existing screens while swapping the underlying palette and surface hierarchy to Velvet Midnight. Targeted Jest validation passed for auth, gameplay, theme-provider, category-selection, and custom-question screen slices after the token swap.
-- Blockers: `SettingsScreenFlow.test.js` currently times out on onboarding replay and should be checked in a follow-up validation pass before Phase 1 is considered fully closed.
+- Notes: Token names were intentionally preserved to avoid breaking existing screens while swapping the underlying palette and surface hierarchy to Velvet Midnight. A later polish pass further deepened the light-mode blush/plum surfaces, strengthened ambient glow tokens, and adjusted the light-mode gradient set so browse/auth shells no longer read like near-white utility screens. Targeted Jest validation passed for auth, gameplay, theme-provider, category-selection, and custom-question screen slices after the token swap.
+- Blockers: No known functional blockers remain in the token layer. The remaining closure work is visual: dark/light/system consistency, browse-shell vs focused-shell cohesion, and deciding whether light mode should move even closer to the darker Velvet Midnight hero treatment.
 
 ---
 
@@ -168,14 +168,15 @@ Status convention:
 - [x] Start new game CTA routes correctly
 - [x] Dashboard still works with real progression/stats data
 - [x] All three main dashboard states render correctly
+- [x] Latest-results recovery hero renders when a completed session snapshot exists
 
 ### Docs
 - [x] Record any dashboard-state deviations from Stitch 2
 - [x] Update spec if bottom-nav decisions change from plan assumptions
 
 ### Notes / Blockers
-- Notes: `DashboardScreen` now uses a state-driven Velvet Midnight structure instead of a mostly linear utility stack. The screen keeps the existing `useDashboardGameFlow` contract and navigation behavior, but reorganizes the content into a stronger browse-home shape: editorial greeting, stateful hero (`active game`, `ready to start`, `not linked`), quick destination cards, progression as a richer narrative section, a bento-style celebration area, denser stats lower in the scroll, and achievements with clearer section framing. The implementation now consumes more of the shared primitive layer directly: `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` alongside the existing browse shell and card primitives. Automated validation now covers both halves of the dashboard contract: `DashboardScreen.test.js` verifies the three main screen states plus their primary CTAs, and `useDashboardGameFlow.test.js` continues to cover the underlying data/loading behavior. Neighboring browse-surface flow tests (`ProfileScreenFlow`, `useGameHistoryFlow`) also remain green after the redesign. This runtime pass revalidated the `not linked` to `linked + no active game` transition using disposable real accounts on phone and tablet: after linking the pair through the real backend, both devices cold-launched back into the `Ready to Begin` dashboard hero, and `Start New Game` routed correctly into `CategorySelection` on tablet. We then advanced the same real session into `INVITED` and Round 1. After force-stopping the phone mid-session, the app cold-launched back into the correct `ACTIVE SESSION` dashboard hero (`ROUND1 • QUESTION 1/8`), and `Continue Game` routed back into the same live question screen.
-- Blockers: The in-progress active-session matrix is now materially closed. We now have runtime proof for `INVITED`, early Round 1, Round 2, and waiting-state recovery through the dashboard hero plus `Continue Game`. The remaining follow-up is no longer “can the user recover an active session?” but “what should happen after a completed session?” Right now a hard relaunch after results returns the user to the normal `Ready to Begin` dashboard hero instead of preserving just-finished results context.
+- Notes: `DashboardScreen` now uses a state-driven Velvet Midnight structure instead of a mostly linear utility stack. The screen keeps the existing `useDashboardGameFlow` contract and navigation behavior, but reorganizes the content into a stronger browse-home shape: editorial greeting, stateful hero (`active game`, `ready to start`, `not linked`), quick destination cards, progression as a richer narrative section, a bento-style celebration area, denser stats lower in the scroll, and achievements with clearer section framing. The implementation now consumes more of the shared primitive layer directly: `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` alongside the existing browse shell and card primitives. Automated validation now covers both halves of the dashboard contract: `DashboardScreen.test.js` verifies the three main screen states plus their primary CTAs, and `useDashboardGameFlow.test.js` continues to cover the underlying data/loading behavior. Neighboring browse-surface flow tests (`ProfileScreenFlow`, `useGameHistoryFlow`) also remain green after the redesign. This runtime pass revalidated the `not linked` to `linked + no active game` transition using disposable real accounts on phone and tablet: after linking the pair through the real backend, both devices cold-launched back into the `Ready to Begin` dashboard hero, and `Start New Game` routed correctly into `CategorySelection` on tablet. We then advanced the same real session into `INVITED` and Round 1. After force-stopping the phone mid-session, the app cold-launched back into the correct `ACTIVE SESSION` dashboard hero (`ROUND1 • QUESTION 1/8`), and `Continue Game` routed back into the same live question screen. A later recovery pass extended the hero model with a persisted `results_ready` state backed by `latest_completed_session_v1`, so a just-finished session can now be surfaced from dashboard instead of disappearing on relaunch. Phone runtime verification using a seeded completed-session snapshot confirmed the new `Results ready` hero renders correctly, and the CTA row was moved above the metadata block so the action appears earlier on smaller screens.
+- Blockers: The active-session recovery matrix is now materially closed for both in-progress and post-completion dashboard continuity. The remaining dashboard polish work is visual rather than behavioral, especially around how soft light-mode browse surfaces should remain compared with the darker hero mode.
 
 ---
 
@@ -328,13 +329,13 @@ Status convention:
 ## Phase 9. Results and Missing States
 
 ### Implementation
-- [ ] Design and implement [`ResultsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ResultsScreen.js) in Velvet Midnight style
-- [ ] Implement celebratory results hero
-- [ ] Implement player score cards
-- [ ] Implement milestones/progression section
-- [ ] Implement share-result CTA styling
-- [ ] Implement play-again/dashboard exit actions
-- [ ] Design in-code results loading state
+- [x] Design and implement [`ResultsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ResultsScreen.js) in Velvet Midnight style
+- [x] Implement celebratory results hero
+- [x] Implement player score cards
+- [x] Implement milestones/progression section
+- [x] Implement share-result CTA styling
+- [x] Implement play-again/dashboard exit actions
+- [x] Design in-code results loading state
 - [x] Design in-code results unavailable/error state
 - [ ] Add forgot-password success/error styling if still incomplete
 - [ ] Add reset-password success/error styling if still incomplete
@@ -347,14 +348,15 @@ Status convention:
 - [x] Back to dashboard works
 - [x] Share result action still works
 - [x] Results fallback state is understandable
+- [x] Latest-results recovery state can route back toward results context
 
 ### Docs
 - [x] Add notes for results design decisions since Stitch 2 has no dedicated export
 - [x] Update master spec with the implemented results direction
 
 ### Notes / Blockers
-- Notes: Before the full Velvet Midnight results redesign, we hardened `ResultsScreen` so backend result states now map to distinct UX. A `409` from `/api/game/{sessionId}/results` now renders an explicit “Results Aren't Ready Yet” recovery surface with `Return to Game`, `Refresh Results`, and `Back to Dashboard` actions instead of collapsing into a generic unavailable error. `404` and other failures still route to the unavailable fallback. Jest validation now covers the new `409` recovery path and refresh behavior in `ResultsScreen.test.js`, while existing play-again, back-to-dashboard, and share-card behaviors remain green. Manual two-device runtime QA now also confirms that real finished sessions land on the shared results screen on both devices with matching final scores and unlocked-milestone content. Additional phone validation confirms `Share Result Card` opens a native Android share sheet with a generated image payload, `Play Again` routes correctly into `CategorySelection` for a fresh session flow, and a recreated perfect-score session now also proves `Back to Dashboard` returns the user to the linked dashboard on hardware.
-- Blockers: The broader visual redesign of `ResultsScreen` itself still belongs to Phase 9 and has not been fully restyled to the Velvet Midnight spec yet.
+- Notes: `ResultsScreen` is now fully on the Velvet Midnight primitive layer rather than a legacy utility composition. The screen owns its own chrome through `VelvetTopBar` and now presents a celebratory hero, animated score cards, milestone/progression sections, branded share actions, and explicit loading / `409 not ready` / unavailable recovery states using the same component family as the rest of the overhaul. `Play Again` and `Back to Dashboard` now also clear the temporary latest-results recovery snapshot on intentional exit, while `GameScreen` passes `sessionId` into results navigation so the screen can reliably re-fetch on reopen. Jest validation remains green across happy path rendering, share action, exit actions, `409` recovery, refresh behavior, and the new dashboard/latest-results recovery state.
+- Blockers: The main remaining work around results is no longer core implementation. It is follow-up visual QA on real devices once the broader light/dark/system polish pass is complete.
 
 ---
 
@@ -363,15 +365,15 @@ Status convention:
 ### Implementation
 - [x] Run frontend test suite
 - [ ] Fix regressions introduced by redesign
-- [ ] Run cross-screen visual consistency pass
-- [ ] Check dark/light/system mode behavior
+- [-] Run cross-screen visual consistency pass
+- [-] Check dark/light/system mode behavior
 - [ ] Check browse-shell vs focused-shell consistency
 - [ ] Polish spacing, hierarchy, and text contrast issues
 - [ ] Remove any obsolete styling or dead components left from previous system
 
 ### Validation
-- [ ] Manual auth pass
-- [ ] Manual onboarding pass
+- [x] Manual auth pass
+- [-] Manual onboarding pass
 - [x] Manual dashboard-state pass
 - [x] Manual linking pass
 - [x] Manual category-selection pass
@@ -381,6 +383,7 @@ Status convention:
 - [x] Manual profile pass
 - [x] Manual settings pass
 - [x] Manual results pass
+- [-] Manual phone/tablet visual regression after latest shell/token polish
 - [ ] Light/dark/system visual QA complete
 
 ### Docs
@@ -389,8 +392,8 @@ Status convention:
 - [ ] Add a short completion summary once overhaul reaches stable baseline
 
 ### Notes / Blockers
-- Notes: Full frontend regression passed on Node 24 with `npm test -- --runInBand`. All 26 Jest suites and all 127 tests passed. Manual results validation is now functionally closed: real finished sessions reached the shared results screen on both devices, `Share Result Card` opened the native Android share sheet, `Play Again` routed into a fresh `CategorySelection` flow, and `Back to Dashboard` was manually verified on both phone and tablet after recreating a fresh clean results route. The remaining manual QA work is concentrated in auth/onboarding follow-through and broader visual polish checks such as light/dark/system consistency and large-screen spacing.
-- Blockers: Replay onboarding remains the main newly confirmed runtime defect. Manual sign-in is still only partial because the phone auth pass in this slice was confounded by adb text-entry behavior and a transient local `No connection` banner rather than a clean in-app form interaction.
+- Notes: Full frontend regression passed on Node 24 with `npm test -- --runInBand`. All 26 Jest suites and all 127 tests passed. Manual results validation is now functionally closed: real finished sessions reached the shared results screen on both devices, `Share Result Card` opened the native Android share sheet, `Play Again` routed into a fresh `CategorySelection` flow, and `Back to Dashboard` was manually verified on both phone and tablet after recreating a fresh clean results route. Post-completion continuity is also now implemented: the dashboard can surface a `results_ready` recovery hero after a hard relaunch, and explicit exits from results clear that temporary recovery state. A follow-up hardware regression after the shared shell/token polish also confirmed that the phone can still deep-link into the real auth surface through the dev client, the tablet dashboard remains visually coherent after browse-atmosphere defaults changed, and `Start New Game` still transitions into `CategorySelection` on tablet. Manual auth is now fully closed because both tablet and phone were manually signed in with real typing and both landed on the linked dashboard successfully. The same late-pass polish cycle also fixed the last obvious `Settings` shell mismatch by theming the native header from Velvet Midnight tokens instead of leaving a bright platform-default header above dark content. The remaining manual QA work is now concentrated in a broader full onboarding walkthrough on-device and the last cross-mode visual polish checks such as light/dark/system consistency, browse-shell vs focused-shell cohesion, and large-screen spacing.
+- Blockers: Manual auth is no longer blocked. The remaining practical testing blocker is harness-related: full AsyncStorage swaps are useful for forced theme-mode QA on the debug build, but they can perturb dev-session auth/runtime state and should not be mistaken for a normal product re-entry path.
 
 ---
 
@@ -431,6 +434,6 @@ Mitigations:
 Current active phase:
 Phase 10. QA, Refinement, and Documentation Closure
 Overall notes:
-Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout. Phases 3 through 9 are largely implemented and broadly validated on hardware. Replay onboarding from settings is now fixed in live runtime. The active-session recovery matrix is now functionally proven through Round 2 and waiting-state continuation, and results behavior is functionally closed in-session. The main remaining closure work is the last round of visual polish/manual QA plus a product decision on whether just-finished results should be recoverable after a hard relaunch.
+Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout. Phases 3 through 9 are largely implemented and broadly validated on hardware. Replay onboarding from settings is now fixed in live runtime. Manual auth is now closed on both tablet and phone with real typed sign-in landing on the linked dashboard. The active-session recovery matrix is functionally proven through Round 2, waiting-state continuation, and post-results relaunch recovery through the new dashboard `results_ready` hero. The main remaining closure work is the last round of visual polish/manual QA: a full onboarding walkthrough on-device, browse-shell vs focused-shell refinement, and the final light/dark/system pass.
 Next recommended task:
-Run one clean sign-in validation pass with reliable manual entry, then recreate an active game and verify dashboard/session recovery before moving into the remaining light/dark/system and large-screen polish pass.
+Run one full onboarding walkthrough on-device, then finish the remaining light/dark/system and large-screen polish pass with special attention to browse-shell vs focused-shell cohesion.

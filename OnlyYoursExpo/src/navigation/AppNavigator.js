@@ -125,8 +125,7 @@ const AppNavigator = () => {
               name="Results"
               component={ResultsScreen}
               options={{
-                title: 'Results',
-                headerLeft: null,
+                headerShown: false,
                 gestureEnabled: false,
               }}
             />

@@ -101,9 +101,9 @@ const GameScreen = ({ route, navigation }) => {
 
   useEffect(() => {
     if (gameStatus === 'completed' && scores) {
-      navigation.replace('Results', { scores });
+      navigation.replace('Results', { scores, sessionId: activeSession });
     }
-  }, [gameStatus, scores, navigation]);
+  }, [activeSession, gameStatus, scores, navigation]);
 
   useEffect(() => {
     if (currentQuestion) {

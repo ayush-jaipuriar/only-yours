@@ -9,7 +9,7 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
     () =>
       StyleSheet.create({
         safeArea: {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.mode === 'light' ? theme.colors.surfaceOverlay : theme.colors.surface,
         },
         container: {
           flexDirection: 'row',
@@ -18,7 +18,7 @@ const VelvetBottomNav = ({ items = [], activeKey, onPress, style }) => {
           paddingHorizontal: 12,
           paddingTop: 10,
           paddingBottom: 8,
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.mode === 'light' ? theme.colors.surfaceOverlay : theme.colors.surface,
           borderTopWidth: 1,
           borderTopColor: theme.colors.border,
         },

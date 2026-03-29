@@ -42,14 +42,14 @@ const VelvetAtmosphere = ({ variant = 'default' }) => {
     return {
       top: {
         ...baseGlowConfig.top,
-        size: 250,
-        opacity: 0.9,
+        size: 290,
+        opacity: 0.88,
       },
       bottom: {
         ...baseGlowConfig.bottom,
-        size: 260,
+        size: 300,
         color: 'glowAccent',
-        opacity: 0.48,
+        opacity: 0.54,
       },
     };
   }, [baseGlowConfig, theme.mode, variant]);

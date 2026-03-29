@@ -39,46 +39,11 @@ Severity guide:
   - This is especially noticeable on gameplay, which was meant to be one of the strongest “focused” dark-luxe moments in the redesign.
   - A follow-up tablet dark-mode check showed that the dark shell is much closer to the intended brand direction, which narrows the problem: the main mismatch is the light/system presentation, not the entire gameplay visual system.
   - A focused polish pass improved the hierarchy in code: the focused atmosphere is richer, hero/footer surfaces are stronger, and selected option states are much clearer on phone and tablet. The issue is no longer “gameplay looks wrong everywhere”; it is now specifically that light/system mode still feels softer than the approved hero direction.
+  - A later shared-foundation polish pass also deepened the browse/auth light-mode palette, turned atmospheric browse backgrounds on by default, and strengthened light-mode shell surfaces. Real-device regression after that pass shows the phone auth shell now feels more intentionally branded than before, while the tablet browse and category-selection surfaces remain strong. The remaining gap is not “light mode is broken”; it is that light mode is still softer than the dark hero mode and may still need one more contrast pass if we want an even more dramatic evening feel in `system` / `light`.
 - Why it matters:
   - This does not block play, but it weakens the visual identity of the overhaul and creates mismatch against the approved Stitch 2 direction.
 - Recommended next action:
-  - Run the dedicated light/dark/system polish pass and decide whether gameplay should default more aggressively into the dark-luxe treatment or receive stronger contrast/glow treatment in light mode.
-
-### VM-OPEN-002
-- Title: Hard relaunch after results loses the just-finished results context
-- Status: `Open`
-- Severity: `P2`
-- Area: post-completion recovery / results continuity
-- Evidence:
-  - Waiting state before relaunch: [`/tmp/onlyyours-phone-waiting-check.png`](/tmp/onlyyours-phone-waiting-check.png)
-  - Results arriving live after the partner finished: [`/tmp/onlyyours-phone-after-tablet-submit.png`](/tmp/onlyyours-phone-after-tablet-submit.png)
-  - Post-results relaunch landing state: [`/tmp/onlyyours-phone-results-relaunch.png`](/tmp/onlyyours-phone-results-relaunch.png)
-- What we saw:
-  - The broader in-progress recovery matrix is now materially proven:
-    - `INVITED` recovery
-    - Round 1 recovery
-    - Round 2 recovery
-    - waiting-state recovery through the dashboard hero plus `Continue Game`
-    - live transition from waiting into shared results when the slower partner finishes
-  - The remaining rough edge is specifically after the session is fully complete. When the phone is hard-relaunched from the results state, it reconnects into the normal linked dashboard `Ready to Begin` hero instead of recovering the just-finished results context.
-- Why it matters:
-  - If a user leaves or crashes out immediately after a completed game, the emotional payoff is no longer preserved on reopen unless they already saw the results or returned via a results-specific route/notification.
-- Recommended next action:
-  - Decide whether the app should persist the latest completed `sessionId` long enough to recover directly into `Results`, or at least surface a prominent “View latest results” CTA on the dashboard after completion.
-
-### VM-OPEN-003
-- Title: Results screen is still not fully restyled to the Velvet Midnight spec
-- Status: `Open`
-- Severity: `P3`
-- Area: results / final-screen polish
-- Evidence:
-  - Already called out in [`VELVET_MIDNIGHT_EXECUTION_TRACKER.md`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursApp/stitch%202/VELVET_MIDNIGHT_EXECUTION_TRACKER.md)
-- What we saw:
-  - Results behavior is functionally closed, but the broader visual redesign of `ResultsScreen` has not yet reached the same polish level as the newer dashboard/gameplay surfaces.
-- Why it matters:
-  - Results is a flagship emotional moment and should match the premium “keepsake” direction of the redesign.
-- Recommended next action:
-  - Include `ResultsScreen` in the next visual polish slice after gameplay/system-mode review.
+  - Run the dedicated light/dark/system polish pass and decide whether gameplay should default more aggressively into the dark-luxe treatment or receive stronger contrast/glow treatment in light mode. The main remaining question is now visual preference and brand intensity, not flow correctness.
 
 ---
 
@@ -154,6 +119,73 @@ Severity guide:
   - Waiting-state relaunch dashboard hero: [`/tmp/onlyyours-phone-waiting-relaunch.png`](/tmp/onlyyours-phone-waiting-relaunch.png)
   - Waiting-state restore via `Continue Game`: [`/tmp/onlyyours-phone-waiting-continue.png`](/tmp/onlyyours-phone-waiting-continue.png)
 
+### VM-FIXED-007
+- Title: Hard relaunch after results no longer drops all completion context
+- Status: `Fixed`
+- Severity: `P2`
+- Area: post-completion recovery / results continuity
+- Original symptom:
+  - After a session completed, a hard relaunch returned the user to the normal linked dashboard `Ready to Begin` hero with no way back into the just-finished reveal.
+- Fix:
+  - [`GameContext.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/GameContext.js) now persists a short-lived `latest_completed_session_v1` snapshot whenever `GAME_RESULTS` arrives.
+  - [`useDashboardGameFlow.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/useDashboardGameFlow.js) now exposes that persisted recovery context.
+  - [`DashboardScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/DashboardScreen.js) now renders a dedicated `results_ready` hero with a `View Latest Results` recovery path instead of treating the user like they are starting cold.
+- Validation:
+  - Jest now covers the recovery path in:
+    - [`DashboardScreen.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/__tests__/DashboardScreen.test.js)
+    - [`useDashboardGameFlow.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/__tests__/useDashboardGameFlow.test.js)
+  - A seeded AsyncStorage runtime pass on phone rendered the new recovery hero successfully with real completed-session data and the corrected `Results ready` badge.
+- Important note:
+  - We validated the recovery hero itself on-device using a seeded persisted payload rather than replaying the full game flow a second time immediately. The actual `Results` navigation contract from that hero remains covered by automated screen tests.
+
+### VM-FIXED-008
+- Title: Results screen was still using pre-overhaul presentation and native-stack chrome
+- Status: `Fixed`
+- Severity: `P3`
+- Area: results / final-screen polish
+- Original symptom:
+  - `ResultsScreen` had stronger backend handling than before, but it had not yet been fully brought into the Velvet Midnight visual system and still depended on the native stack header.
+- Fix:
+  - [`ResultsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/ResultsScreen.js) now uses Velvet Midnight hero, section, stat, button, and top-bar primitives for the happy path and recovery states.
+  - [`AppNavigator.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/navigation/AppNavigator.js) now hides the native stack header for `Results` so the screen owns its own chrome consistently.
+  - `Play Again` and `Back to Dashboard` now also clear the temporary latest-results recovery context on intentional exit.
+- Validation:
+  - [`ResultsScreen.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/__tests__/ResultsScreen.test.js) stayed green across happy path, share action, exit actions, and `409` recovery behavior.
+
+### VM-FIXED-009
+- Title: Latest-results recovery hero showed the wrong badge and buried the primary CTA on phone
+- Status: `Fixed`
+- Severity: `P3`
+- Area: dashboard / recovery UX polish
+- Original symptom:
+  - The new dashboard recovery hero initially rendered the badge as `LINK REQUIRED` because the `results_ready` branch fell through the old label logic.
+  - On phone, the real `View Latest Results` CTA sat too low in the hero, so the recovery action was less immediate than intended.
+- Fix:
+  - [`DashboardScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/DashboardScreen.js) now gives `results_ready` its own explicit `Results ready` badge label.
+  - The results-recovery action row now renders above the metadata block so the resume action appears earlier in the card on smaller screens.
+  - The dashboard loading state was also moved onto `VelvetScreen` + `VelvetHeroCard`, which makes the temporary loading shell feel aligned with the browse system instead of like a plain utility view.
+- Validation:
+  - Seeded phone screenshot after the fix: [`/tmp/onlyyours-phone-posttap-settled.png`](/tmp/onlyyours-phone-posttap-settled.png)
+  - Dashboard screen tests remained green after the layout change.
+
+### VM-FIXED-010
+- Title: Settings screen kept a bright native header that broke the Velvet Midnight shell
+- Status: `Fixed`
+- Severity: `P3`
+- Area: settings / shell polish
+- Original symptom:
+  - On tablet hardware, the `Settings` content rendered with the dark Velvet Midnight surface stack, but the native stack header remained bright white.
+  - That created a visual seam at the top of the screen and made `Settings` feel like a partially migrated route.
+- Fix:
+  - [`SettingsScreen.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/screens/SettingsScreen.js) now themes the native header via `navigation.setOptions(...)` using the active Velvet Midnight tokens.
+  - The header title, back arrow tint, and background now follow the current theme instead of using the platform default.
+- Validation:
+  - Jest:
+    - [`SettingsScreenFlow.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/state/__tests__/SettingsScreenFlow.test.js)
+    - [`ThemeProvider.test.js`](/Users/ayushjaipuriar/Documents/GitHub/only-yours/OnlyYoursExpo/src/theme/__tests__/ThemeProvider.test.js)
+  - Hardware:
+    - themed settings screenshot: [`/tmp/onlyyours-tablet-settings-headerfix.png`](/tmp/onlyyours-tablet-settings-headerfix.png)
+
 ### VM-FIXED-004
 - Title: Settings unlink control was not truthful enough while an active game existed
 - Status: `Fixed`
@@ -222,6 +254,20 @@ Severity guide:
   - Treat the dev-client launcher/blank reconnect surface as testing harness noise.
   - Evaluate recovery only after the JavaScript bundle is reattached and the app shell is back on-screen.
 
+### VM-BLOCKER-004
+- Title: Full AsyncStorage database swaps can perturb dev-session auth state during forced theme QA
+- Status: `Testing blocker`
+- Severity: `P3`
+- Area: theme validation harness
+- What we saw:
+  - Replacing the entire `RKStorage` database is effective for forcing `theme_preference_v1` and proving theme hydration paths, but it can also disturb unrelated local session context on the debug build.
+  - During the forced tablet light-mode pass, the app relaunched into the auth shell rather than returning cleanly to the previously authenticated dashboard route.
+- Why it matters:
+  - This can look like a product auth regression even though it is a side effect of blunt local-storage manipulation during debug-only QA.
+- Current practice:
+  - Use full-database swaps only for targeted theme validation.
+  - Restore the original database afterward and do not treat resulting auth-shell changes as ordinary user-path behavior unless they can be reproduced without storage injection.
+
 ---
 
 ## Investigated And Closed As Not Product Bugs
@@ -265,6 +311,5 @@ Severity guide:
 ## Current Priority Order
 
 1. `VM-OPEN-001` Gameplay/system-mode visual polish against the Velvet Midnight target
-2. `VM-OPEN-002` Decide and implement post-results recovery behavior
-3. `VM-OPEN-003` Finish Results screen visual overhaul
-4. Keep using manual entry for auth certification when needed until `VM-BLOCKER-001` has a better automation workaround
+2. Re-run one clean phone/tablet visual pass once the next polish slice lands so the refreshed results/dashboard/settings surfaces are reviewed without seeded-state shortcuts
+3. Keep using manual entry for auth certification when needed until `VM-BLOCKER-001` has a better automation workaround

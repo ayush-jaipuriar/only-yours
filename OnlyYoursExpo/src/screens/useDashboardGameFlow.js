@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Alert } from 'react-native';
 import { useAuth } from '../state/AuthContext';
+import { useGame } from '../state/GameContext';
 import api from '../services/api';
 
 const useDashboardGameFlow = (navigation, alertApi = Alert) => {
   const { user } = useAuth();
+  const { latestCompletedSession } = useGame();
   const [couple, setCouple] = useState(null);
   const [activeGame, setActiveGame] = useState(null);
   const [stats, setStats] = useState(null);
@@ -121,6 +123,7 @@ const useDashboardGameFlow = (navigation, alertApi = Alert) => {
     progression,
     badges,
     loading,
+    latestCompletedSession,
     shouldShowContinueGame: Boolean(activeGame?.sessionId),
     handleStartGame,
     handleContinueGame,

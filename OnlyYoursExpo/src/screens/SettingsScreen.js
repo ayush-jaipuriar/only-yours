@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   ScrollView,
@@ -52,6 +52,23 @@ const SettingsScreen = ({ navigation }) => {
   const [unlinkError, setUnlinkError] = useState('');
   const [isRecoveringCouple, setIsRecoveringCouple] = useState(false);
   const previousCoupleStatusRef = useRef(null);
+
+  useLayoutEffect(() => {
+    navigation?.setOptions?.({
+      title: 'Settings',
+      headerStyle: {
+        backgroundColor: theme.colors.surface,
+        elevation: 0,
+        shadowOpacity: 0,
+      },
+      headerTintColor: theme.colors.textPrimary,
+      headerTitleStyle: {
+        color: theme.colors.textPrimary,
+        fontWeight: '700',
+      },
+      headerBackTitleVisible: false,
+    });
+  }, [navigation, theme]);
 
   const styles = useMemo(
     () =>
