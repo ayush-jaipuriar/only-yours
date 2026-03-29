@@ -496,7 +496,9 @@ const SettingsScreen = ({ navigation }) => {
     try {
       setIsReplayingOnboarding(true);
       await replayOnboarding();
-      navigation.replace('Onboarding');
+      announceForAccessibility('Replaying onboarding.');
+    } catch (error) {
+      announceForAccessibility('Unable to replay onboarding right now.');
     } finally {
       setIsReplayingOnboarding(false);
     }

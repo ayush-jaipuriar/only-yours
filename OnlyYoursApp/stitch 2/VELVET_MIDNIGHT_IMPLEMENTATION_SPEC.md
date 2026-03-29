@@ -282,6 +282,13 @@ Implementation status:
 - auth errors now render as inline message cards instead of plain detached text
 - sign-in secondary action grouping keeps only forgot-password and create-account pathways
 - autofill and keyboard hints are now explicitly configured to improve real-device form usability
+- the auth shell now also hides the global real-time reconnection banner while signed out, which keeps the sign-in experience truthful and avoids implying a broken live session before authentication has even started
+
+Current runtime review status:
+- sign-out back to the sign-in screen is hardware-validated and visually correct
+- the backend auth path and persisted-login hydration are both healthy again after correcting the local device API host setup
+- a clean manual sign-in on tablet using a known-good linked account now lands back on the real linked dashboard successfully, which closes the core sign-in UX path
+- direct adb text-entry is still not reliable enough on the connected devices to treat automated email/password submission as a trustworthy sign-in certification step; `%40` was inserted literally on phone and focus shifted unexpectedly after keyboard movement
 
 ## 8.2 Sign Up
 
@@ -369,7 +376,8 @@ Required UX:
 Implementation status:
 - implemented as a cinematic 3-step story flow rather than a single repeated card with swapped copy
 - preserves onboarding start-on-mount, skip, completion, and dashboard redirect behavior
-- replay-onboarding support remains intact and now validates cleanly through `SettingsScreenFlow`
+- Jest coverage still validates the replay-onboarding flow through `SettingsScreenFlow`, but live tablet runtime review found a real navigation bug: tapping `Replay Onboarding` from settings surfaced `The action 'REPLACE' with payload {"name":"Onboarding"} was not handled by any navigator`
+- replay-onboarding should now be treated as an open implementation defect rather than a closed manual-validation item
 - each step now has stronger visual identity and supporting copy while keeping the core message sequence intact
 
 ## 8.6 Dashboard
@@ -520,6 +528,8 @@ Current runtime review status:
 - The linked `no active game` dashboard state now has real hardware proof on tablet: `Start New Game` routes cleanly into `CategorySelection`.
 - The custom-deck not-ready state reads clearly on-device and explains why custom play is gated.
 - Selecting a standard category from that same tablet flow transitions into the real invitation-pending gameplay surface instead of dropping the user back to dashboard or leaving them in a stale chooser state.
+- A deeper recovery pass now also confirms the browse-to-game handoff survives a real app restart on phone. With a live backend session in `INVITED`, the phone cold-launched back into the dashboard’s `ACTIVE SESSION` hero, correctly labeled `ROUND1 • QUESTION 1/8`, and `Continue Game` routed back into the same Round 1 question screen.
+- This means the current dashboard recovery path is no longer just visually correct for idle states; it has runtime proof for at least one real in-progress session resume path.
 
 ## 8.9 Custom Questions List
 
@@ -626,6 +636,7 @@ Current runtime review status:
 - Phone review showed the live profile surface now behaving like a real product screen rather than a concept screen. The inspected lower surface contains real actions only: `Edit Profile`, `Settings`, and `Sign Out`, alongside progression and achievements framing.
 - No residual invented `Journal Archives`-style action was visible in the reviewed runtime surface.
 - Tablet runtime review now also confirms the live `Sign Out` action works and returns the user to the Velvet Midnight auth surface rather than leaving the app in a broken intermediate shell.
+- On large tablet surfaces, the lower profile actions are reachable, but the inner content column must be scrolled directly; broad outer-area swipes can make the page feel stuck even though the content is still scrollable. That should be treated as a tablet usability polish note rather than a core functional defect.
 
 ## 8.13 Settings
 
@@ -660,6 +671,8 @@ Current runtime review status:
 - Backend verification after the runtime pass confirms both users in the disposable pair are again `LINKED` to the same couple record.
 - Re-entry testing after sign-out on the original `alphatwo` throwaway account initially failed because the remembered local credentials were stale (`a2@t.co / Testpass123` returned a real backend `401 Invalid credentials`), so that specific observation should not be misclassified as a frontend/UI regression.
 - A follow-up tablet runtime pass with a known-good paired account successfully restored the authenticated app shell, which closes the practical re-entry concern even though the old throwaway credentials remain invalid.
+- Replay onboarding is now runtime-safe again. The bug came from trying to `replace('Onboarding')` directly from `SettingsScreen` before the route was mounted in the logged-in stack. The fix moved replay into a state-driven app-shell reset in `AppNavigator`, and a follow-up tablet hardware pass confirmed that tapping `Replay Onboarding` now lands on `STEP 1 OF 3` instead of throwing a navigator error.
+- The auth-shell runtime is also more truthful now: the global real-time reconnection banner is hidden while signed out, which removes the misleading `No connection` state from the sign-in experience when there is no authenticated WebSocket session yet.
 
 ## 8.14 Game: Round 1 Answering
 
@@ -798,6 +811,13 @@ Current runtime review status:
   - accepting the invite moves both devices into the same Round 1 gameplay screen
 - On both phone and tablet, the first question renders clearly with the Velvet Midnight answering shell.
 - Choosing an option and submitting advances both devices from Question 1 to Question 2, which gives us functional proof that the redesigned first-answer path is not just visually correct but operational.
+- The later-phase recovery matrix is now runtime-proven too:
+  - both devices advanced into real Round 2 guessing
+  - a force-stop and reconnect on phone during Round 2 restored the session through the active-session dashboard hero at `ROUND2 • QUESTION 6/8`
+  - `Continue Game` returned the phone to the correct live Round 2 question
+  - after the faster phone finished Round 2, the dedicated waiting state rendered with the submitted-guess review list intact
+  - a force-stop and reconnect from that waiting state again returned through the active-session hero, and `Continue Game` restored the waiting screen correctly
+  - when the slower tablet finished the last Round 2 guess, the waiting phone transitioned into shared results automatically
 - One UX nuance surfaced during this pass: on tablet landscape, the primary `Lock Selection` CTA sits just below the initial viewport and becomes visible after a small natural scroll. This is usable, but it is worth tracking as a potential layout polish opportunity if we want the first-answer CTA to remain fully above the fold on larger landscape devices.
 
 ## 8.17 Results
@@ -842,8 +862,14 @@ Validation status:
   - play-again and dashboard exits
   - dedicated `409` not-ready recovery state
   - refresh-from-not-ready behavior
+- Manual runtime validation now also proves:
+  - real finished sessions render on-device results with correct scores on both devices
+  - `Share Result Card` opens the native Android share sheet with a generated image payload
+  - `Play Again` exits results into `CategorySelection` for a fresh session flow
+  - `Back to Dashboard` now returns to the linked dashboard on hardware on both phone and tablet after recreating a fresh clean results route specifically for that validation
 
 Manual runtime note:
+- The functional results path is now proven end to end. The remaining work on this screen is primarily visual restyling to bring the final results surface fully in line with the Velvet Midnight spec.
 - On-device Android validation now reaches the real auth UI through the dev client, which confirms the app boots on hardware.
 - The full two-device gameplay path is now runtime-proven on a phone and tablet:
   - invite from category selection
@@ -853,6 +879,8 @@ Manual runtime note:
   - waiting-for-partner after the faster finisher completes Round 2
   - final shared results on both devices once the slower device finishes
 - This closes the earlier uncertainty around later-round completion and real results reveal behavior.
+- One post-completion continuity nuance remains: after results have already rendered, a hard relaunch currently brings the phone back to the normal linked dashboard `Ready to Begin` hero instead of restoring the just-finished results context. That is not a blocker for in-session completion, but it is an open product decision around whether the latest completed session should be recoverable on reopen.
+- Broader frontend regression is also green after these flows: `npm test -- --runInBand` passed with 26/26 suites and 127/127 tests.
 
 ## 9. Component Breakdown
 

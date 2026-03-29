@@ -12,7 +12,7 @@ import { HapticsProvider } from './src/haptics';
 import { ThemeProvider, useTheme } from './src/theme';
 
 const AppShell = () => {
-  const { wsConnectionState, isAuthLoading } = useAuth();
+  const { isLoggedIn, wsConnectionState, isAuthLoading } = useAuth();
   const { theme, resolvedMode } = useTheme();
 
   if (isAuthLoading) {
@@ -21,7 +21,7 @@ const AppShell = () => {
 
   return (
     <View style={[styles.root, { backgroundColor: theme.colors.background }]}>
-      <ReconnectionBanner connectionState={wsConnectionState} />
+      {isLoggedIn ? <ReconnectionBanner connectionState={wsConnectionState} /> : null}
       <GameProvider>
         <AppNavigator />
       </GameProvider>

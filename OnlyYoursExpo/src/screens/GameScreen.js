@@ -88,6 +88,7 @@ const GameScreen = ({ route, navigation }) => {
   const routeSessionId = route?.params?.sessionId;
   const isCompactLandscape = width > height && height < 520;
   const isRound2 = round === 'round2';
+  const isLightMode = theme.mode === 'light';
 
   useEffect(() => {
     if (!routeSessionId) {
@@ -182,7 +183,7 @@ const GameScreen = ({ route, navigation }) => {
           flex: 1,
         },
         topBar: {
-          backgroundColor: theme.colors.background,
+          backgroundColor: isLightMode ? theme.colors.backgroundMuted : theme.colors.background,
         },
         scroll: {
           flex: 1,
@@ -206,10 +207,10 @@ const GameScreen = ({ route, navigation }) => {
           paddingVertical: 12,
           marginBottom: 14,
           backgroundColor: wsConnectionState === 'connected'
-            ? theme.colors.surfaceMuted
+            ? (isLightMode ? theme.colors.surfacePanel : theme.colors.surfaceMuted)
             : theme.colors.bannerWarning,
           borderColor: wsConnectionState === 'connected'
-            ? theme.colors.border
+            ? (isLightMode ? theme.colors.borderStrong : theme.colors.border)
             : theme.colors.bannerWarningBorder,
         },
         statusBannerText: {
@@ -222,6 +223,13 @@ const GameScreen = ({ route, navigation }) => {
           width: '100%',
           marginBottom: 14,
           overflow: 'hidden',
+          backgroundColor: isLightMode
+            ? (isRound2 ? theme.colors.surfaceElevated : theme.colors.surfaceHero)
+            : undefined,
+          borderColor: isLightMode
+            ? (isRound2 ? theme.colors.borderStrong : theme.colors.borderAccent)
+            : undefined,
+          shadowColor: isRound2 ? theme.colors.glowAccent : theme.colors.glowPrimary,
         },
         heroGlow: {
           position: 'absolute',
@@ -231,7 +239,7 @@ const GameScreen = ({ route, navigation }) => {
           height: 180,
           borderRadius: 999,
           backgroundColor: isRound2 ? theme.colors.glowAccent : theme.colors.glowPrimary,
-          opacity: 0.5,
+          opacity: isLightMode ? 0.75 : 0.5,
         },
         heroTitle: {
           color: theme.colors.textPrimary,
@@ -246,7 +254,9 @@ const GameScreen = ({ route, navigation }) => {
           borderRadius: 18,
           borderWidth: 1,
           borderColor: isRound2 ? theme.colors.accent : theme.colors.borderAccent,
-          backgroundColor: isRound2 ? theme.colors.badgeSurfaceMint : theme.colors.surfaceEmphasis,
+          backgroundColor: isRound2
+            ? (isLightMode ? theme.colors.badgeSurfaceLavender : theme.colors.badgeSurfaceMint)
+            : theme.colors.surfaceEmphasis,
           paddingHorizontal: 16,
           paddingVertical: 12,
           marginBottom: 14,
@@ -268,14 +278,14 @@ const GameScreen = ({ route, navigation }) => {
           marginBottom: 10,
         },
         questionMetaText: {
-          color: theme.colors.textSecondary,
+          color: isLightMode ? theme.colors.textPrimary : theme.colors.textSecondary,
           fontSize: 13,
           fontWeight: '700',
           letterSpacing: 0.8,
           textTransform: 'uppercase',
         },
         helperText: {
-          color: theme.colors.textSecondary,
+          color: isLightMode ? theme.colors.textSecondary : theme.colors.textSecondary,
           fontSize: 13,
           lineHeight: 20,
           textAlign: 'center',
@@ -307,7 +317,7 @@ const GameScreen = ({ route, navigation }) => {
           backgroundColor: isRound2 ? theme.colors.accent : theme.colors.primary,
         },
         optionLetterMuted: {
-          backgroundColor: theme.colors.surfaceEmphasis,
+          backgroundColor: isLightMode ? theme.colors.surfaceOverlay : theme.colors.surfaceEmphasis,
         },
         optionLetterText: {
           color: isRound2 ? theme.colors.accentContrast : theme.colors.primaryContrast,
@@ -333,6 +343,8 @@ const GameScreen = ({ route, navigation }) => {
         footerCard: {
           width: '100%',
           marginTop: 2,
+          backgroundColor: isLightMode ? theme.colors.surfaceElevated : undefined,
+          borderColor: isLightMode ? theme.colors.borderStrong : undefined,
         },
         footerStatus: {
           flexDirection: 'row',
@@ -502,7 +514,7 @@ const GameScreen = ({ route, navigation }) => {
           textAlign: 'center',
         },
       }),
-    [isCompactLandscape, isRound2, theme, wsConnectionState]
+    [isCompactLandscape, isLightMode, isRound2, theme, wsConnectionState]
   );
 
   const renderConnectionBanner = () => {

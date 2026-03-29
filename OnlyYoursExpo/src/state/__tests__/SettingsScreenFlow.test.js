@@ -75,9 +75,9 @@ describe('SettingsScreen flow', () => {
     });
   });
 
-  it('replays onboarding and redirects to onboarding screen', async () => {
+  it('replays onboarding through auth context', async () => {
     const replayOnboarding = jest.fn(() => Promise.resolve());
-    const navigation = { replace: jest.fn() };
+    const navigation = { replace: jest.fn(), navigate: jest.fn() };
 
     const { getByLabelText, getByText } = render(
       <ThemeProvider>
@@ -93,7 +93,6 @@ describe('SettingsScreen flow', () => {
 
     await waitFor(() => {
       expect(replayOnboarding).toHaveBeenCalledTimes(1);
-      expect(navigation.replace).toHaveBeenCalledWith('Onboarding');
     });
     expect(getByLabelText('Replay onboarding')).toBeTruthy();
   });

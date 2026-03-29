@@ -33,18 +33,39 @@ const createGlowStyle = ({ size, color, opacity, top, left, right, bottom }, the
 
 const VelvetAtmosphere = ({ variant = 'default' }) => {
   const { theme } = useTheme();
-  const glowConfig = GLOW_VARIANTS[variant] || GLOW_VARIANTS.default;
+  const baseGlowConfig = GLOW_VARIANTS[variant] || GLOW_VARIANTS.default;
+  const glowConfig = useMemo(() => {
+    if (variant !== 'focused' || theme.mode !== 'light') {
+      return baseGlowConfig;
+    }
+
+    return {
+      top: {
+        ...baseGlowConfig.top,
+        size: 250,
+        opacity: 0.9,
+      },
+      bottom: {
+        ...baseGlowConfig.bottom,
+        size: 260,
+        color: 'glowAccent',
+        opacity: 0.48,
+      },
+    };
+  }, [baseGlowConfig, theme.mode, variant]);
   const styles = useMemo(
     () =>
       StyleSheet.create({
         canvas: {
           ...StyleSheet.absoluteFillObject,
-          backgroundColor: theme.colors.backgroundCanvas,
+          backgroundColor: variant === 'focused' && theme.mode === 'light'
+            ? theme.colors.backgroundMuted
+            : theme.colors.backgroundCanvas,
         },
         topGlow: createGlowStyle(glowConfig.top, theme),
         bottomGlow: createGlowStyle(glowConfig.bottom, theme),
       }),
-    [glowConfig, theme]
+    [glowConfig, theme, variant]
   );
 
   return (

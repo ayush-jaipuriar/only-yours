@@ -143,8 +143,8 @@ Status convention:
 - [x] Update spec if forgot/reset screens introduce new shared auth patterns
 
 ### Notes / Blockers
-- Notes: The auth stack now uses the stable Velvet Midnight primitive layer rather than raw `TextInput` and ad-hoc buttons. `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, and `ResetPasswordScreen` all retain their existing API contracts and validation logic, but now share a stronger content pattern: editorial eyebrow + title hierarchy, `VelvetTextField` inputs, primary CTA through `VelvetPrimaryButton`, calmer secondary navigation, and inline error/success message cards rather than plain text-only feedback. The sign-in redesign explicitly keeps only real product actions and does not introduce any social or alternate login concepts. A follow-up polish pass also added more intentional helper/meta copy, stronger secondary-button treatment where appropriate, and autofill/autocomplete hints so the forms feel better in real use. Onboarding has now been rebuilt into a true 3-step Velvet Midnight story flow with step-specific emotional framing, stronger visual anchors, explicit progress treatment, optional back navigation, and preserved skip/completion behavior. Jest validation passed for `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `OnboardingScreenFlow`, and `SettingsScreenFlow`.
-- Blockers: None for Phase 3. Remaining work shifts to dashboard/core navigation surfaces.
+- Notes: The auth stack now uses the stable Velvet Midnight primitive layer rather than raw `TextInput` and ad-hoc buttons. `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, and `ResetPasswordScreen` all retain their existing API contracts and validation logic, but now share a stronger content pattern: editorial eyebrow + title hierarchy, `VelvetTextField` inputs, primary CTA through `VelvetPrimaryButton`, calmer secondary navigation, and inline error/success message cards rather than plain text-only feedback. The sign-in redesign explicitly keeps only real product actions and does not introduce any social or alternate login concepts. A follow-up polish pass also added more intentional helper/meta copy, stronger secondary-button treatment where appropriate, and autofill/autocomplete hints so the forms feel better in real use. Onboarding has now been rebuilt into a true 3-step Velvet Midnight story flow with step-specific emotional framing, stronger visual anchors, explicit progress treatment, optional back navigation, and preserved skip/completion behavior. Jest validation passed for `SignInScreen`, `SignUpScreen`, `ForgotPasswordScreen`, `ResetPasswordScreen`, `OnboardingScreenFlow`, and `SettingsScreenFlow`. A later hardware auth check also confirmed the live `Sign Out` path returns to the redesigned sign-in surface cleanly. This runtime pass fixed the replay-onboarding bug in code by making onboarding replay state-driven at the app-shell level instead of issuing a leaf-screen `navigation.replace('Onboarding')`. The same pass also removed the misleading global `No connection` banner from signed-out auth screens and confirmed on real tablet hardware that tapping `Replay Onboarding` now lands on `STEP 1 OF 3` as intended. A fresh manual sign-in on tablet with the disposable linked account (`vmtablet1774771274@example.com`) now also re-enters the real linked dashboard successfully, which closes the core sign-in validation path.
+- Blockers: adb text entry is still unreliable on the connected devices, so future auth automation should not depend on blind `input text` for email/password certification. Manual on-device typing is currently the trustworthy path for auth validation.
 
 ---
 
@@ -174,8 +174,8 @@ Status convention:
 - [x] Update spec if bottom-nav decisions change from plan assumptions
 
 ### Notes / Blockers
-- Notes: `DashboardScreen` now uses a state-driven Velvet Midnight structure instead of a mostly linear utility stack. The screen keeps the existing `useDashboardGameFlow` contract and navigation behavior, but reorganizes the content into a stronger browse-home shape: editorial greeting, stateful hero (`active game`, `ready to start`, `not linked`), quick destination cards, progression as a richer narrative section, a bento-style celebration area, denser stats lower in the scroll, and achievements with clearer section framing. The implementation now consumes more of the shared primitive layer directly: `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` alongside the existing browse shell and card primitives. Automated validation now covers both halves of the dashboard contract: `DashboardScreen.test.js` verifies the three main screen states plus their primary CTAs, and `useDashboardGameFlow.test.js` continues to cover the underlying data/loading behavior. Neighboring browse-surface flow tests (`ProfileScreenFlow`, `useGameHistoryFlow`) also remain green after the redesign.
-- Blockers: Manual/runtime dashboard QA is now partially complete and surfaced one important continuation-risk. The tablet runtime has been repaired and now also lands back in the authenticated app on the active-session hero (`ROUND1 • QUESTION 2/8`) after reseeding local storage, which restores the two-device QA setup. The earlier browse-surface recovery concern still stands, though: the phone had previously been left on `CategorySelection` while the backend already had an active Round 1 session, which suggests browse-surface recovery back to the active-session pathway is still not fully resilient if a user leaves gameplay mid-flow and later lands on another transactional screen.
+- Notes: `DashboardScreen` now uses a state-driven Velvet Midnight structure instead of a mostly linear utility stack. The screen keeps the existing `useDashboardGameFlow` contract and navigation behavior, but reorganizes the content into a stronger browse-home shape: editorial greeting, stateful hero (`active game`, `ready to start`, `not linked`), quick destination cards, progression as a richer narrative section, a bento-style celebration area, denser stats lower in the scroll, and achievements with clearer section framing. The implementation now consumes more of the shared primitive layer directly: `VelvetPrimaryButton`, `VelvetSecondaryButton`, `VelvetStatusPill`, and `VelvetProgressBar` alongside the existing browse shell and card primitives. Automated validation now covers both halves of the dashboard contract: `DashboardScreen.test.js` verifies the three main screen states plus their primary CTAs, and `useDashboardGameFlow.test.js` continues to cover the underlying data/loading behavior. Neighboring browse-surface flow tests (`ProfileScreenFlow`, `useGameHistoryFlow`) also remain green after the redesign. This runtime pass revalidated the `not linked` to `linked + no active game` transition using disposable real accounts on phone and tablet: after linking the pair through the real backend, both devices cold-launched back into the `Ready to Begin` dashboard hero, and `Start New Game` routed correctly into `CategorySelection` on tablet. We then advanced the same real session into `INVITED` and Round 1. After force-stopping the phone mid-session, the app cold-launched back into the correct `ACTIVE SESSION` dashboard hero (`ROUND1 • QUESTION 1/8`), and `Continue Game` routed back into the same live question screen.
+- Blockers: The in-progress active-session matrix is now materially closed. We now have runtime proof for `INVITED`, early Round 1, Round 2, and waiting-state recovery through the dashboard hero plus `Continue Game`. The remaining follow-up is no longer “can the user recover an active session?” but “what should happen after a completed session?” Right now a hard relaunch after results returns the user to the normal `Ready to Begin` dashboard hero instead of preserving just-finished results context.
 
 ---
 
@@ -246,8 +246,8 @@ Status convention:
 - [x] Update spec if gameplay shell behavior changes during implementation
 
 ### Notes / Blockers
-- Notes: `GameScreen` now uses a focused Velvet Midnight gameplay shell rather than a generic stacked utility layout. The implementation preserves the full `useGame()` state machine and result navigation, but re-frames each real state with stronger hierarchy: minimal top bar, cinematic question hero, explicit Round 2 prompt, stronger option selection treatment, calmer waiting panels, and a more intentional action footer. We also hid the native stack header for the `Game` route so the custom gameplay top bar is now the single visible header source. The redesign now covers the live states we truly receive today: loading, invitation pending, Round 1 answering, Round 2 guessing, submission feedback, waiting for partner with review list, round transition, realtime reconnect banner treatment via `wsConnectionState`, partner disconnected / returned notices, and an explicit expired-session takeover state. The gameplay context now translates `PARTNER_LEFT`, `PARTNER_RETURNED`, and `SESSION_EXPIRED` payloads into screen state directly, and hydration now also treats `410` responses from `/current-question` as an expired-session surface instead of dropping back to a generic loader. Automated validation now includes direct gameplay tests for loading, custom-question badge rendering, Round 2 guessing, waiting review state, invitation-pending state, reconnect-banner treatment, partner-left notice rendering, expired-session rendering, and targeted `GameContext` coverage for the new status payload handling. Manual Android runtime verification now includes both a phone and a tablet authenticated as the live paired account. On hardware we confirmed: the invite modal appears route-appropriately on phone while the inviter sees the invitation-pending screen on tablet, accepting the invite moves both devices into the same Round 1 question, and after choosing an option and submitting, both devices advance from Question 1 to Question 2 as expected. We also validated the late-round path end to end: the faster phone finished Round 2 and correctly landed on the `Round 2 Complete` waiting state, the slower tablet completed its remaining Round 2 guesses, and both devices then transitioned into the shared results screen with the same final score breakdown.
-- Blockers: The earlier Question 3 vs Question 2 observation is no longer treated as a gameplay defect. Repo validation and backend service tests confirm Round 1 is intentionally asynchronous per user: each player advances through their own next unanswered question without per-question partner blocking, and `Continue Game` should restore the next unanswered question for that specific user. Two-device runtime behavior matched that model. The STOMP dev-runtime escalation has been hardened in code and no longer redboxes in the reproduced phone flow. No current gameplay blocker remains from the tested invite-through-results path.
+- Notes: `GameScreen` now uses a focused Velvet Midnight gameplay shell rather than a generic stacked utility layout. The implementation preserves the full `useGame()` state machine and result navigation, but re-frames each real state with stronger hierarchy: minimal top bar, cinematic question hero, explicit Round 2 prompt, stronger option selection treatment, calmer waiting panels, and a more intentional action footer. We also hid the native stack header for the `Game` route so the custom gameplay top bar is now the single visible header source. The redesign now covers the live states we truly receive today: loading, invitation pending, Round 1 answering, Round 2 guessing, submission feedback, waiting for partner with review list, round transition, realtime reconnect banner treatment via `wsConnectionState`, partner disconnected / returned notices, and an explicit expired-session takeover state. The gameplay context now translates `PARTNER_LEFT`, `PARTNER_RETURNED`, and `SESSION_EXPIRED` payloads into screen state directly, and hydration now also treats `410` responses from `/current-question` as an expired-session surface instead of dropping back to a generic loader. Automated validation now includes direct gameplay tests for loading, custom-question badge rendering, Round 2 guessing, waiting review state, invitation-pending state, reconnect-banner treatment, partner-left notice rendering, expired-session rendering, and targeted `GameContext` coverage for the new status payload handling. Manual Android runtime verification now includes both a phone and a tablet authenticated as the live paired account. On hardware we confirmed: the invite modal appears route-appropriately on phone while the inviter sees the invitation-pending screen on tablet, accepting the invite moves both devices into the same Round 1 question, and after choosing an option and submitting, both devices advance from Question 1 to Question 2 as expected. We then pushed the same real session all the way through the later-phase recovery matrix: both devices reached Round 2, a phone force-stop during Round 2 recovered into the `ACTIVE SESSION` dashboard hero at `ROUND2 • QUESTION 6/8`, `Continue Game` restored the live guess screen, the faster phone finished Round 2 and landed on the dedicated waiting state with submitted-guess review intact, and a hard relaunch from that waiting state came back through the dashboard active-session hero before `Continue Game` restored the waiting screen again. Finally, when the slower tablet submitted its last guess, the phone transitioned automatically from waiting into shared results on-device.
+- Blockers: The earlier Question 3 vs Question 2 observation is no longer treated as a gameplay defect. Repo validation and backend service tests confirm Round 1 is intentionally asynchronous per user: each player advances through their own next unanswered question without per-question partner blocking, and `Continue Game` should restore the next unanswered question for that specific user. Two-device runtime behavior matched that model. The STOMP dev-runtime escalation has been hardened in code and no longer redboxes in the reproduced phone flow. The one remaining nuance after the full invite-through-results pass is post-completion continuity: after the results screen has already been reached, a hard relaunch returns the user to the normal linked dashboard instead of preserving the just-finished results context.
 
 ---
 
@@ -343,9 +343,9 @@ Status convention:
 
 ### Validation
 - [x] Results render correctly with real data
-- [ ] Play again works
-- [ ] Back to dashboard works
-- [ ] Share result action still works
+- [x] Play again works
+- [x] Back to dashboard works
+- [x] Share result action still works
 - [x] Results fallback state is understandable
 
 ### Docs
@@ -353,7 +353,7 @@ Status convention:
 - [x] Update master spec with the implemented results direction
 
 ### Notes / Blockers
-- Notes: Before the full Velvet Midnight results redesign, we hardened `ResultsScreen` so backend result states now map to distinct UX. A `409` from `/api/game/{sessionId}/results` now renders an explicit “Results Aren't Ready Yet” recovery surface with `Return to Game`, `Refresh Results`, and `Back to Dashboard` actions instead of collapsing into a generic unavailable error. `404` and other failures still route to the unavailable fallback. Jest validation now covers the new `409` recovery path and refresh behavior in `ResultsScreen.test.js`, while existing play-again, back-to-dashboard, and share-card behaviors remain green. Manual two-device runtime QA now also confirms that real finished sessions land on the shared results screen on both devices with matching final scores and unlocked-milestone content.
+- Notes: Before the full Velvet Midnight results redesign, we hardened `ResultsScreen` so backend result states now map to distinct UX. A `409` from `/api/game/{sessionId}/results` now renders an explicit “Results Aren't Ready Yet” recovery surface with `Return to Game`, `Refresh Results`, and `Back to Dashboard` actions instead of collapsing into a generic unavailable error. `404` and other failures still route to the unavailable fallback. Jest validation now covers the new `409` recovery path and refresh behavior in `ResultsScreen.test.js`, while existing play-again, back-to-dashboard, and share-card behaviors remain green. Manual two-device runtime QA now also confirms that real finished sessions land on the shared results screen on both devices with matching final scores and unlocked-milestone content. Additional phone validation confirms `Share Result Card` opens a native Android share sheet with a generated image payload, `Play Again` routes correctly into `CategorySelection` for a fresh session flow, and a recreated perfect-score session now also proves `Back to Dashboard` returns the user to the linked dashboard on hardware.
 - Blockers: The broader visual redesign of `ResultsScreen` itself still belongs to Phase 9 and has not been fully restyled to the Velvet Midnight spec yet.
 
 ---
@@ -361,7 +361,7 @@ Status convention:
 ## Phase 10. QA, Refinement, and Documentation Closure
 
 ### Implementation
-- [ ] Run frontend test suite
+- [x] Run frontend test suite
 - [ ] Fix regressions introduced by redesign
 - [ ] Run cross-screen visual consistency pass
 - [ ] Check dark/light/system mode behavior
@@ -372,25 +372,25 @@ Status convention:
 ### Validation
 - [ ] Manual auth pass
 - [ ] Manual onboarding pass
-- [ ] Manual dashboard-state pass
-- [ ] Manual linking pass
-- [ ] Manual category-selection pass
-- [ ] Manual gameplay pass
-- [ ] Manual custom-question pass
-- [ ] Manual history pass
-- [ ] Manual profile pass
-- [ ] Manual settings pass
-- [ ] Manual results pass
+- [x] Manual dashboard-state pass
+- [x] Manual linking pass
+- [x] Manual category-selection pass
+- [x] Manual gameplay pass
+- [x] Manual custom-question pass
+- [x] Manual history pass
+- [x] Manual profile pass
+- [x] Manual settings pass
+- [x] Manual results pass
 - [ ] Light/dark/system visual QA complete
 
 ### Docs
-- [ ] Update implementation spec with final deltas
+- [x] Update implementation spec with final deltas
 - [ ] Update phased plan if execution diverged materially
 - [ ] Add a short completion summary once overhaul reaches stable baseline
 
 ### Notes / Blockers
-- Notes:
-- Blockers:
+- Notes: Full frontend regression passed on Node 24 with `npm test -- --runInBand`. All 26 Jest suites and all 127 tests passed. Manual results validation is now functionally closed: real finished sessions reached the shared results screen on both devices, `Share Result Card` opened the native Android share sheet, `Play Again` routed into a fresh `CategorySelection` flow, and `Back to Dashboard` was manually verified on both phone and tablet after recreating a fresh clean results route. The remaining manual QA work is concentrated in auth/onboarding follow-through and broader visual polish checks such as light/dark/system consistency and large-screen spacing.
+- Blockers: Replay onboarding remains the main newly confirmed runtime defect. Manual sign-in is still only partial because the phone auth pass in this slice was confounded by adb text-entry behavior and a transient local `No connection` banner rather than a clean in-app form interaction.
 
 ---
 
@@ -429,8 +429,8 @@ Mitigations:
 ## Progress Summary
 
 Current active phase:
-Phase 4. Dashboard and Core Navigation Surfaces
+Phase 10. QA, Refinement, and Documentation Closure
 Overall notes:
-Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout. Phase 3 is now complete with the auth stack and onboarding rebuilt on the Velvet Midnight foundation and replay-onboarding validation passing.
+Phase 0 is complete. Phase 1 token work is landed. Phase 2 is complete with reusable browse and focused shell primitives, shared card families, and targeted Jest coverage validating the core primitive rollout. Phases 3 through 9 are largely implemented and broadly validated on hardware. Replay onboarding from settings is now fixed in live runtime. The active-session recovery matrix is now functionally proven through Round 2 and waiting-state continuation, and results behavior is functionally closed in-session. The main remaining closure work is the last round of visual polish/manual QA plus a product decision on whether just-finished results should be recoverable after a hard relaunch.
 Next recommended task:
-Start Phase 4 by rebuilding the dashboard states more faithfully to the Stitch 2 direction now that the shell and auth/onboarding systems are stable.
+Run one clean sign-in validation pass with reliable manual entry, then recreate an active game and verify dashboard/session recovery before moving into the remaining light/dark/system and large-screen polish pass.

@@ -20,23 +20,29 @@ const VelvetOptionCard = ({
     () =>
       StyleSheet.create({
         card: {
-          backgroundColor: theme.colors.surface,
+          backgroundColor: theme.mode === 'light'
+            ? theme.colors.surfaceElevated
+            : theme.colors.surface,
           borderRadius: 18,
           padding: 16,
           borderWidth: 1,
-          borderColor: theme.colors.border,
+          borderColor: theme.mode === 'light'
+            ? theme.colors.borderStrong
+            : theme.colors.border,
           ...theme.shadows.card,
           shadowColor: theme.colors.overlayScrim,
         },
         selected: {
           borderColor: isAccentTone ? theme.colors.accent : theme.colors.primary,
-          backgroundColor: isAccentTone
-            ? theme.colors.badgeSurfaceMint
-            : theme.colors.surfaceEmphasis,
+          backgroundColor: theme.mode === 'light'
+            ? (isAccentTone ? theme.colors.badgeSurfaceLavender : theme.colors.badgeSurfaceRose)
+            : (isAccentTone ? theme.colors.badgeSurfaceMint : theme.colors.surfaceEmphasis),
         },
         submitted: {
           borderColor: theme.colors.accent,
-          backgroundColor: theme.colors.badgeSurfaceMint,
+          backgroundColor: theme.mode === 'light'
+            ? theme.colors.celebrationSurface
+            : theme.colors.badgeSurfaceMint,
         },
         disabled: {
           opacity: 0.6,

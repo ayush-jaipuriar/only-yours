@@ -1,5 +1,5 @@
 import React, { useContext, useRef, useEffect } from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import { CommonActions, NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { AuthContext } from '../state/AuthContext';
 import SignInScreen from '../screens/SignInScreen';
@@ -40,6 +40,26 @@ const AppNavigator = () => {
       setNavigationRef(navigationRef.current);
     }
   }, [setNavigationRef]);
+
+  useEffect(() => {
+    const navigation = navigationRef.current;
+    const currentRoute = navigation?.getCurrentRoute?.();
+
+    if (!navigation || !isLoggedIn || !shouldShowOnboarding) {
+      return;
+    }
+
+    if (!currentRoute || currentRoute.name === 'Onboarding') {
+      return;
+    }
+
+    navigation.dispatch(
+      CommonActions.reset({
+        index: 0,
+        routes: [{ name: 'Onboarding' }],
+      })
+    );
+  }, [isLoggedIn, shouldShowOnboarding]);
 
   return (
     <NavigationContainer ref={navigationRef}>
