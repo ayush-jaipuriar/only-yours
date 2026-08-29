@@ -172,7 +172,7 @@ describe('SettingsScreen flow', () => {
 
     await waitFor(() => {
       expect(getByText('Finish Active Game First')).toBeTruthy();
-      expect(getByText('Finish or expire your active game before unlinking.')).toBeTruthy();
+      expect(getByText('Finish the active game before unlinking.')).toBeTruthy();
     });
 
     expect(getByLabelText('Unlink unavailable while a game is active')).toBeTruthy();

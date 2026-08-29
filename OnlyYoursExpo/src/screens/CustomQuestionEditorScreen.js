@@ -148,7 +148,7 @@ const CustomQuestionEditorScreen = ({ route, navigation }) => {
       triggerHaptic(HAPTIC_EVENTS.SETTINGS_SAVED);
       navigation.goBack();
     } catch (error) {
-      const message = error.response?.data?.message || 'We could not save this custom question right now.';
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'We could not save this custom question right now.';
       setErrorMessage(message);
       triggerHaptic(HAPTIC_EVENTS.ACTION_ERROR);
       Alert.alert(existingQuestion ? 'Update Failed' : 'Create Failed', message);

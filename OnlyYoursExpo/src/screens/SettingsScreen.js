@@ -534,7 +534,7 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Theme</Text>
         <Text style={styles.sectionSubtitle}>
-          Choose how the app appearance behaves. Current resolved mode: {resolvedMode}.
+          Match your OS or lock one mode. Now: {resolvedMode}.
         </Text>
 
         <View style={styles.optionsRow}>
@@ -557,14 +557,14 @@ const SettingsScreen = ({ navigation }) => {
           })}
         </View>
         <Text style={styles.hint}>
-          System follows your OS setting. Light and dark lock the app to that mode.
+          System follows your OS. Light and dark lock the app.
         </Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Haptics</Text>
         <Text style={styles.sectionSubtitle}>
-          Add subtle device feedback for key actions like submits, results, and relationship controls.
+          Subtle feedback for key actions.
         </Text>
 
         <View style={styles.optionsRow}>
@@ -588,14 +588,14 @@ const SettingsScreen = ({ navigation }) => {
           })}
         </View>
         <Text style={styles.hint}>
-          Haptics are enabled by default and apply only on this device.
+          Applies only on this device.
         </Text>
       </View>
 
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Notification Preferences</Text>
         <Text style={styles.sectionSubtitle}>
-          Configure your reminder window and quiet-hours boundaries.
+          Set reminders and quiet hours.
         </Text>
 
         <Text style={styles.inputLabel}>Timezone (IANA)</Text>
@@ -679,7 +679,7 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Relationship Controls</Text>
         <Text style={styles.sectionSubtitle}>
-          Manage unlink and cooldown recovery safely from one place.
+          Manage unlink and recovery.
         </Text>
 
         {isLoadingCoupleStatus ? (
@@ -700,7 +700,7 @@ const SettingsScreen = ({ navigation }) => {
             {coupleStatus?.status === 'LINKED' ? (
               <>
                 <Text style={styles.infoText}>
-                  You are linked. Unlinking starts a 24-hour cooldown before unrestricted relinking.
+                  Linked now. Unlinking starts a 24-hour cooldown.
                 </Text>
                 <TouchableOpacity
                   style={[
@@ -714,7 +714,7 @@ const SettingsScreen = ({ navigation }) => {
                   accessibilityLabel={unlinkAccessibilityLabel}
                   accessibilityHint={
                     hasActiveGameBlockingUnlink
-                      ? 'Finish or expire your active game before unlinking.'
+                      ? 'Finish the active game before unlinking.'
                       : 'Starts the two-step unlink confirmation flow.'
                   }
                   accessibilityState={{ disabled: isPreparingUnlink || isConfirmingUnlink || hasActiveGameBlockingUnlink }}
@@ -730,7 +730,7 @@ const SettingsScreen = ({ navigation }) => {
                 </TouchableOpacity>
                 {hasActiveGameBlockingUnlink ? (
                   <Text style={styles.infoText}>
-                    Finish or expire your active game before unlinking.
+                    Finish the active game before unlinking.
                   </Text>
                 ) : null}
               </>
@@ -739,7 +739,7 @@ const SettingsScreen = ({ navigation }) => {
             {coupleStatus?.status === 'COOLDOWN_ACTIVE' ? (
               <>
                 <Text style={styles.infoText}>
-                  Cooldown active until {formatCooldownTime(coupleStatus.cooldownEndsAt)}.
+                  Cooldown ends {formatCooldownTime(coupleStatus.cooldownEndsAt)}.
                 </Text>
                 <TouchableOpacity
                   style={styles.recoverButton}
@@ -760,7 +760,7 @@ const SettingsScreen = ({ navigation }) => {
 
             {coupleStatus?.status === 'READY_TO_LINK' ? (
               <Text style={styles.infoText}>
-                No active relationship is linked right now.
+                No partner linked right now.
               </Text>
             ) : null}
           </>
@@ -770,7 +770,7 @@ const SettingsScreen = ({ navigation }) => {
           <View style={styles.unlinkConfirmPanel}>
             <Text style={styles.unlinkConfirmTitle}>Final Confirmation</Text>
             <Text style={styles.unlinkConfirmText}>
-              This action unlinks your partner and starts a 24-hour cooldown.
+              Unlinking starts a 24-hour cooldown.
             </Text>
             <TextInput
               value={unlinkReason}
@@ -821,7 +821,7 @@ const SettingsScreen = ({ navigation }) => {
       <View style={styles.card}>
         <Text style={styles.sectionTitle}>Onboarding</Text>
         <Text style={styles.sectionSubtitle}>
-          Replay onboarding anytime to revisit key game flow concepts.
+          Replay the intro anytime.
         </Text>
         <TouchableOpacity
           style={styles.replayButton}

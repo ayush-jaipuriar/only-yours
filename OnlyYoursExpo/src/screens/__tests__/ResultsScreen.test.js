@@ -47,19 +47,19 @@ const mockScores = {
   ],
 };
 
-const MockAuthProvider = ({ children }) => (
-  <AuthContext.Provider value={{ setGameContextRef: jest.fn() }}>
+const MockAuthProvider = ({ children, user = { name: 'Alice' } }) => (
+  <AuthContext.Provider value={{ setGameContextRef: jest.fn(), user }}>
     {children}
   </AuthContext.Provider>
 );
 
-const renderResults = (routeParams = { scores: mockScores }, navigation = {}) => {
+const renderResults = (routeParams = { scores: mockScores }, navigation = {}, authUser = { name: 'Alice' }) => {
   const mockNav = { replace: jest.fn(), navigate: jest.fn(), ...navigation };
   const mockRoute = { params: routeParams };
   WebSocketService.subscribe.mockReturnValue({ unsubscribe: jest.fn() });
 
   const result = render(
-    <MockAuthProvider>
+    <MockAuthProvider user={authUser}>
       <GameProvider>
         <ResultsScreen route={mockRoute} navigation={mockNav} />
       </GameProvider>
@@ -162,5 +162,11 @@ describe('ResultsScreen', () => {
       expect(api.get).toHaveBeenCalledTimes(2);
       expect(getByText('Game Complete!')).toBeTruthy();
     });
+  });
+
+  it('renders Player 2 score under "Your score" when Player 2 is logged in', () => {
+    const { getByLabelText } = renderResults({ scores: mockScores }, {}, { name: 'Bob' });
+    expect(getByLabelText('Bob scored 5 out of 8.')).toBeTruthy();
+    expect(getByLabelText('Alice scored 6 out of 8.')).toBeTruthy();
   });
 });

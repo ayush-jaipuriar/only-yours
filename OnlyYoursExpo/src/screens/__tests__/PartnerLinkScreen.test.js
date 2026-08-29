@@ -10,12 +10,15 @@ jest.mock('../../services/api', () => ({
   },
 }));
 
+jest.mock('expo-clipboard', () => ({
+  setStringAsync: jest.fn().mockResolvedValue(true),
+  setString: jest.fn(),
+}));
+
 const ReactNative = require('react-native');
+const Clipboard = require('expo-clipboard');
 ReactNative.Alert = {
   alert: jest.fn(),
-};
-ReactNative.Clipboard = {
-  setString: jest.fn(),
 };
 ReactNative.Share = {
   share: jest.fn(),
@@ -70,6 +73,20 @@ describe('PartnerLinkScreen', () => {
       expect(api.post).toHaveBeenCalledWith('/couple/link', { code: 'ABCD1234' });
       expect(getByText("You're connected.")).toBeTruthy();
       expect(getByText('Start First Game')).toBeTruthy();
+    });
+  });
+
+  it('copies partner code to clipboard when Copy Code is pressed', async () => {
+    api.post.mockResolvedValueOnce({ data: { code: 'XJ9R4L' } });
+    const { getByLabelText, findByLabelText } = renderScreen();
+
+    fireEvent.press(getByLabelText('Generate partner code'));
+
+    const copyBtn = await findByLabelText('Copy partner code');
+    fireEvent.press(copyBtn);
+
+    await waitFor(() => {
+      expect(Clipboard.setStringAsync).toHaveBeenCalledWith('XJ9R4L');
     });
   });
 });

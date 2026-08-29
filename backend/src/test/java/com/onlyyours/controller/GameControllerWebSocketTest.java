@@ -126,6 +126,18 @@ class GameControllerWebSocketTest {
     }
 
     @Test
+    void testConnect_WithoutToken_Fails() {
+        assertThrows(Exception.class, () -> {
+            CompletableFuture<StompSession> future = stompClient.connectAsync(
+                    "ws://localhost:" + port + "/ws",
+                    new WebSocketHttpHeaders(),
+                    new StompHeaders(),
+                    new StompSessionHandlerAdapter() {});
+            future.get(5, TimeUnit.SECONDS);
+        });
+    }
+
+    @Test
     void testInvitationFlow_InviteeReceivesInvitation() throws Exception {
         StompSession inviterSession = connectWithToken(inviterToken);
         StompSession inviteeSession = connectWithToken(inviteeToken);

@@ -35,7 +35,7 @@ const SignInScreen = ({ navigation }) => {
       });
       await login(response.data);
     } catch (error) {
-      const message = error?.response?.data?.message || 'Invalid credentials';
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'Invalid credentials';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);

@@ -36,7 +36,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
         'If an account with that email exists, a password reset link has been sent.';
       setSuccessMessage(message);
     } catch (error) {
-      const message = error?.response?.data?.message || 'Unable to process request right now.';
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'Unable to process request right now.';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);

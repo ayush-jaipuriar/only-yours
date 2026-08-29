@@ -54,7 +54,7 @@ const ResetPasswordScreen = ({ navigation }) => {
         navigation.navigate('SignIn');
       }, 800);
     } catch (error) {
-      const message = error?.response?.data?.message || 'Invalid or expired reset token.';
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'Invalid or expired reset token.';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);

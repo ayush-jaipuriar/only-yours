@@ -39,7 +39,7 @@ const getRoundMeta = (round, currentQuestion, correctCount = 0) => {
       tone: 'accent',
       prompt: 'How did your partner answer this?',
       footerCta: 'Submit Guess',
-      helper: 'Your guess locks in immediately and counts toward your final match score.',
+      helper: 'Your guess locks in right away.',
       statLabel: `${correctCount}/${Math.max(questionNumber - 1, 0)} correct`,
     };
   }
@@ -50,7 +50,7 @@ const getRoundMeta = (round, currentQuestion, correctCount = 0) => {
     tone: 'primary',
     prompt: null,
     footerCta: 'Lock Selection',
-    helper: 'Your partner will guess this answer in Round 2.',
+    helper: 'Your partner guesses this in Round 2.',
     statLabel: null,
   };
 };
@@ -526,8 +526,8 @@ const GameScreen = ({ route, navigation }) => {
       <View style={styles.statusBanner}>
         <Text style={styles.statusBannerText} {...accessibilityStatusProps}>
           {wsConnectionState === 'connecting'
-            ? 'Reconnecting to your session... We will refresh the latest game state as soon as realtime is ready.'
-            : 'Realtime connection is unavailable right now. You can still refresh, and the session will recover when connection returns.'}
+            ? 'Reconnecting to your session...'
+            : 'Connection is down right now. Refresh if needed; the session will recover when it returns.'}
         </Text>
       </View>
     );
@@ -613,7 +613,7 @@ const GameScreen = ({ route, navigation }) => {
           <Text style={styles.transitionEmoji} {...decorativeAccessibilityProps}>🎯</Text>
           <Text style={styles.transitionTitle}>Round 1 complete.</Text>
           <Text style={styles.transitionSubtitle} {...accessibilityStatusProps}>
-            Now guess how your partner answered. The tone changes here on purpose: this round should feel more suspenseful and more revealing.
+            Now guess how your partner answered.
           </Text>
           <ActivityIndicator size="large" color={theme.colors.accent} />
         </VelvetHeroCard>
@@ -630,7 +630,7 @@ const GameScreen = ({ route, navigation }) => {
           <VelvetStatusPill label="Invite state" tone="warning" />
           <Text style={styles.pendingTitle}>Invitation pending</Text>
           <Text style={styles.pendingBody}>
-            This session is still in invite state. Accept the invitation to start Round 1, or refresh the session while you wait for the latest state.
+            Accept to start Round 1, or refresh for the latest state.
           </Text>
           <View style={styles.pendingActions}>
             <VelvetPrimaryButton
@@ -699,7 +699,7 @@ const GameScreen = ({ route, navigation }) => {
             </VelvetHeroCard>
 
             <VelvetSectionCard style={styles.reviewSection}>
-              <Text style={styles.reviewSectionTitle}>Your submitted {submittedLabel}</Text>
+              <Text style={styles.reviewSectionTitle}>Your {submittedLabel}</Text>
               {roundState?.reviewItems?.map((item) => (
                 <VelvetSectionCard
                   key={`${roundState?.round}-${item.questionId}`}
@@ -734,7 +734,7 @@ const GameScreen = ({ route, navigation }) => {
           </View>
           <Text style={styles.loadingTitle}>Loading question...</Text>
           <Text style={styles.loadingText}>
-            We&apos;re syncing the latest session state so both partners stay aligned.
+            Syncing the latest session state.
           </Text>
           {renderConnectionBanner()}
         </VelvetHeroCard>
@@ -750,7 +750,7 @@ const GameScreen = ({ route, navigation }) => {
           <VelvetStatusPill label="Expired session" tone="warning" />
           <Text style={styles.pendingTitle}>This session has expired</Text>
           <Text style={styles.pendingBody} {...accessibilityStatusProps}>
-            {expiredMessage || 'This game session is no longer active. Head back to the dashboard to start again.'}
+            {expiredMessage || 'This session is no longer active. Return to dashboard to start again.'}
           </Text>
           <View style={styles.pendingActions}>
             <VelvetPrimaryButton

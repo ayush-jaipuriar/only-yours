@@ -38,26 +38,29 @@ public class WebSocketSecurityConfig implements WebSocketMessageBrokerConfigurer
 
                 if (accessor != null && StompCommand.CONNECT.equals(accessor.getCommand())) {
                     String authHeader = accessor.getFirstNativeHeader("Authorization");
-                    if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                        String token = authHeader.substring(7);
-                        try {
-                            String username = jwtService.extractUsername(token);
-                            if (username != null) {
-                                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                                if (jwtService.validateToken(token, userDetails)) {
-                                    UsernamePasswordAuthenticationToken authentication =
-                                            new UsernamePasswordAuthenticationToken(
-                                                    userDetails, null, userDetails.getAuthorities());
-                                    accessor.setUser(authentication);
-                                } else {
-                                    throw new IllegalArgumentException("Invalid JWT token");
-                                }
+                    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                        throw new IllegalArgumentException("Missing or invalid Authorization header in STOMP CONNECT");
+                    }
+                    String token = authHeader.substring(7);
+                    try {
+                        String username = jwtService.extractUsername(token);
+                        if (username != null) {
+                            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                            if (jwtService.validateToken(token, userDetails)) {
+                                UsernamePasswordAuthenticationToken authentication =
+                                        new UsernamePasswordAuthenticationToken(
+                                                userDetails, null, userDetails.getAuthorities());
+                                accessor.setUser(authentication);
+                            } else {
+                                throw new IllegalArgumentException("Invalid JWT token");
                             }
-                        } catch (IllegalArgumentException e) {
-                            throw e;
-                        } catch (Exception e) {
-                            throw new IllegalArgumentException("JWT validation failed: " + e.getMessage());
+                        } else {
+                            throw new IllegalArgumentException("Invalid JWT token: subject is missing");
                         }
+                    } catch (IllegalArgumentException e) {
+                        throw e;
+                    } catch (Exception e) {
+                        throw new IllegalArgumentException("JWT validation failed: " + e.getMessage());
                     }
                 }
                 return message;

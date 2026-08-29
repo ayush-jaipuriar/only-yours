@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Animated,
@@ -8,6 +8,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import { AuthContext } from '../state/AuthContext';
 import { useGame } from '../state/GameContext';
 import useTheme from '../theme/useTheme';
 import api from '../services/api';
@@ -30,6 +31,8 @@ const RESULTS_SUBTITLE = 'Your shared reveal';
 
 const ResultsScreen = ({ route, navigation }) => {
   const { theme } = useTheme();
+  const authContext = useContext(AuthContext) || {};
+  const user = authContext.user || null;
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const incomingScores = route?.params?.scores || null;
@@ -366,7 +369,7 @@ const ResultsScreen = ({ route, navigation }) => {
             <ActivityIndicator size="large" color={theme.colors.primary} />
             <Text style={styles.recoveryTitle}>Loading results...</Text>
             <Text style={styles.recoveryBody}>
-              We&apos;re pulling the final score and milestone details for this session.
+              Pulling the final score and milestones.
             </Text>
           </VelvetHeroCard>
         </View>
@@ -391,7 +394,7 @@ const ResultsScreen = ({ route, navigation }) => {
             </Text>
             <Text style={styles.recoveryBody} {...accessibilityAlertProps}>
               {isNotReady
-                ? 'Your session is still active, but final results have not unlocked yet. Return to the game or refresh after your partner finishes.'
+                ? 'Final results unlock after your partner finishes. Return to the game or refresh.'
                 : 'This game result is no longer available.'}
             </Text>
 
@@ -423,6 +426,45 @@ const ResultsScreen = ({ route, navigation }) => {
       </VelvetScreen>
     );
   }
+
+  const isPlayer2CurrentUser = Boolean(
+    user &&
+      scores &&
+      (user.name === scores.player2Name || user.username === scores.player2Name) &&
+      user.name !== scores.player1Name
+  );
+
+  const yourCard = isPlayer2CurrentUser
+    ? {
+        name: scores?.player2Name,
+        score: scores?.player2Score,
+        anim: p2ScoreAnim,
+        hint: 'Your score',
+        accessibilityLabel: `${scores?.player2Name} scored ${scores?.player2Score} out of ${scores?.totalQuestions}.`,
+      }
+    : {
+        name: scores?.player1Name,
+        score: scores?.player1Score,
+        anim: p1ScoreAnim,
+        hint: 'Your score',
+        accessibilityLabel: `${scores?.player1Name} scored ${scores?.player1Score} out of ${scores?.totalQuestions}.`,
+      };
+
+  const partnerCard = isPlayer2CurrentUser
+    ? {
+        name: scores?.player1Name,
+        score: scores?.player1Score,
+        anim: p1ScoreAnim,
+        hint: 'Partner score',
+        accessibilityLabel: `${scores?.player1Name} scored ${scores?.player1Score} out of ${scores?.totalQuestions}.`,
+      }
+    : {
+        name: scores?.player2Name,
+        score: scores?.player2Score,
+        anim: p2ScoreAnim,
+        hint: 'Partner score',
+        accessibilityLabel: `${scores?.player2Name} scored ${scores?.player2Score} out of ${scores?.totalQuestions}.`,
+      };
 
   return (
     <VelvetScreen withAtmosphere atmosphere="focused" safeAreaEdges={['left', 'right']}>
@@ -465,33 +507,33 @@ const ResultsScreen = ({ route, navigation }) => {
               <VelvetStatCard
                 style={styles.scoreCard}
                 accessible
-                accessibilityLabel={`${scores.player1Name} scored ${scores.player1Score} out of ${scores.totalQuestions}.`}
+                accessibilityLabel={yourCard.accessibilityLabel}
               >
-                <Text style={styles.playerName} numberOfLines={1}>{scores.player1Name}</Text>
+                <Text style={styles.playerName} numberOfLines={1}>{yourCard.name}</Text>
                 <View style={styles.scoreCircle}>
                   <AnimatedScore
-                    animatedValue={p1ScoreAnim}
+                    animatedValue={yourCard.anim}
                     total={scores.totalQuestions}
                     theme={theme}
                   />
                 </View>
-                <Text style={styles.scoreHint}>Your match score</Text>
+                <Text style={styles.scoreHint}>{yourCard.hint}</Text>
               </VelvetStatCard>
 
               <VelvetStatCard
                 style={styles.scoreCard}
                 accessible
-                accessibilityLabel={`${scores.player2Name} scored ${scores.player2Score} out of ${scores.totalQuestions}.`}
+                accessibilityLabel={partnerCard.accessibilityLabel}
               >
-                <Text style={styles.playerName} numberOfLines={1}>{scores.player2Name}</Text>
+                <Text style={styles.playerName} numberOfLines={1}>{partnerCard.name}</Text>
                 <View style={styles.scoreCircle}>
                   <AnimatedScore
-                    animatedValue={p2ScoreAnim}
+                    animatedValue={partnerCard.anim}
                     total={scores.totalQuestions}
                     theme={theme}
                   />
                 </View>
-                <Text style={styles.scoreHint}>Partner match score</Text>
+                <Text style={styles.scoreHint}>{partnerCard.hint}</Text>
               </VelvetStatCard>
             </View>
 
@@ -499,9 +541,9 @@ const ResultsScreen = ({ route, navigation }) => {
             <ProgressionCard snapshot={scores.coupleProgression} />
 
             <VelvetSectionCard style={styles.actionsCard}>
-              <Text style={styles.actionsTitle}>Choose your next moment</Text>
+              <Text style={styles.actionsTitle}>What next?</Text>
               <Text style={styles.actionsBody}>
-                Share the reveal, start another ritual, or head back to your relationship home with this session wrapped up.
+                Share it, play again, or head home.
               </Text>
 
               <VelvetPrimaryButton

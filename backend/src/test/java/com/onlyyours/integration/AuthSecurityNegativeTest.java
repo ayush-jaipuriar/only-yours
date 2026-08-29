@@ -158,4 +158,23 @@ class AuthSecurityNegativeTest extends BaseIntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Invalid or expired reset token"));
     }
+
+    @Test
+    void userMe_WithDeletedUserValidJwt_ReturnsUnauthorized() throws Exception {
+        User user = new User();
+        user.setEmail("deleted@test.com");
+        user.setUsername("deleted");
+        user.setName("Deleted");
+        user.setGoogleUserId("google-deleted");
+        user = userRepo.save(user);
+
+        String validToken = createJwtFor(user);
+
+        // Delete the user from the repository so loadUserByUsername throws UsernameNotFoundException
+        userRepo.delete(user);
+
+        mockMvc.perform(get("/api/user/me")
+                        .header("Authorization", "Bearer " + validToken))
+                .andExpect(status().isUnauthorized());
+    }
 }

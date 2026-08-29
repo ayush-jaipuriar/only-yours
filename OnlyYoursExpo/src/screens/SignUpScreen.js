@@ -50,7 +50,7 @@ const SignUpScreen = ({ navigation }) => {
       });
       await login(response.data);
     } catch (error) {
-      const message = error?.response?.data?.message || 'Registration failed. Please try again.';
+      const message = error?.response?.data?.message || error?.response?.data?.error || 'Registration failed. Please try again.';
       setErrorMessage(message);
     } finally {
       setIsSubmitting(false);

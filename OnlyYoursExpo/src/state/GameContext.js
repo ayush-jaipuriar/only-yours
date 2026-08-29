@@ -246,7 +246,7 @@ export const GameProvider = ({ children }) => {
           setIsInvitationPending(false);
           setStatusNotice(null);
           setExpiredMessage(
-            error?.response?.data?.message || 'This session has expired. Start a new game from the dashboard.'
+            error?.response?.data?.message || error?.response?.data?.error || 'This session has expired. Start a new game from the dashboard.'
           );
           setGameStatus('expired');
         }

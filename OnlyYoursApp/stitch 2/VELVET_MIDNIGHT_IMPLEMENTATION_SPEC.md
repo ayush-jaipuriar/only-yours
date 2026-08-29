@@ -666,7 +666,8 @@ Corrective changes:
 
 Current runtime review status:
 - Phone runtime review confirms the real settings grouping is now coherent and faithful to product scope: theme, haptics, notification preferences, relationship controls, and replay onboarding are all present and readable.
-- The active-game unlink safeguard is now strengthened in code: `SettingsScreen` also checks `/game/active`, renders unlink as an explicitly unavailable guarded action while a live session exists, and shows the “Finish or expire your active game before unlinking.” guidance before the user taps.
+- A later polish pass reduced the remaining copy density in the most text-heavy settings areas. Theme, haptics, reminders, unlink, cooldown, and onboarding sections now read more cleanly while keeping the same contracts and safeguards.
+- The active-game unlink safeguard is now strengthened in code: `SettingsScreen` also checks `/game/active`, renders unlink as an explicitly unavailable guarded action while a live session exists, and shows the “Finish the active game before unlinking.” guidance before the user taps.
 - This keeps the backend protection intact while making the destructive control more truthful in the interface.
 - Recover-previous-partner is now runtime-validated end to end on phone hardware.
 - The linked state renders correctly, unlink presents a final confirmation block with cooldown language and optional reason input, confirm unlink transitions the account into `COOLDOWN_ACTIVE`, and the same settings surface then exposes a `Recover Previous Partner` CTA with an absolute recovery timestamp.
@@ -719,6 +720,7 @@ Current implementation status:
   - a calmer, more emotionally intentional waiting state with dashboard fallback
   - route-aware partner-presence handling, with in-game notices preserved while `PARTNER_RETURNED` no longer interrupts browse surfaces with a modal alert
   - a hardened mobile transport path in `WebSocketService`, so recoverable STOMP/send failures now move the app into reconnecting state and warn in logs instead of surfacing as redbox-level dev errors
+  - tighter microcopy in the focused states, so invite, loading, waiting, reconnect, and expired-session language reads more cleanly on-device
 
 Implementation deviations from Stitch 2:
 - We intentionally did not invent image-backed gameplay canvases because the current product data contract does not provide that asset layer.
@@ -864,6 +866,7 @@ Current implementation status:
   - unavailable fallback for `404` and non-recoverable failures
 - It also now owns its own navigation chrome, and `AppNavigator` hides the native stack header for `Results` so the screen does not render duplicate headers.
 - Exit actions now intentionally clear the temporary latest-results recovery snapshot so the dashboard does not keep surfacing stale completion context after the user has explicitly moved on.
+- A later polish pass also tightened the loading, pending-results, score-hint, and action-copy language so the screen reads more like a finished product than a diagnostic summary.
 
 Why this matters:
 - Backend semantics here are meaningful: `409` does not mean the result is gone, it means the session exists but the finishing condition has not been met yet. Treating that as a distinct user-facing state prevents a dead-end experience when one partner opens Results early from a notification or deeplink.

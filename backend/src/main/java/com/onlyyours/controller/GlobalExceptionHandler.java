@@ -32,6 +32,7 @@ public class GlobalExceptionHandler {
         }
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("error", "Validation failed");
+        body.put("message", "Validation failed");
         body.put("fieldErrors", fieldErrors);
         return ResponseEntity.badRequest().body(body);
     }
@@ -40,12 +41,19 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleMalformedJson(
             HttpMessageNotReadableException ex) {
         return ResponseEntity.badRequest().body(
-                Map.of("error", "Malformed request body"));
+                Map.of(
+                        "error", "Malformed request body",
+                        "message", "Malformed request body"
+                ));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgument(IllegalArgumentException ex) {
+        String msg = ex.getMessage() != null ? ex.getMessage() : "Invalid argument";
         return ResponseEntity.badRequest().body(
-                Map.of("error", ex.getMessage()));
+                Map.of(
+                        "error", msg,
+                        "message", msg
+                ));
     }
 }

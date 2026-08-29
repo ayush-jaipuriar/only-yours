@@ -140,7 +140,7 @@ describe('GameScreen', () => {
 
     const { findAllByText, findByText } = renderWithProviders();
     expect((await findAllByText('Waiting for your partner')).length).toBeGreaterThan(0);
-    expect(await findByText('Your submitted answers')).toBeTruthy();
+    expect(await findByText('Your answers')).toBeTruthy();
     expect(await findByText('Your answer: B')).toBeTruthy();
   });
 

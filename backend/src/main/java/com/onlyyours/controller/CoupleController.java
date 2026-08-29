@@ -58,7 +58,11 @@ public class CoupleController {
         pushNotificationService.sendToUser(
                 partner.getId(),
                 "Partner Linked!",
-                linker.getName() + " just linked with you on Only Yours"
+                linker.getName() + " just linked with you on Only Yours",
+                Map.of(
+                        "type", "COUPLE_LINKED",
+                        "targetRoute", "Dashboard"
+                )
         );
 
         return ResponseEntity.ok(toDto(couple));

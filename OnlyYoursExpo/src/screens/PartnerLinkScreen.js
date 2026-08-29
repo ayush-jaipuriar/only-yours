@@ -2,7 +2,6 @@ import React, { useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Clipboard,
   Platform,
   ScrollView,
   Share,
@@ -11,6 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import * as Clipboard from 'expo-clipboard';
 import api from '../services/api';
 import {
   VelvetFocusedScreen,
@@ -311,15 +311,21 @@ const PartnerLinkScreen = ({ navigation }) => {
     }
   };
 
-  const copyCode = () => {
+  const copyCode = async () => {
     if (!generatedCode) {
       return;
     }
 
-    if (Platform.OS === 'web') {
-      navigator.clipboard?.writeText(generatedCode);
-    } else {
-      Clipboard.setString(generatedCode);
+    try {
+      if (Platform.OS === 'web' && typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(generatedCode);
+      } else if (Clipboard?.setStringAsync) {
+        await Clipboard.setStringAsync(generatedCode);
+      } else if (Clipboard?.setString) {
+        Clipboard.setString(generatedCode);
+      }
+    } catch (e) {
+      console.warn('[PartnerLink] Clipboard write failed:', e?.message || e);
     }
 
     setCopied(true);
