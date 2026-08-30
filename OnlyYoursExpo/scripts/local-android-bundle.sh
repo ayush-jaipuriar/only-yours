@@ -45,11 +45,13 @@ if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "${ANDROID_HOME}" ]; then
 fi
 
 export PATH="$ANDROID_HOME/platform-tools:$ANDROID_HOME/emulator:$PATH"
+export EXPO_PUBLIC_API_URL="${EXPO_PUBLIC_API_URL:-https://onlyyours-backend-216762620268.asia-south1.run.app}"
 
 echo "Using Node: $(node -v)"
 echo "Using npm: $(npm -v)"
 echo "Using JAVA_HOME: $JAVA_HOME"
 echo "Using ANDROID_HOME: $ANDROID_HOME"
+echo "Using EXPO_PUBLIC_API_URL: $EXPO_PUBLIC_API_URL"
 
 # Generate native android project from app.json/plugins config.
 if [ "${EXPO_FORCE_PREBUILD:-0}" = "1" ] || [ ! -d "$PROJECT_ROOT/android" ]; then
