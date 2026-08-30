@@ -599,4 +599,16 @@ class RestControllerTest {
                     .andExpect(jsonPath("$[?(@.name == 'Sensitive Cat')].sensitive").value(true));
         }
     }
+
+    // ============ Actuator Health Sanity Tests ============
+
+    @Nested
+    class ActuatorHealthTests {
+        @Test
+        void healthEndpoint_IsAccessibleAndReportsUp() throws Exception {
+            mockMvc.perform(get("/actuator/health"))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.status").value("UP"));
+        }
+    }
 }

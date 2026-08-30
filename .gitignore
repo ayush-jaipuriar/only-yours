@@ -40,6 +40,11 @@ out/
 .env
 .env.*
 
+# Release signing keys (secrets)
+*.keystore
+*.jks
+keystore.properties
+
 # Expo prebuild generated native directories (managed workflow)
 OnlyYoursExpo/android/
 OnlyYoursExpo/ios/
