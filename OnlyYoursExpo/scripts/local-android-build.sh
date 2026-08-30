@@ -74,6 +74,12 @@ else
   echo "Push notifications will not work on Android dev client until this file is added."
 fi
 
+# Ensure android/local.properties points to Android SDK.
+if [ -d "$PROJECT_ROOT/android" ] && [ ! -f "$PROJECT_ROOT/android/local.properties" ]; then
+  echo "sdk.dir=$ANDROID_HOME" > "$PROJECT_ROOT/android/local.properties"
+  echo "Created android/local.properties pointing to $ANDROID_HOME"
+fi
+
 # Compile local debug APK (device/emulator install can be done separately).
 cd android
 ./gradlew assembleDebug

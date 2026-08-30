@@ -68,6 +68,12 @@ else
   echo "Warning: google-services.json not found in project root."
 fi
 
+# Ensure android/local.properties points to Android SDK.
+if [ -d "$PROJECT_ROOT/android" ] && [ ! -f "$PROJECT_ROOT/android/local.properties" ]; then
+  echo "sdk.dir=$ANDROID_HOME" > "$PROJECT_ROOT/android/local.properties"
+  echo "Created android/local.properties pointing to $ANDROID_HOME"
+fi
+
 # Compile local production Android App Bundle (.aab).
 cd android
 ./gradlew bundleRelease
